@@ -1,4 +1,4 @@
-(module CUIDEVICES-SJ1-3523NG (layer F.Cu) (tedit 5E1B2393)
+(module CUIDEVICES-SJ1-3523NG (layer F.Cu) (tedit 5F5B98D4)
   (descr "3.5mm Audio Jack TRS")
   (fp_text reference REF** (at 8.255 4.7244 90) (layer F.SilkS)
     (effects (font (size 1 1) (thickness 0.15)))
@@ -6,6 +6,7 @@
   (fp_text value VAL** (at 0 -0.5) (layer F.Fab) hide
     (effects (font (size 1 1) (thickness 0.15)))
   )
+  (fp_line (start -3.2766 6.5) (end -3.2766 -6.5) (layer F.CrtYd) (width 0.12))
   (fp_line (start -3.3 -6) (end 7 -6) (layer F.SilkS) (width 0.12))
   (fp_line (start 7 -6) (end 7 6) (layer F.SilkS) (width 0.12))
   (fp_line (start 7 6) (end -3.3 6) (layer F.SilkS) (width 0.12))
@@ -20,7 +21,7 @@
   (fp_line (start -3.3 -4.5) (end -3.3 -6) (layer F.SilkS) (width 0.12))
   (fp_line (start -3.2766 -6.5) (end 7.5 -6.5) (layer F.CrtYd) (width 0.12))
   (fp_line (start 7.5 -6.5) (end 7.5 6.5) (layer F.CrtYd) (width 0.12))
-  (fp_line (start 7.5 6.5) (end -3.2258 6.5) (layer F.CrtYd) (width 0.12))
+  (fp_line (start 7.5 6.5) (end -3.2766 6.5) (layer F.CrtYd) (width 0.12))
   (fp_line (start -3.3 -7) (end -3.3 7) (layer Cmts.User) (width 0.12))
   (pad 3 thru_hole circle (at 5 -5) (size 3 3) (drill 1.7) (layers *.Cu *.Mask F.SilkS))
   (pad 2 thru_hole circle (at 5 5) (size 3 3) (drill 1.7) (layers *.Cu *.Mask F.SilkS))
