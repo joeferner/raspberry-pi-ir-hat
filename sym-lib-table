@@ -1,3 +1,7 @@
 (sym_lib_table
   (lib (name raspberry-pi-ir-hat)(type Legacy)(uri ${KIPRJMOD}/raspberry-pi-ir-hat.lib)(options "")(descr ""))
+  (lib (name connector_generic)(type Legacy)(uri ${KICAD_SYMBOL_DIR}/Connector_Generic.lib)(options "")(descr ""))
+  (lib (name power)(type Legacy)(uri ${KICAD_SYMBOL_DIR}/power.lib)(options "")(descr ""))
+  (lib (name device)(type Legacy)(uri ${KICAD_SYMBOL_DIR}/Device.lib)(options "")(descr ""))
+  (lib (name connector)(type Legacy)(uri ${KICAD_SYMBOL_DIR}/Connector.lib)(options "")(descr ""))
 )
