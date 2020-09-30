@@ -136,10 +136,10 @@ U 1 1 5F5D67BE
 P 2900 4650
 F 0 "J4" H 2950 4850 50  0000 C CNN
 F 1 "RX_JMP" H 2950 4450 50  0000 C CNN
-F 2 "Connector_PinSocket_2.54mm:PinSocket_2x03_P2.54mm_Vertical" H 2900 4650 50  0001 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_2x03_P2.54mm_Vertical" H 2900 4650 50  0001 C CNN
 F 3 "~" H 2900 4650 50  0001 C CNN
 	1    2900 4650
-	1    0    0    -1  
+	1    0    0    1   
 $EndComp
 $Comp
 L raspberry-pi-ir-hat:AudioJack2_Ground J3
@@ -226,13 +226,13 @@ $EndComp
 $Comp
 L connector_generic:Conn_02x02_Odd_Even J5
 U 1 1 5F5F00A7
-P 3150 2100
-F 0 "J5" H 3200 2200 50  0000 C CNN
-F 1 "TX_JMP" H 3200 1900 50  0000 C CNN
-F 2 "Connector_PinSocket_2.54mm:PinSocket_2x02_P2.54mm_Vertical" H 3150 2100 50  0001 C CNN
-F 3 "~" H 3150 2100 50  0001 C CNN
-	1    3150 2100
-	1    0    0    -1  
+P 3150 2200
+F 0 "J5" H 3200 2300 50  0000 C CNN
+F 1 "TX_JMP" H 3200 2000 50  0000 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_2x02_P2.54mm_Vertical" H 3150 2200 50  0001 C CNN
+F 3 "~" H 3150 2200 50  0001 C CNN
+	1    3150 2200
+	1    0    0    1   
 $EndComp
 Wire Wire Line
 	2950 2200 2850 2200
@@ -259,7 +259,7 @@ U 1 1 5F5FFCAF
 P 6850 5350
 F 0 "J6" H 6850 5450 50  0000 C CNN
 F 1 "RW_JMP" H 6850 5150 50  0000 C CNN
-F 2 "Connector_PinSocket_2.54mm:PinSocket_1x02_P2.54mm_Vertical" H 6850 5350 50  0001 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" H 6850 5350 50  0001 C CNN
 F 3 "~" H 6850 5350 50  0001 C CNN
 	1    6850 5350
 	-1   0    0    1   
@@ -438,7 +438,7 @@ U 1 1 5F64A133
 P 6400 6200
 F 0 "J1" H 6400 6500 50  0000 C CNN
 F 1 "IO" H 6400 5800 50  0000 C CNN
-F 2 "Connector_PinSocket_2.54mm:PinSocket_1x06_P2.54mm_Vertical" H 6400 6200 50  0001 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical" H 6400 6200 50  0001 C CNN
 F 3 "~" H 6400 6200 50  0001 C CNN
 	1    6400 6200
 	1    0    0    -1  
