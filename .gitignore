@@ -2,3 +2,5 @@
 *-cache.lib
 fp-info-cache
 *.FCStd1
+lockfile.lck
+OldVersions/
