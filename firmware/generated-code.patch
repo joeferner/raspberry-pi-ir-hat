@@ -1,0 +1,27 @@
+--- Core/Src/main.c
++++ main.c
+@@ -32,6 +32,8 @@
+ 
+ /* Private define ------------------------------------------------------------*/
+ /* USER CODE BEGIN PD */
++extern void setup();
++extern void loop();
+ /* USER CODE END PD */
+ 
+ /* Private macro -------------------------------------------------------------*/
+@@ -103,13 +105,14 @@
+   MX_USART1_UART_Init();
+   MX_USART2_UART_Init();
+   /* USER CODE BEGIN 2 */
+-
++  setup();
+   /* USER CODE END 2 */
+ 
+   /* Infinite loop */
+   /* USER CODE BEGIN WHILE */
+   while (1)
+   {
++    loop();
+     /* USER CODE END WHILE */
+ 
+     /* USER CODE BEGIN 3 */

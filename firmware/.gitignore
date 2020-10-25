@@ -1,0 +1,9 @@
+.idea/
+cmake-build-debug/
+Drivers/
+Core/
+.cproject
+.mxproject
+.project
+CMakeLists.txt
+STM32F072RBTX_FLASH.ld
