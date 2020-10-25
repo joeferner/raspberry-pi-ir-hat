@@ -1,4 +1,5 @@
 
+#include "config.h"
 #include "uart.h"
 #include "ir_rx.h"
 
@@ -14,7 +15,7 @@ void loop() {
 }
 
 void main_error_handler() {
-    while(1);
+    while (1);
 }
 
 void uart_rx(const uint8_t *data, size_t data_len) {
@@ -24,6 +25,7 @@ void uart_rx(const uint8_t *data, size_t data_len) {
 }
 
 void ir_rx_received(ir_rx_value value) {
+    uart_send_string("P");
     uart_send_uint32(value);
-    uart_send_string(",");
+    uart_send_string("\n");
 }
