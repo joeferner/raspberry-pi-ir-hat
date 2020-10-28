@@ -2,7 +2,7 @@ ISO-10303-21;
 HEADER;
 FILE_DESCRIPTION(('FreeCAD Model'),'2;1');
 FILE_NAME(
-'C:/dev/raspberry-pi-ir-hat/modules/packages3d\\BIVAR-RLP3-200-500.step'
+'C:/dev/raspberry-pi-ir-hat/kicad-library/modules/packages3d\\BIVAR-RLP3-200-500.step'
   ,'2020-09-30T14:53:49',('kicad StepUp'),('ksu MCAD'),
   'Open CASCADE STEP processor 7.3','FreeCAD','Unknown');
 FILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));

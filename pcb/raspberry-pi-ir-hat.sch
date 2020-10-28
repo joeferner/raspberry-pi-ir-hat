@@ -140,12 +140,12 @@ F 3 "~" H 1500 4600 50  0001 C CNN
 	1    0    0    1   
 $EndComp
 $Comp
-L raspberry-pi-ir-hat:AudioJack2_Ground J1
+L kicad-library:AudioJack2_Ground J1
 U 1 1 5F5D8D83
 P 850 4600
 F 0 "J1" H 850 4950 50  0000 C CNN
 F 1 "RX" H 850 4850 50  0000 C CNN
-F 2 "modules:CUIDEVICES-SJ1-3523NG" H 850 4600 50  0001 C CNN
+F 2 "kicad-library:CUIDEVICES-SJ1-3523NG" H 850 4600 50  0001 C CNN
 F 3 "~" H 850 4600 50  0001 C CNN
 	1    850  4600
 	1    0    0    -1  
@@ -166,12 +166,12 @@ Wire Wire Line
 Wire Wire Line
 	1900 4500 1900 4300
 $Comp
-L raspberry-pi-ir-hat:AudioJack2_Ground J2
+L kicad-library:AudioJack2_Ground J2
 U 1 1 5F5EEE5F
 P 1050 2100
 F 0 "J2" H 1050 2450 50  0000 C CNN
 F 1 "TX" H 1050 2350 50  0000 C CNN
-F 2 "modules:CUIDEVICES-SJ1-3523NG" H 1050 2100 50  0001 C CNN
+F 2 "kicad-library:CUIDEVICES-SJ1-3523NG" H 1050 2100 50  0001 C CNN
 F 3 "~" H 1050 2100 50  0001 C CNN
 	1    1050 2100
 	1    0    0    -1  
@@ -345,15 +345,11 @@ F 3 "~" H 8950 5350 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	8550 3200 7950 3200
-Wire Wire Line
-	8550 3300 7950 3300
-Wire Wire Line
-	8550 3400 7950 3400
 Text Label 7950 3200 0    50   ~ 0
 IO1
-Text Label 7950 3300 0    50   ~ 0
+Text Label 7300 2550 2    50   ~ 0
 IO2
-Text Label 7950 3400 0    50   ~ 0
+Text Label 7300 2450 2    50   ~ 0
 IO3
 Text Label 8500 5150 0    50   ~ 0
 IO1
@@ -564,7 +560,7 @@ F 3 "" H 1900 4800 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L raspberry-pi-ir-hat:STM32G030Fx_TSSOP20 U1
+L kicad-library:STM32G030Fx_TSSOP20 U1
 U 1 1 5F981B79
 P 5850 2850
 F 0 "U1" H 5100 3800 50  0000 L CNN
@@ -660,19 +656,15 @@ Wire Wire Line
 	7950 2200 8550 2200
 Wire Wire Line
 	8550 2100 7950 2100
-Text Label 7950 2500 0    50   ~ 0
+Text Label 7750 2500 0    50   ~ 0
 MCU_RESET
 Text Label 4400 3450 0    50   ~ 0
 MCU_RESET
 Wire Wire Line
 	4900 3450 4400 3450
-Wire Wire Line
-	8550 2500 7950 2500
 NoConn ~ 8550 2400
-Text Label 7950 2600 0    50   ~ 0
+Text Label 7750 2600 0    50   ~ 0
 MCU_BOOT0
-Wire Wire Line
-	8550 2600 7950 2600
 Text Label 7300 3250 2    50   ~ 0
 MCU_BOOT0
 Wire Wire Line
@@ -687,81 +679,48 @@ Text Label 7300 2750 2    50   ~ 0
 RXLED
 Wire Wire Line
 	7300 2750 6700 2750
-$Comp
-L raspberry-pi-ir-hat:ST-SWD P1
-U 1 1 5FA3D3AB
-P 5650 5500
-F 0 "P1" H 6378 5803 60  0000 L CNN
-F 1 "ST-SWD" H 6378 5697 60  0000 L CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical" H 5350 5400 60  0001 C CNN
-F 3 "" H 5350 5400 60  0000 C CNN
-	1    5650 5500
-	1    0    0    -1  
-$EndComp
-Text Label 4600 5400 0    50   ~ 0
+Text Label 4800 5050 0    50   ~ 0
 MCU_RESET
-NoConn ~ 5350 5500
 Wire Wire Line
-	5350 5400 4600 5400
+	5300 5050 4800 5050
 $Comp
 L power:GND #PWR015
 U 1 1 5FA46C6A
-P 5200 5600
-F 0 "#PWR015" H 5200 5350 50  0001 C CNN
-F 1 "GND" H 5200 5450 50  0000 C CNN
-F 2 "" H 5200 5600 50  0001 C CNN
-F 3 "" H 5200 5600 50  0001 C CNN
-	1    5200 5600
+P 5200 5750
+F 0 "#PWR015" H 5200 5500 50  0001 C CNN
+F 1 "GND" H 5200 5600 50  0000 C CNN
+F 2 "" H 5200 5750 50  0001 C CNN
+F 3 "" H 5200 5750 50  0001 C CNN
+	1    5200 5750
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	5350 5200 5200 5200
-Wire Wire Line
-	5200 5200 5200 5600
 $Comp
 L power:VCC #PWR014
 U 1 1 5FA4D097
-P 5200 4450
-F 0 "#PWR014" H 5200 4300 50  0001 C CNN
-F 1 "VCC" H 5200 4600 50  0000 C CNN
-F 2 "" H 5200 4450 50  0001 C CNN
-F 3 "" H 5200 4450 50  0001 C CNN
-	1    5200 4450
+P 5200 4550
+F 0 "#PWR014" H 5200 4400 50  0001 C CNN
+F 1 "VCC" H 5200 4700 50  0000 C CNN
+F 2 "" H 5200 4550 50  0001 C CNN
+F 3 "" H 5200 4550 50  0001 C CNN
+	1    5200 4550
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	5350 4550 5200 4550
-Wire Wire Line
-	5200 4550 5200 4450
-Text Label 4600 5100 0    50   ~ 0
+Text Label 4800 4850 0    50   ~ 0
 MCU_BOOT0
 Wire Wire Line
-	5350 5100 4600 5100
+	5300 4850 4800 4850
 Text Label 7300 3150 2    50   ~ 0
 SWDIO
 Wire Wire Line
 	7300 3150 6700 3150
-Text Label 4600 5300 0    50   ~ 0
+Text Label 4800 4950 0    50   ~ 0
 SWDIO
 Wire Wire Line
-	5350 5300 4600 5300
-$Comp
-L connector_generic:Conn_01x02 J5
-U 1 1 5FA5C803
-P 5550 4550
-F 0 "J5" H 5550 4650 50  0000 C CNN
-F 1 "SWD_VCC" H 5550 4350 50  0000 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" H 5550 4550 50  0001 C CNN
-F 3 "~" H 5550 4550 50  0001 C CNN
-	1    5550 4550
-	1    0    0    -1  
-$EndComp
+	5300 4950 4800 4950
 Wire Wire Line
-	5350 4650 5250 4650
+	5200 4550 5200 4650
 Wire Wire Line
-	5250 4650 5250 5000
-Wire Wire Line
-	5250 5000 5350 5000
+	5200 4650 5300 4650
 Wire Notes Line style solid
 	3450 6000 3450 4000
 Wire Notes Line style solid
@@ -775,17 +734,144 @@ Wire Notes Line style solid
 Wire Notes Line style solid
 	650  1000 3450 1000
 NoConn ~ 6700 3650
-NoConn ~ 6700 3450
-NoConn ~ 6700 3350
 NoConn ~ 6700 3050
 NoConn ~ 6700 2950
 NoConn ~ 6700 2850
-NoConn ~ 6700 2550
-NoConn ~ 6700 2450
 NoConn ~ 6700 2150
 NoConn ~ 6700 2050
 Wire Notes Line style solid
 	650  6000 3450 6000
 Wire Notes Line style solid
 	3450 4000 650  4000
+$Comp
+L kicad-library:ST_PROGRAM_DEBUG P1
+U 1 1 5F9982B3
+P 5500 5150
+F 0 "P1" H 5500 5800 60  0000 L CNN
+F 1 "ST_PROGRAM_DEBUG" H 5500 4500 60  0000 L CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_2x04_P2.54mm_Vertical" H 5200 4950 60  0001 C CNN
+F 3 "" H 5200 4950 60  0000 C CNN
+	1    5500 5150
+	1    0    0    -1  
+$EndComp
+NoConn ~ 5300 5150
+Wire Wire Line
+	5300 5650 5200 5650
+Wire Wire Line
+	5200 5650 5200 5750
+Text Label 4800 5450 0    50   ~ 0
+DEBUG_TX
+Text Label 4800 5350 0    50   ~ 0
+DEBUG_RX
+Wire Wire Line
+	4800 5350 5300 5350
+Wire Wire Line
+	5300 5450 4800 5450
+Text Label 7300 3450 2    50   ~ 0
+DEBUG_RX
+Text Label 7300 3350 2    50   ~ 0
+DEBUG_TX
+Wire Wire Line
+	7300 3350 6700 3350
+Wire Wire Line
+	6700 3450 7300 3450
+$Comp
+L kicad-library:PWR_FLAG #FLG0101
+U 1 1 5F990BF5
+P 5050 6850
+F 0 "#FLG0101" H 5050 6945 30  0001 C CNN
+F 1 "PWR_FLAG" H 5050 6973 30  0000 C CNN
+F 2 "" H 5050 6850 60  0000 C CNN
+F 3 "" H 5050 6850 60  0000 C CNN
+	1    5050 6850
+	1    0    0    -1  
+$EndComp
+$Comp
+L kicad-library:PWR_FLAG #FLG0102
+U 1 1 5F9923BD
+P 5350 6950
+F 0 "#FLG0102" H 5350 7045 30  0001 C CNN
+F 1 "PWR_FLAG" H 5350 7072 30  0000 C CNN
+F 2 "" H 5350 6950 60  0000 C CNN
+F 3 "" H 5350 6950 60  0000 C CNN
+	1    5350 6950
+	-1   0    0    1   
+$EndComp
+$Comp
+L kicad-library:PWR_FLAG #FLG0103
+U 1 1 5F992687
+P 5650 6950
+F 0 "#FLG0103" H 5650 7045 30  0001 C CNN
+F 1 "PWR_FLAG" H 5650 7072 30  0000 C CNN
+F 2 "" H 5650 6950 60  0000 C CNN
+F 3 "" H 5650 6950 60  0000 C CNN
+	1    5650 6950
+	-1   0    0    1   
+$EndComp
+$Comp
+L power:GND #PWR0101
+U 1 1 5F99290E
+P 5050 6950
+F 0 "#PWR0101" H 5050 6700 50  0001 C CNN
+F 1 "GND" H 5050 6800 50  0000 C CNN
+F 2 "" H 5050 6950 50  0001 C CNN
+F 3 "" H 5050 6950 50  0001 C CNN
+	1    5050 6950
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:VCC #PWR0102
+U 1 1 5F993000
+P 5350 6850
+F 0 "#PWR0102" H 5350 6700 50  0001 C CNN
+F 1 "VCC" H 5350 7000 50  0000 C CNN
+F 2 "" H 5350 6850 50  0001 C CNN
+F 3 "" H 5350 6850 50  0001 C CNN
+	1    5350 6850
+	1    0    0    -1  
+$EndComp
+Text Label 5650 6750 3    50   ~ 0
+5V
+Wire Wire Line
+	5050 6850 5050 6950
+Wire Wire Line
+	5350 6950 5350 6850
+Wire Wire Line
+	5650 6950 5650 6750
+$Comp
+L device:R R5
+U 1 1 5F9AB55E
+P 8350 2500
+F 0 "R5" V 8250 2450 50  0000 C CNN
+F 1 "10K" V 8350 2500 50  0000 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 8280 2500 50  0001 C CNN
+F 3 "~" H 8350 2500 50  0001 C CNN
+	1    8350 2500
+	0    1    1    0   
+$EndComp
+$Comp
+L device:R R6
+U 1 1 5F9AC427
+P 8350 2600
+F 0 "R6" V 8450 2550 50  0000 C CNN
+F 1 "10K" V 8350 2600 50  0000 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 8280 2600 50  0001 C CNN
+F 3 "~" H 8350 2600 50  0001 C CNN
+	1    8350 2600
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	8550 2500 8500 2500
+Wire Wire Line
+	8550 2600 8500 2600
+Wire Wire Line
+	8200 2600 7750 2600
+Wire Wire Line
+	8200 2500 7750 2500
+NoConn ~ 8550 3300
+NoConn ~ 8550 3400
+Wire Wire Line
+	7300 2450 6700 2450
+Wire Wire Line
+	7300 2550 6700 2550
 $EndSCHEMATC

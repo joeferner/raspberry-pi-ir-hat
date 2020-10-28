@@ -1,0 +1,22 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP AudioJack2_Ground
+D Audio Jack, 2 Poles (Mono / TS), Grounded Sleeve
+K audio jack receptacle mono phone headphone TS connector
+F ~
+$ENDCMP
+#
+$CMP PWR_FLAG
+D Power Flag
+$ENDCMP
+#
+$CMP STM32G030Fx_TSSOP20
+D STM32G030Fx TSSOP20
+K stm32
+$ENDCMP
+#
+$CMP ST_PROGRAM_DEBUG
+D STMicro Programming and Debugging Port
+$ENDCMP
+#
+#End Doc Library
