@@ -3,4 +3,5 @@
 DIR=$(cd "$(dirname "$0")" && pwd)
 cd "${DIR}"
 
-patch -p0 --binary --backup --forward -i generated-code.patch
+rm Core/Src/stm32f0xx_it.c
+rm Core/Src/main.c

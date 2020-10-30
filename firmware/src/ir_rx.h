@@ -1,6 +1,8 @@
 #ifndef _ir_rx_h_
 #define _ir_rx_h_
 
+#include "stdint.h"
+
 typedef uint32_t ir_rx_value;
 
 void ir_rx_setup();
