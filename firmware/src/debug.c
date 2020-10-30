@@ -15,38 +15,36 @@ static lwrb_t uart_rx_dma_ringbuff;
 static uint8_t uart_rx_dma_lwrb_data[256];
 static int uart_rx_old_pos = 0;
 
-void uart_start_tx_dma_transfer();
+static void _debug_start_tx_dma_transfer();
 
-void debug_dma_tx_complete();
+static void _debug_dma_tx_complete();
 
-void debug_dma_rx_complete();
+static void _debug_dma_rx_complete();
 
-#define uart_rx_get_pos() (sizeof(uart_rx_dma_lwrb_data) - LL_DMA_GetDataLength(DEBUG_TX_RX_DMA, DEBUG_RX_DMA_CH))
+static size_t _debug_rx_get_pos();
 
 void debug_setup() {
-    // Peripheral clock enable
     LL_APB1_GRP2_EnableClock(DEBUG_USART_CLOCK);
-    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
 
     // USART GPIO Configuration
     // PA9   ------> USART_TX
     // PA10   ------> USART_RX
     LL_GPIO_InitTypeDef gpio_init = {0};
-    gpio_init.Pin = LL_GPIO_PIN_9;
+    gpio_init.Pin = DEBUG_TX_PIN;
     gpio_init.Mode = LL_GPIO_MODE_ALTERNATE;
     gpio_init.Speed = LL_GPIO_SPEED_FREQ_HIGH;
     gpio_init.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
     gpio_init.Pull = LL_GPIO_PULL_NO;
     gpio_init.Alternate = LL_GPIO_AF_1;
-    LL_GPIO_Init(GPIOA, &gpio_init);
+    LL_GPIO_Init(DEBUG_TX_PORT, &gpio_init);
 
-    gpio_init.Pin = LL_GPIO_PIN_10;
+    gpio_init.Pin = DEBUG_RX_PIN;
     gpio_init.Mode = LL_GPIO_MODE_ALTERNATE;
     gpio_init.Speed = LL_GPIO_SPEED_FREQ_HIGH;
     gpio_init.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
     gpio_init.Pull = LL_GPIO_PULL_NO;
     gpio_init.Alternate = LL_GPIO_AF_1;
-    LL_GPIO_Init(GPIOA, &gpio_init);
+    LL_GPIO_Init(DEBUG_RX_PORT, &gpio_init);
 
     // USART DMA TX Init
     LL_DMA_SetDataTransferDirection(DEBUG_TX_RX_DMA, DEBUG_TX_DMA_CH, LL_DMA_DIRECTION_MEMORY_TO_PERIPH);
@@ -95,16 +93,16 @@ void debug_setup() {
     LL_DMA_DisableChannel(DEBUG_TX_RX_DMA, DEBUG_RX_DMA_CH);
     DEBUG_LL_DMA_ClearFlag_RX_GI();
     LL_DMA_SetDataLength(DEBUG_TX_RX_DMA, DEBUG_RX_DMA_CH, sizeof(uart_rx_dma_lwrb_data));
-    LL_DMA_SetPeriphAddress(DEBUG_TX_RX_DMA, DEBUG_RX_DMA_CH, DEBUG_USART->RDR);
+    LL_DMA_SetPeriphAddress(DEBUG_TX_RX_DMA, DEBUG_RX_DMA_CH, LL_USART_DMA_GetRegAddr(DEBUG_USART, LL_USART_DMA_REG_DATA_RECEIVE));
     LL_DMA_SetMemoryAddress(DEBUG_TX_RX_DMA, DEBUG_RX_DMA_CH, (uint32_t) uart_rx_dma_lwrb_data);
     LL_DMA_EnableChannel(DEBUG_TX_RX_DMA, DEBUG_RX_DMA_CH);
     LL_USART_EnableDMAReq_RX(DEBUG_USART);
 
-    uart_rx_old_pos = uart_rx_get_pos();
+    uart_rx_old_pos = _debug_rx_get_pos();
 }
 
 void debug_loop() {
-    debug_dma_rx_complete();
+    _debug_dma_rx_complete();
 
     uint8_t peek_buffer[256];
     size_t peek_size;
@@ -132,14 +130,14 @@ void debug_send_uint32(uint32_t value) {
 
 void debug_tx(const uint8_t *data, size_t data_len) {
     if (data_len > sizeof(uart_tx_dma_lwrb_data)) {
-        main_error_handler();
+        Error_Handler();
     }
     while (lwrb_get_free(&uart_tx_dma_ringbuff) < data_len);
     lwrb_write(&uart_tx_dma_ringbuff, data, data_len);
-    uart_start_tx_dma_transfer();
+    _debug_start_tx_dma_transfer();
 }
 
-void uart_start_tx_dma_transfer() {
+void _debug_start_tx_dma_transfer() {
     if (uart_tx_dma_current_len == 0) {
         uart_tx_dma_current_len = lwrb_get_linear_block_read_length(&uart_tx_dma_ringbuff);
         if (uart_tx_dma_current_len > 0) {
@@ -148,7 +146,7 @@ void uart_start_tx_dma_transfer() {
             LL_DMA_DisableChannel(DEBUG_TX_RX_DMA, DEBUG_TX_DMA_CH);
             DEBUG_LL_DMA_ClearFlag_TX_GI();
             LL_DMA_SetDataLength(DEBUG_TX_RX_DMA, DEBUG_TX_DMA_CH, uart_tx_dma_current_len);
-            LL_DMA_SetPeriphAddress(DEBUG_TX_RX_DMA, DEBUG_TX_DMA_CH, DEBUG_USART->TDR);
+            LL_DMA_SetPeriphAddress(DEBUG_TX_RX_DMA, DEBUG_TX_DMA_CH, LL_USART_DMA_GetRegAddr(DEBUG_USART, LL_USART_DMA_REG_DATA_TRANSMIT));
             LL_DMA_SetMemoryAddress(DEBUG_TX_RX_DMA, DEBUG_TX_DMA_CH, (uint32_t) p);
             LL_DMA_EnableChannel(DEBUG_TX_RX_DMA, DEBUG_TX_DMA_CH);
             LL_USART_ClearFlag_TC(DEBUG_USART);
@@ -160,23 +158,31 @@ void uart_start_tx_dma_transfer() {
 void debug_dma_irq() {
     if (DEBUG_LL_DMA_IsActiveFlag_TX_TC()) {
         DEBUG_LL_DMA_ClearFlag_TX_GI();
-        debug_dma_tx_complete();
+        _debug_dma_tx_complete();
     }
 
     if (DEBUG_LL_DMA_IsActiveFlag_RX_TC()) {
         DEBUG_LL_DMA_ClearFlag_RX_GI();
-        debug_dma_rx_complete();
+        _debug_dma_rx_complete();
+    }
+
+    if (DEBUG_LL_DMA_IsActiveFlag_TX_GI()) {
+        DEBUG_LL_DMA_ClearFlag_TX_GI();
+    }
+
+    if (DEBUG_LL_DMA_IsActiveFlag_RX_GI()) {
+        DEBUG_LL_DMA_ClearFlag_RX_GI();
     }
 }
 
-void debug_dma_tx_complete() {
+void _debug_dma_tx_complete() {
     lwrb_skip(&uart_tx_dma_ringbuff, uart_tx_dma_current_len);
     uart_tx_dma_current_len = 0;
-    uart_start_tx_dma_transfer();
+    _debug_start_tx_dma_transfer();
 }
 
-void debug_dma_rx_complete() {
-    size_t pos = uart_rx_get_pos();
+void _debug_dma_rx_complete() {
+    size_t pos = _debug_rx_get_pos();
     if (pos != uart_rx_old_pos) {
         if (pos > uart_rx_old_pos) {
             // not wrapped
@@ -190,4 +196,8 @@ void debug_dma_rx_complete() {
     if (uart_rx_old_pos == sizeof(uart_rx_dma_lwrb_data)) {
         uart_rx_old_pos = 0;
     }
+}
+
+size_t _debug_rx_get_pos() {
+    return (sizeof(uart_rx_dma_lwrb_data) - LL_DMA_GetDataLength(DEBUG_TX_RX_DMA, DEBUG_RX_DMA_CH));
 }

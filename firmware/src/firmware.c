@@ -28,6 +28,7 @@ void setup() {
     LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
     LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
     LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+
     setup_system_clock();
 
     NVIC_SetPriority(DMA1_Channel2_3_IRQn, 0);
@@ -72,7 +73,7 @@ void Error_Handler(void) {
 }
 
 void debug_rx(const uint8_t *data, size_t data_len) {
-    debug_send_string("OK\n");
+    debug_send_string("OK ");
     debug_tx(data, data_len);
     debug_send_string("\n");
 }

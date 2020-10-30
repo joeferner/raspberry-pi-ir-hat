@@ -1,5 +1,6 @@
 #include "config.h"
 #include "debug.h"
+#include "time.h"
 
 /**
  * @brief This function handles Non maskable interrupt.
@@ -31,7 +32,7 @@ void PendSV_Handler(void) {
  * @brief This function handles System tick timer.
  */
 void SysTick_Handler(void) {
-    // TODO HAL_IncTick();
+    time_increment_tick();
 }
 
 /**
@@ -45,7 +46,7 @@ void DMA1_Channel2_3_IRQHandler(void) {
  * @brief This function handles DMA1 channel 4, 5, 6 and 7 interrupts.
  */
 void DMA1_Channel4_5_6_7_IRQHandler(void) {
-    // TODO HAL_DMA_IRQHandler(&hdma_tim2_ch1);
+    ir_rx_irq();
 }
 
 /**
