@@ -7,12 +7,12 @@
 #include "debug.h"
 #include "lwrb/lwrb.h"
 
-static lwrb_t uart_tx_dma_ringbuff;
-static uint8_t uart_tx_dma_lwrb_data[256];
+static volatile lwrb_t uart_tx_dma_ringbuff;
+static uint8_t uart_tx_dma_lwrb_data[256] __attribute__ ((aligned (8)));;
 static volatile size_t uart_tx_dma_current_len;
 
-static lwrb_t uart_rx_dma_ringbuff;
-static uint8_t uart_rx_dma_lwrb_data[256];
+static volatile lwrb_t uart_rx_dma_ringbuff;
+static uint8_t uart_rx_dma_lwrb_data[256] __attribute__ ((aligned (8)));;
 static int uart_rx_old_pos = 0;
 
 static void _debug_start_tx_dma_transfer();
@@ -118,21 +118,32 @@ void debug_loop() {
     }
 }
 
+/**
+ * \brief do not call this in an interrupt
+ */
 void debug_send_string(const char *str) {
     debug_tx((const uint8_t *) str, strlen(str));
 }
 
+/**
+ * \brief do not call this in an interrupt
+ */
 void debug_send_uint32(uint32_t value) {
     char buffer[15];
     utoa(value, buffer, 10);
     debug_send_string(buffer);
 }
 
+/**
+ * \brief do not call this in an interrupt
+ */
 void debug_tx(const uint8_t *data, size_t data_len) {
     if (data_len > sizeof(uart_tx_dma_lwrb_data)) {
         Error_Handler();
     }
-    while (lwrb_get_free(&uart_tx_dma_ringbuff) < data_len);
+    while (lwrb_get_free(&uart_tx_dma_ringbuff) < data_len) {
+        _debug_start_tx_dma_transfer();
+    }
     lwrb_write(&uart_tx_dma_ringbuff, data, data_len);
     _debug_start_tx_dma_transfer();
 }

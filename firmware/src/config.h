@@ -20,15 +20,18 @@ extern void Error_Handler();
 #define IR_RX_PERIPH_TIMER    LL_APB1_GRP1_PERIPH_TIM2
 #define IR_RX_TIMER           TIM2
 #define IR_RX_TIMER_CH        LL_TIM_CHANNEL_CH1
+#define IR_RX_TIMER_IRQ       TIM2_IRQn
 #define IR_RX_DMA             DMA1
 #define IR_RX_DMA_CH          LL_DMA_CHANNEL_5
 #define IR_RX_PORT            GPIOA
 #define IR_RX_PIN             LL_GPIO_PIN_0
 #define IR_RX_TIMER_PRESCALER 176
 #define IR_RX_BUFFER_SAMPLES  100
+#define IR_RX_CAPTURE_REG_ADDR          (&(IR_RX_TIMER->CCR1))
 #define IR_RX_LL_TIM_EnableIT_CC()      LL_TIM_EnableIT_CC1(IR_RX_TIMER)
+#define IR_RX_LL_TIM_EnableDMAReq_CC()  LL_TIM_EnableDMAReq_CC1(IR_RX_TIMER)
 #define IR_RX_LL_DMA_ClearFlag_RX_GI()  LL_DMA_ClearFlag_GI5(IR_RX_DMA)
-#define IR_RX_LL_TIM_EnableIT_CC()      LL_TIM_EnableIT_CC1(IR_RX_TIMER)
+#define IR_RX_LL_TIM_IsActiveFlag_CC()  LL_TIM_IsActiveFlag_CC1(IR_RX_TIMER)
 
 #define IR_RX_CH                TIM_CHANNEL_1
 
