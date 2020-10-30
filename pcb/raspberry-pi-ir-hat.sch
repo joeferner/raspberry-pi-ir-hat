@@ -749,7 +749,7 @@ U 1 1 5F9982B3
 P 5500 5150
 F 0 "P1" H 5500 5800 60  0000 L CNN
 F 1 "ST_PROGRAM_DEBUG" H 5500 4500 60  0000 L CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_2x04_P2.54mm_Vertical" H 5200 4950 60  0001 C CNN
+F 2 "kicad-library:PinHeader_2x04_P2.54mm_Vertical_Shrouded" H 5200 4950 60  0001 C CNN
 F 3 "" H 5200 4950 60  0000 C CNN
 	1    5500 5150
 	1    0    0    -1  
