@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+void time_setup();
+
 uint32_t time_get();
 
 void time_increment_tick();

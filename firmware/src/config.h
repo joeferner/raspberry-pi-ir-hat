@@ -25,7 +25,8 @@ extern void Error_Handler();
 #define IR_RX_DMA_CH          LL_DMA_CHANNEL_5
 #define IR_RX_PORT            GPIOA
 #define IR_RX_PIN             LL_GPIO_PIN_0
-#define IR_RX_TIMER_PRESCALER 176
+// SystemCoreClock (8000000)
+#define IR_RX_TIMER_PRESCALER 7
 #define IR_RX_BUFFER_SAMPLES  100
 #define IR_RX_CAPTURE_REG_ADDR          (&(IR_RX_TIMER->CCR1))
 #define IR_RX_LL_TIM_EnableIT_CC()      LL_TIM_EnableIT_CC1(IR_RX_TIMER)
