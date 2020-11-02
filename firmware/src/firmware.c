@@ -55,6 +55,7 @@ void debug_rx(const uint8_t *data, size_t data_len) {
     debug_send_string("OK ");
     debug_tx(data, data_len);
     debug_send_string("\n");
+    ir_tx_send();
 }
 
 void ir_rx_received(ir_rx_value value) {

@@ -2,6 +2,7 @@
 #include "debug.h"
 #include "ir_rx.h"
 #include "time.h"
+#include "ir_tx.h"
 
 void NMI_Handler() {
 }
@@ -31,4 +32,8 @@ void DMA1_Channel4_5_6_7_IRQHandler() {
 
 void TIM2_IRQHandler() {
     ir_rx_irq();
+}
+
+void TIM16_IRQHandler() {
+    ir_tx_irq();
 }

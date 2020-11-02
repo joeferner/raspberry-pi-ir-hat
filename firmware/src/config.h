@@ -34,9 +34,12 @@ extern void Error_Handler();
 #define IR_RX_LL_DMA_ClearFlag_RX_GI()  LL_DMA_ClearFlag_GI5(IR_RX_DMA)
 #define IR_RX_LL_TIM_IsActiveFlag_CC()  LL_TIM_IsActiveFlag_CC1(IR_RX_TIMER)
 
-#define IR_RX_CH                TIM_CHANNEL_1
-
-#define IR_TX_TIMER_CARRIER     htim17
-#define IR_TX_TIMER_CARRIER_CH  TIM_CHANNEL_1
-#define IR_TX_TIMER_SIGNAL      htim16
-#define IR_TX_TIMER_SIGNAL_CH   TIM_CHANNEL_1
+#define IR_TX_PORT                 GPIOB
+#define IR_TX_PIN                  LL_GPIO_PIN_9
+#define IR_TX_AF                   LL_GPIO_AF_0
+#define IR_TX_CARRIER_TIMER        TIM17
+#define IR_TX_CARRIER_PERIPH_TIMER LL_APB1_GRP2_PERIPH_TIM17
+#define IR_TX_CARRIER_CHANNEL      LL_TIM_CHANNEL_CH1
+#define IR_TX_SIGNAL_TIMER         TIM16
+#define IR_TX_SIGNAL_PERIPH_TIMER  LL_APB1_GRP2_PERIPH_TIM16
+#define IR_TX_SIGNAL_CHANNEL       LL_TIM_CHANNEL_CH1

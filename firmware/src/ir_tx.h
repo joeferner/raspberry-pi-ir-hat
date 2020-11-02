@@ -3,4 +3,8 @@
 
 void ir_tx_setup();
 
+void ir_tx_send();
+
+void ir_tx_irq();
+
 #endif
