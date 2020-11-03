@@ -1,7 +1,7 @@
 #ifndef _debug_h_
 #define _debug_h_
 
-#include <string.h>
+#include <stddef.h>
 #include <stdint.h>
 
 void debug_setup();

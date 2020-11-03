@@ -5,23 +5,34 @@
 #include "config.h"
 #include "ir_tx.h"
 
-uint32_t signal_length = 8;
-uint32_t signal[] = {100, 300, 200, 100, 100, 500, 200, 0};
-uint32_t signal_idx = 0;
+static uint32_t *_ir_tx_signal = NULL;
+static uint32_t _ir_tx_signal_length = 0;
+static uint32_t _ir_tx_signal_idx = 0;
 
 static void _ir_tx_next_signal();
 
 static void _ir_tx_enable_gpio(bool enable);
 
 void ir_tx_setup() {
+    _ir_tx_enable_gpio(false);
+    NVIC_EnableIRQ(IR_TX_SIGNAL_IRQ);
+    NVIC_SetPriority(IR_TX_SIGNAL_IRQ, 0);
+}
+
+/**
+ * @brief the caller owns the signal buffer and must retain it until the send is complete which
+ *        happens async
+ */
+void ir_tx_send(uint32_t carrier_freq, uint32_t *signal, size_t signal_length) {
+    _ir_tx_signal = signal;
+    _ir_tx_signal_length = signal_length;
+
     LL_TIM_InitTypeDef tim_init = {0};
     LL_TIM_OC_InitTypeDef tim_oc_init = {0};
     LL_TIM_BDTR_InitTypeDef tim_bdtr_init = {0};
 
-    _ir_tx_enable_gpio(false);
-
     // init carrier timer
-    uint32_t carrier_counter = 220;
+    uint32_t carrier_counter = carrier_freq / (SystemCoreClock / 44444);
 
     LL_APB1_GRP2_EnableClock(IR_TX_CARRIER_PERIPH_TIMER);
     tim_init.Prescaler = 0;
@@ -56,7 +67,7 @@ void ir_tx_setup() {
     LL_APB1_GRP2_EnableClock(IR_TX_SIGNAL_PERIPH_TIMER);
     tim_init.Prescaler = 0;
     tim_init.CounterMode = LL_TIM_COUNTERMODE_DOWN;
-    tim_init.Autoreload = signal[0];
+    tim_init.Autoreload = 0;
     tim_init.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
     tim_init.RepetitionCounter = 0;
     LL_TIM_Init(IR_TX_SIGNAL_TIMER, &tim_init);
@@ -65,7 +76,7 @@ void ir_tx_setup() {
     tim_oc_init.OCMode = LL_TIM_OCMODE_PWM1;
     tim_oc_init.OCState = LL_TIM_OCSTATE_ENABLE;
     tim_oc_init.OCNState = LL_TIM_OCSTATE_DISABLE;
-    tim_oc_init.CompareValue = signal[0] / 2;
+    tim_oc_init.CompareValue = 0;
     tim_oc_init.OCPolarity = LL_TIM_OCPOLARITY_HIGH;
     tim_oc_init.OCNPolarity = LL_TIM_OCPOLARITY_HIGH;
     tim_oc_init.OCIdleState = LL_TIM_OCIDLESTATE_LOW;
@@ -83,38 +94,30 @@ void ir_tx_setup() {
     LL_TIM_EnableAllOutputs(IR_TX_SIGNAL_TIMER);
     LL_TIM_EnableIT_UPDATE(IR_TX_SIGNAL_TIMER);
 
-    _ir_tx_next_signal();
-
-    NVIC_EnableIRQ(IR_TX_SIGNAL_IRQ);
-    NVIC_SetPriority(IR_TX_SIGNAL_IRQ, 0);
-}
-
-void ir_tx_send() {
+    // begin send
     _ir_tx_enable_gpio(true);
-
-    signal_idx = 0;
+    _ir_tx_signal_idx = 0;
     _ir_tx_next_signal();
-
     LL_TIM_EnableCounter(IR_TX_CARRIER_TIMER);
     LL_TIM_EnableCounter(IR_TX_SIGNAL_TIMER);
 }
 
 void _ir_tx_next_signal() {
-    if (signal_idx >= signal_length) {
-        signal_idx = 0;
+    if (_ir_tx_signal_idx >= _ir_tx_signal_length) {
+        _ir_tx_signal_idx = 0;
         LL_TIM_DisableCounter(IR_TX_CARRIER_TIMER);
         LL_TIM_DisableCounter(IR_TX_SIGNAL_TIMER);
         _ir_tx_enable_gpio(false);
         return;
     }
 
-    uint32_t on_t = signal[signal_idx] * (SystemCoreClock / 100000);
-    uint32_t off_t = signal[signal_idx + 1] * (SystemCoreClock / 100000);
+    uint32_t on_t = _ir_tx_signal[_ir_tx_signal_idx] * (SystemCoreClock / 100000);
+    uint32_t off_t = _ir_tx_signal[_ir_tx_signal_idx + 1] * (SystemCoreClock / 100000);
     uint32_t total_t = on_t + off_t;
 
     LL_TIM_SetAutoReload(IR_TX_SIGNAL_TIMER, total_t);
     IR_TX_LL_TIM_OC_SetCompare(on_t);
-    signal_idx += 2;
+    _ir_tx_signal_idx += 2;
 }
 
 void ir_tx_irq() {
@@ -134,5 +137,9 @@ static void _ir_tx_enable_gpio(bool enable) {
         .Alternate = IR_TX_AF
     };
     LL_GPIO_Init(IR_TX_PORT, &gpio_init);
-    LL_GPIO_ResetOutputPin(IR_TX_PORT, IR_TX_PIN);
+    if (enable) {
+        LL_GPIO_SetOutputPin(IR_TX_PORT, IR_TX_PIN);
+    } else {
+        LL_GPIO_ResetOutputPin(IR_TX_PORT, IR_TX_PIN);
+    }
 }
