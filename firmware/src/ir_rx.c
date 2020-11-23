@@ -1,7 +1,3 @@
-#include <stm32f0xx_ll_bus.h>
-#include <stm32f0xx_ll_gpio.h>
-#include <stm32f0xx_ll_tim.h>
-#include <stm32f0xx_ll_dma.h>
 #include "config.h"
 #include "ir_rx.h"
 #include "lwrb/lwrb.h"
@@ -13,41 +9,9 @@ static size_t ir_rx_dma_data_read_index = 0;
 volatile static size_t _ir_rx_get_pos();
 
 void ir_rx_setup() {
-    LL_APB1_GRP1_EnableClock(IR_RX_PERIPH_TIMER);
-
-    // TIM2 GPIO Configuration
-    // PA0   ------> TIM2_CH1
-    LL_GPIO_InitTypeDef gpi_init = {0};
-    gpi_init.Pin = IR_RX_PIN;
-    gpi_init.Mode = LL_GPIO_MODE_ALTERNATE;
-    gpi_init.Speed = LL_GPIO_SPEED_FREQ_LOW;
-    gpi_init.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-    gpi_init.Pull = LL_GPIO_PULL_NO;
-    gpi_init.Alternate = LL_GPIO_AF_2;
-    LL_GPIO_Init(IR_RX_PORT, &gpi_init);
-
-    LL_TIM_InitTypeDef tim_init = {0};
-    tim_init.Prescaler = IR_RX_TIMER_PRESCALER;
-    tim_init.CounterMode = LL_TIM_COUNTERMODE_UP;
-    tim_init.Autoreload = 4294967295;
-    tim_init.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
-    LL_TIM_Init(IR_RX_TIMER, &tim_init);
-    LL_TIM_DisableARRPreload(IR_RX_TIMER);
-    LL_TIM_SetTriggerOutput(IR_RX_TIMER, LL_TIM_TRGO_RESET);
-    LL_TIM_DisableMasterSlaveMode(IR_RX_TIMER);
-    LL_TIM_IC_SetActiveInput(IR_RX_TIMER, IR_RX_TIMER_CH, LL_TIM_ACTIVEINPUT_DIRECTTI);
-    LL_TIM_IC_SetPrescaler(IR_RX_TIMER, IR_RX_TIMER_CH, LL_TIM_ICPSC_DIV1);
-    LL_TIM_IC_SetFilter(IR_RX_TIMER, IR_RX_TIMER_CH, LL_TIM_IC_FILTER_FDIV1);
-    LL_TIM_IC_SetPolarity(IR_RX_TIMER, IR_RX_TIMER_CH, LL_TIM_IC_POLARITY_BOTHEDGE);
+    LL_TIM_SetPrescaler(IR_RX_TIMER, IR_RX_TIMER_PRESCALER);
 
     // init dma
-    LL_DMA_SetDataTransferDirection(IR_RX_DMA, IR_RX_DMA_CH, LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
-    LL_DMA_SetChannelPriorityLevel(IR_RX_DMA, IR_RX_DMA_CH, LL_DMA_PRIORITY_LOW);
-    LL_DMA_SetMode(IR_RX_DMA, IR_RX_DMA_CH, LL_DMA_MODE_CIRCULAR);
-    LL_DMA_SetPeriphIncMode(IR_RX_DMA, IR_RX_DMA_CH, LL_DMA_PERIPH_NOINCREMENT);
-    LL_DMA_SetMemoryIncMode(IR_RX_DMA, IR_RX_DMA_CH, LL_DMA_MEMORY_INCREMENT);
-    LL_DMA_SetPeriphSize(IR_RX_DMA, IR_RX_DMA_CH, LL_DMA_PDATAALIGN_BYTE);
-    LL_DMA_SetMemorySize(IR_RX_DMA, IR_RX_DMA_CH, LL_DMA_MDATAALIGN_BYTE);
     LL_DMA_EnableIT_TC(IR_RX_DMA, IR_RX_DMA_CH);
     LL_DMA_EnableIT_TE(IR_RX_DMA, IR_RX_DMA_CH);
 

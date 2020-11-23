@@ -19,7 +19,7 @@ void PendSV_Handler() {
 }
 
 void SysTick_Handler() {
-    time_increment_tick();
+    HAL_IncTick();
 }
 
 void DMA1_Channel2_3_IRQHandler() {
