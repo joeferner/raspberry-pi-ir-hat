@@ -6,10 +6,10 @@
 
 static uint32_t ir_tx_signal_length = 8;
 static uint32_t ir_tx_signal[] = {
-    100, 300,
-    200, 100,
-    100, 500,
-    200, 0
+    1000, 3000,
+    2000, 1000,
+    1000, 5000,
+    2000, 0
 };
 
 void setup();
@@ -19,6 +19,7 @@ void setup_system_clock();
 void loop();
 
 void setup() {
+    time_setup();
     debug_setup();
     ir_rx_setup();
     ir_tx_setup();
@@ -26,6 +27,7 @@ void setup() {
 }
 
 void loop() {
+    LL_WWDG_SetCounter(WWDG, 64);
     debug_loop();
     ir_rx_loop();
 }

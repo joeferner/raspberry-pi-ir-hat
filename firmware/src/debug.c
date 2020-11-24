@@ -21,8 +21,8 @@ static size_t _debug_rx_get_pos();
 
 void debug_setup() {
     // USART DMA TX Init
-    LL_DMA_EnableIT_TC(DEBUG_TX_RX_DMA, DEBUG_TX_DMA_CH);
-    LL_DMA_EnableIT_TE(DEBUG_TX_RX_DMA, DEBUG_TX_DMA_CH);
+    LL_DMA_EnableIT_TC(DEBUG_TX_DMA, DEBUG_TX_DMA_CH);
+    LL_DMA_EnableIT_TE(DEBUG_TX_DMA, DEBUG_TX_DMA_CH);
 
     // ring buffers init
     lwrb_init(&uart_tx_dma_ringbuff, uart_tx_dma_lwrb_data, sizeof(uart_tx_dma_lwrb_data));
@@ -30,12 +30,12 @@ void debug_setup() {
     uart_tx_dma_current_len = 0;
 
     // begin rx dma
-    LL_DMA_DisableChannel(DEBUG_TX_RX_DMA, DEBUG_RX_DMA_CH);
+    LL_DMA_DisableChannel(DEBUG_RX_DMA, DEBUG_RX_DMA_CH);
     DEBUG_LL_DMA_ClearFlag_RX_GI();
-    LL_DMA_SetDataLength(DEBUG_TX_RX_DMA, DEBUG_RX_DMA_CH, sizeof(uart_rx_dma_lwrb_data));
-    LL_DMA_SetPeriphAddress(DEBUG_TX_RX_DMA, DEBUG_RX_DMA_CH, LL_USART_DMA_GetRegAddr(DEBUG_USART, LL_USART_DMA_REG_DATA_RECEIVE));
-    LL_DMA_SetMemoryAddress(DEBUG_TX_RX_DMA, DEBUG_RX_DMA_CH, (uint32_t) uart_rx_dma_lwrb_data);
-    LL_DMA_EnableChannel(DEBUG_TX_RX_DMA, DEBUG_RX_DMA_CH);
+    LL_DMA_SetDataLength(DEBUG_RX_DMA, DEBUG_RX_DMA_CH, sizeof(uart_rx_dma_lwrb_data));
+    LL_DMA_SetPeriphAddress(DEBUG_RX_DMA, DEBUG_RX_DMA_CH, LL_USART_DMA_GetRegAddr(DEBUG_USART, LL_USART_DMA_REG_DATA_RECEIVE));
+    LL_DMA_SetMemoryAddress(DEBUG_RX_DMA, DEBUG_RX_DMA_CH, (uint32_t) uart_rx_dma_lwrb_data);
+    LL_DMA_EnableChannel(DEBUG_RX_DMA, DEBUG_RX_DMA_CH);
     LL_USART_EnableDMAReq_RX(DEBUG_USART);
 
     uart_rx_old_pos = _debug_rx_get_pos();
@@ -94,12 +94,12 @@ void _debug_start_tx_dma_transfer() {
         if (uart_tx_dma_current_len > 0) {
             void *p = lwrb_get_linear_block_read_address(&uart_tx_dma_ringbuff);
 
-            LL_DMA_DisableChannel(DEBUG_TX_RX_DMA, DEBUG_TX_DMA_CH);
+            LL_DMA_DisableChannel(DEBUG_TX_DMA, DEBUG_TX_DMA_CH);
             DEBUG_LL_DMA_ClearFlag_TX_GI();
-            LL_DMA_SetDataLength(DEBUG_TX_RX_DMA, DEBUG_TX_DMA_CH, uart_tx_dma_current_len);
-            LL_DMA_SetPeriphAddress(DEBUG_TX_RX_DMA, DEBUG_TX_DMA_CH, LL_USART_DMA_GetRegAddr(DEBUG_USART, LL_USART_DMA_REG_DATA_TRANSMIT));
-            LL_DMA_SetMemoryAddress(DEBUG_TX_RX_DMA, DEBUG_TX_DMA_CH, (uint32_t) p);
-            LL_DMA_EnableChannel(DEBUG_TX_RX_DMA, DEBUG_TX_DMA_CH);
+            LL_DMA_SetDataLength(DEBUG_TX_DMA, DEBUG_TX_DMA_CH, uart_tx_dma_current_len);
+            LL_DMA_SetPeriphAddress(DEBUG_TX_DMA, DEBUG_TX_DMA_CH, LL_USART_DMA_GetRegAddr(DEBUG_USART, LL_USART_DMA_REG_DATA_TRANSMIT));
+            LL_DMA_SetMemoryAddress(DEBUG_TX_DMA, DEBUG_TX_DMA_CH, (uint32_t) p);
+            LL_DMA_EnableChannel(DEBUG_TX_DMA, DEBUG_TX_DMA_CH);
             LL_USART_ClearFlag_TC(DEBUG_USART);
             LL_USART_EnableDMAReq_TX(DEBUG_USART);
         }
@@ -150,5 +150,5 @@ void _debug_dma_rx_complete() {
 }
 
 size_t _debug_rx_get_pos() {
-    return (sizeof(uart_rx_dma_lwrb_data) - LL_DMA_GetDataLength(DEBUG_TX_RX_DMA, DEBUG_RX_DMA_CH));
+    return (sizeof(uart_rx_dma_lwrb_data) - LL_DMA_GetDataLength(DEBUG_RX_DMA, DEBUG_RX_DMA_CH));
 }
