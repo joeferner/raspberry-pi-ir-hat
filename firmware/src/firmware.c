@@ -1,5 +1,6 @@
 #include "config.h"
 #include "debug.h"
+#include "rpi.h"
 #include "ir_rx.h"
 #include "ir_tx.h"
 #include "time.h"
@@ -21,6 +22,7 @@ void loop();
 void setup() {
     time_setup();
     debug_setup();
+    rpi_setup();
     ir_rx_setup();
     ir_tx_setup();
     debug_send_string("READY\n");
@@ -29,10 +31,15 @@ void setup() {
 void loop() {
     LL_WWDG_SetCounter(WWDG, 64);
     debug_loop();
+    rpi_loop();
     ir_rx_loop();
 }
 
 void debug_rx(const uint8_t *data, size_t data_len) {
+    debug_send_string("-ERR\n");
+}
+
+void rpi_rx(const uint8_t *data, size_t data_len) {
     debug_send_string("OK ");
     debug_tx(data, data_len);
     debug_send_string("\n");
