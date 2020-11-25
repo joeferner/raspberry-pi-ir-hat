@@ -1,6 +1,3 @@
-#include <stm32f0xx_ll_gpio.h>
-#include <stm32f0xx_ll_bus.h>
-#include <stm32f0xx_ll_tim.h>
 #include <stdbool.h>
 #include "config.h"
 #include "ir_tx.h"
@@ -13,10 +10,16 @@ static void _ir_tx_next_signal();
 
 static void _ir_tx_enable_gpio(bool enable);
 
+static uint32_t _ir_tx_temp_signal[] = {1000, 1000};
+
 void ir_tx_setup() {
     _ir_tx_enable_gpio(false);
-    NVIC_EnableIRQ(IR_TX_SIGNAL_IRQ);
-    NVIC_SetPriority(IR_TX_SIGNAL_IRQ, 0);
+    LL_SYSCFG_SetIRPolarity(LL_SYSCFG_IR_POL_INVERTED);
+    NVIC_EnableIRQ(IR_OUT_SIGNAL_IRQ);
+    NVIC_SetPriority(IR_OUT_SIGNAL_IRQ, 0);
+
+    // Not sure why we need this but the first transmit is always wrong
+    ir_tx_send(38000, _ir_tx_temp_signal, 2);
 }
 
 /**
@@ -27,119 +30,61 @@ void ir_tx_send(uint32_t carrier_freq, uint32_t *signal, size_t signal_length) {
     _ir_tx_signal = signal;
     _ir_tx_signal_length = signal_length;
 
-    LL_TIM_InitTypeDef tim_init = {0};
-    LL_TIM_OC_InitTypeDef tim_oc_init = {0};
-    LL_TIM_BDTR_InitTypeDef tim_bdtr_init = {0};
-
     // init carrier timer
-    uint32_t carrier_counter = carrier_freq / (SystemCoreClock / 44444);
-
-    LL_APB1_GRP2_EnableClock(IR_TX_CARRIER_PERIPH_TIMER);
-    tim_init.Prescaler = 0;
-    tim_init.CounterMode = LL_TIM_COUNTERMODE_DOWN;
-    tim_init.Autoreload = carrier_counter;
-    tim_init.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
-    tim_init.RepetitionCounter = 0;
-    LL_TIM_Init(IR_TX_CARRIER_TIMER, &tim_init);
-    LL_TIM_DisableARRPreload(IR_TX_CARRIER_TIMER);
-    LL_TIM_OC_EnablePreload(IR_TX_CARRIER_TIMER, IR_TX_CARRIER_CHANNEL);
-    tim_oc_init.OCMode = LL_TIM_OCMODE_PWM1;
-    tim_oc_init.OCState = LL_TIM_OCSTATE_ENABLE;
-    tim_oc_init.OCNState = LL_TIM_OCSTATE_DISABLE;
-    tim_oc_init.CompareValue = (carrier_counter / 4); // 25% duty cycle
-    tim_oc_init.OCPolarity = LL_TIM_OCPOLARITY_HIGH;
-    tim_oc_init.OCNPolarity = LL_TIM_OCPOLARITY_HIGH;
-    tim_oc_init.OCIdleState = LL_TIM_OCIDLESTATE_LOW;
-    tim_oc_init.OCNIdleState = LL_TIM_OCIDLESTATE_LOW;
-    LL_TIM_OC_Init(IR_TX_CARRIER_TIMER, IR_TX_CARRIER_CHANNEL, &tim_oc_init);
-    LL_TIM_OC_DisableFast(IR_TX_CARRIER_TIMER, IR_TX_CARRIER_CHANNEL);
-    tim_bdtr_init.OSSRState = LL_TIM_OSSR_DISABLE;
-    tim_bdtr_init.OSSIState = LL_TIM_OSSI_DISABLE;
-    tim_bdtr_init.LockLevel = LL_TIM_LOCKLEVEL_OFF;
-    tim_bdtr_init.DeadTime = 0;
-    tim_bdtr_init.BreakState = LL_TIM_BREAK_DISABLE;
-    tim_bdtr_init.BreakPolarity = LL_TIM_BREAK_POLARITY_LOW;
-    tim_bdtr_init.AutomaticOutput = LL_TIM_AUTOMATICOUTPUT_DISABLE;
-    LL_TIM_BDTR_Init(IR_TX_CARRIER_TIMER, &tim_bdtr_init);
-    LL_TIM_EnableAllOutputs(IR_TX_CARRIER_TIMER);
+    uint32_t autoReload = __LL_TIM_CALC_ARR(SystemCoreClock, IR_OUT_CARRIER_PRESCALER, carrier_freq);
+    LL_TIM_SetPrescaler(IR_OUT_CARRIER_TIMER, IR_OUT_CARRIER_PRESCALER);
+    LL_TIM_SetAutoReload(IR_OUT_CARRIER_TIMER, autoReload);
+    LL_TIM_CC_EnableChannel(IR_OUT_CARRIER_TIMER, IR_OUT_CARRIER_CHANNEL);
+    IR_OUT_CARRIER_TIM_OC_SetCompare(autoReload / 4); // 25% duty cycle
+    LL_TIM_EnableAllOutputs(IR_OUT_CARRIER_TIMER);
 
     // init signal timer
-    LL_APB1_GRP2_EnableClock(IR_TX_SIGNAL_PERIPH_TIMER);
-    tim_init.Prescaler = 0;
-    tim_init.CounterMode = LL_TIM_COUNTERMODE_DOWN;
-    tim_init.Autoreload = 0;
-    tim_init.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
-    tim_init.RepetitionCounter = 0;
-    LL_TIM_Init(IR_TX_SIGNAL_TIMER, &tim_init);
-    LL_TIM_DisableARRPreload(IR_TX_SIGNAL_TIMER);
-    LL_TIM_OC_DisablePreload(IR_TX_SIGNAL_TIMER, IR_TX_SIGNAL_CHANNEL);
-    tim_oc_init.OCMode = LL_TIM_OCMODE_PWM1;
-    tim_oc_init.OCState = LL_TIM_OCSTATE_ENABLE;
-    tim_oc_init.OCNState = LL_TIM_OCSTATE_DISABLE;
-    tim_oc_init.CompareValue = 0;
-    tim_oc_init.OCPolarity = LL_TIM_OCPOLARITY_HIGH;
-    tim_oc_init.OCNPolarity = LL_TIM_OCPOLARITY_HIGH;
-    tim_oc_init.OCIdleState = LL_TIM_OCIDLESTATE_LOW;
-    tim_oc_init.OCNIdleState = LL_TIM_OCIDLESTATE_LOW;
-    LL_TIM_OC_Init(IR_TX_SIGNAL_TIMER, IR_TX_SIGNAL_CHANNEL, &tim_oc_init);
-    LL_TIM_OC_DisableFast(IR_TX_SIGNAL_TIMER, IR_TX_SIGNAL_CHANNEL);
-    tim_bdtr_init.OSSRState = LL_TIM_OSSR_DISABLE;
-    tim_bdtr_init.OSSIState = LL_TIM_OSSI_DISABLE;
-    tim_bdtr_init.LockLevel = LL_TIM_LOCKLEVEL_OFF;
-    tim_bdtr_init.DeadTime = 0;
-    tim_bdtr_init.BreakState = LL_TIM_BREAK_DISABLE;
-    tim_bdtr_init.BreakPolarity = LL_TIM_BREAK_POLARITY_HIGH;
-    tim_bdtr_init.AutomaticOutput = LL_TIM_AUTOMATICOUTPUT_DISABLE;
-    LL_TIM_BDTR_Init(IR_TX_SIGNAL_TIMER, &tim_bdtr_init);
-    LL_TIM_EnableAllOutputs(IR_TX_SIGNAL_TIMER);
-    LL_TIM_EnableIT_UPDATE(IR_TX_SIGNAL_TIMER);
+    LL_TIM_SetPrescaler(IR_OUT_SIGNAL_TIMER, IR_OUT_SIGNAL_PRESCALER);
+    LL_TIM_SetAutoReload(IR_OUT_SIGNAL_TIMER, 65000);
+    LL_TIM_OC_DisablePreload(IR_OUT_SIGNAL_TIMER, IR_OUT_SIGNAL_CHANNEL);
+    LL_TIM_EnableIT_UPDATE(IR_OUT_SIGNAL_TIMER);
+    LL_TIM_CC_EnableChannel(IR_OUT_SIGNAL_TIMER, IR_OUT_SIGNAL_CHANNEL);
+    IR_OUT_SIGNAL_TIM_OC_SetCompare(30000);
+    LL_TIM_EnableAllOutputs(IR_OUT_SIGNAL_TIMER);
 
     // begin send
-    _ir_tx_enable_gpio(true);
     _ir_tx_signal_idx = 0;
     _ir_tx_next_signal();
-    LL_TIM_EnableCounter(IR_TX_CARRIER_TIMER);
-    LL_TIM_EnableCounter(IR_TX_SIGNAL_TIMER);
+    _ir_tx_enable_gpio(true);
+    LL_TIM_EnableCounter(IR_OUT_CARRIER_TIMER);
+    LL_TIM_EnableCounter(IR_OUT_SIGNAL_TIMER);
 }
 
 void _ir_tx_next_signal() {
     if (_ir_tx_signal_idx >= _ir_tx_signal_length) {
         _ir_tx_signal_idx = 0;
-        LL_TIM_DisableCounter(IR_TX_CARRIER_TIMER);
-        LL_TIM_DisableCounter(IR_TX_SIGNAL_TIMER);
+        LL_TIM_DisableCounter(IR_OUT_CARRIER_TIMER);
+        LL_TIM_DisableCounter(IR_OUT_SIGNAL_TIMER);
         _ir_tx_enable_gpio(false);
         return;
     }
 
-    uint32_t on_t = _ir_tx_signal[_ir_tx_signal_idx] * (SystemCoreClock / 100000);
-    uint32_t off_t = _ir_tx_signal[_ir_tx_signal_idx + 1] * (SystemCoreClock / 100000);
+    uint32_t on_t = __LL_TIM_CALC_DELAY(SystemCoreClock, IR_OUT_SIGNAL_PRESCALER, _ir_tx_signal[_ir_tx_signal_idx]);
+    uint32_t off_t = __LL_TIM_CALC_DELAY(SystemCoreClock, IR_OUT_SIGNAL_PRESCALER, _ir_tx_signal[_ir_tx_signal_idx + 1]);
     uint32_t total_t = on_t + off_t;
 
-    LL_TIM_SetAutoReload(IR_TX_SIGNAL_TIMER, total_t);
-    IR_TX_LL_TIM_OC_SetCompare(on_t);
+    LL_TIM_SetAutoReload(IR_OUT_SIGNAL_TIMER, total_t);
+    IR_OUT_SIGNAL_TIM_OC_SetCompare(on_t);
     _ir_tx_signal_idx += 2;
 }
 
 void ir_tx_irq() {
-    if (LL_TIM_IsActiveFlag_UPDATE(IR_TX_SIGNAL_TIMER)) {
-        LL_TIM_ClearFlag_UPDATE(IR_TX_SIGNAL_TIMER);
+    if (LL_TIM_IsActiveFlag_UPDATE(IR_OUT_SIGNAL_TIMER)) {
+        LL_TIM_ClearFlag_UPDATE(IR_OUT_SIGNAL_TIMER);
         _ir_tx_next_signal();
     }
 }
 
 static void _ir_tx_enable_gpio(bool enable) {
-    LL_GPIO_InitTypeDef gpio_init = {
-        .Pin = IR_TX_PIN,
-        .Mode = enable ? LL_GPIO_MODE_ALTERNATE : LL_GPIO_MODE_OUTPUT,
-        .Speed = LL_GPIO_SPEED_FREQ_HIGH,
-        .OutputType=LL_GPIO_OUTPUT_PUSHPULL,
-        .Pull = LL_GPIO_PULL_NO,
-        .Alternate = IR_TX_AF
-    };
-    LL_GPIO_Init(IR_TX_PORT, &gpio_init);
+    LL_GPIO_SetPinMode(IR_OUT_PORT, IR_OUT_PIN, enable ? LL_GPIO_MODE_ALTERNATE : LL_GPIO_MODE_OUTPUT);
     if (enable) {
-        LL_GPIO_SetOutputPin(IR_TX_PORT, IR_TX_PIN);
+        LL_GPIO_SetOutputPin(IR_OUT_PORT, IR_OUT_PIN);
     } else {
-        LL_GPIO_ResetOutputPin(IR_TX_PORT, IR_TX_PIN);
+        LL_GPIO_ResetOutputPin(IR_OUT_PORT, IR_OUT_PIN);
     }
 }

@@ -6,4 +6,4 @@ Core/
 .mxproject
 .project
 CMakeLists.txt
-STM32F072RBTX_FLASH.ld
+*_FLASH.ld
