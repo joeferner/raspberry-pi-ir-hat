@@ -6,10 +6,10 @@
 
 static uint32_t ir_tx_signal_length = 8;
 static uint32_t ir_tx_signal[] = {
-    1000, 3000,
-    2000, 1000,
-    1000, 5000,
-    2000, 0
+    5000, 400,
+    1000, 1000,
+    2000, 2000,
+    5000, 0
 };
 
 void setup();

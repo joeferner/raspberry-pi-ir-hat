@@ -44,8 +44,10 @@ extern void Error_Handler();
 
 #define IR_OUT_CARRIER_TIMER            TIM17
 #define IR_OUT_CARRIER_CHANNEL          LL_TIM_CHANNEL_CH1
-#define IR_OUT_CARRIER_TIM_OC_SetCompareCH1(on) LL_TIM_OC_SetCompareCH1(IR_OUT_CARRIER_TIMER, on)
+#define IR_OUT_CARRIER_TIM_OC_SetCompare(on) LL_TIM_OC_SetCompareCH1(IR_OUT_CARRIER_TIMER, on)
+#define IR_OUT_CARRIER_PRESCALER        0
 #define IR_OUT_SIGNAL_TIMER             TIM16
 #define IR_OUT_SIGNAL_CHANNEL           LL_TIM_CHANNEL_CH1
 #define IR_OUT_SIGNAL_IRQ               TIM16_IRQn
-#define IR_OUT_LL_TIM_OC_SetCompare(on) LL_TIM_OC_SetCompareCH1(IR_OUT_SIGNAL_TIMER, on)
+#define IR_OUT_SIGNAL_TIM_OC_SetCompare(on) LL_TIM_OC_SetCompareCH1(IR_OUT_SIGNAL_TIMER, on)
+#define IR_OUT_SIGNAL_PRESCALER         10
