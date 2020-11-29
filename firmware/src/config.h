@@ -45,7 +45,6 @@ extern void Error_Handler();
 #define IR_RX_TIMER           TIM3
 #define IR_RX_TIMER_CH_NO     1
 #define IR_RX_TIMER_CH        CONCAT(LL_TIM_CHANNEL_CH, IR_RX_TIMER_CH_NO)
-#define IR_RX_TIMER_IRQ       TIM3_IRQn
 #define IR_RX_DMA             DMA1
 #define IR_RX_DMA_CH_NO       5
 #define IR_RX_DMA_CH          CONCAT(LL_DMA_CHANNEL_, IR_RX_DMA_CH_NO)

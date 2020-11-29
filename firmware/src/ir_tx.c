@@ -15,8 +15,6 @@ static uint32_t _ir_tx_temp_signal[] = {1000, 1000};
 void ir_tx_setup() {
     _ir_tx_enable_gpio(false);
     LL_SYSCFG_SetIRPolarity(LL_SYSCFG_IR_POL_INVERTED);
-    NVIC_EnableIRQ(IR_OUT_SIGNAL_IRQ);
-    NVIC_SetPriority(IR_OUT_SIGNAL_IRQ, 0);
 
     // Not sure why we need this but the first transmit is always wrong
     ir_tx_send(38000, _ir_tx_temp_signal, 2);

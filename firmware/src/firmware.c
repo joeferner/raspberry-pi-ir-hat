@@ -36,7 +36,9 @@ void loop() {
 }
 
 void debug_rx(const uint8_t *data, size_t data_len) {
-    debug_send_string("-ERR\n");
+    debug_send_string("-ERR ");
+    debug_tx(data, data_len);
+    debug_send_string("\n");
 }
 
 void rpi_rx(const uint8_t *data, size_t data_len) {

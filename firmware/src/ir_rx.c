@@ -16,10 +16,6 @@ void ir_rx_setup() {
     LL_DMA_EnableIT_TC(IR_RX_DMA, IR_RX_DMA_CH);
     LL_DMA_EnableIT_TE(IR_RX_DMA, IR_RX_DMA_CH);
 
-    // enable tim irq
-    NVIC_SetPriority(IR_RX_TIMER_IRQ, 0);
-    NVIC_EnableIRQ(IR_RX_TIMER_IRQ);
-
     // start dma
     LL_DMA_DisableChannel(IR_RX_DMA, IR_RX_DMA_CH);
     IR_RX_LL_DMA_ClearFlag_RX_GI();
