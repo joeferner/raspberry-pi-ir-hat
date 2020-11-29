@@ -41,10 +41,8 @@ void debug_rx(const uint8_t *data, size_t data_len) {
     debug_send_string("\n");
 }
 
-void rpi_rx(const uint8_t *data, size_t data_len) {
-    debug_send_string("OK ");
-    debug_tx(data, data_len);
-    debug_send_string("\n");
+void rpi_rx(const rpi_packet_header *packet) {
+    debug_send_string("OK\n");
     ir_tx_send(NEC_CARRIER_FREQ, ir_tx_signal, ir_tx_signal_length);
 }
 

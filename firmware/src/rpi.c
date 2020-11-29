@@ -3,6 +3,15 @@
 #include "dma_tx_ring_buffer.h"
 #include "dma_rx_ring_buffer.h"
 
+// 0x7e
+#define PACKET_BEGIN  0b01111110u
+// 0x7f
+#define PACKET_END    0b01111111u
+// 0x7d
+#define PACKET_ESCAPE 0b01111101u
+// 0xdf
+#define PACKET_MASK   0b11011111u
+
 #define RX_BUFFER_LEN 512
 
 static dma_tx_ring_buffer uart_tx_dma_ring_buffer;
@@ -14,6 +23,8 @@ static uint8_t uart_rx_dma_ring_buffer_data[RX_BUFFER_LEN] __attribute__ ((align
 static void rpi_dma_tx_complete();
 
 static void rpi_tx_begin_dma(struct dma_tx_ring_buffer_t *rb);
+
+static size_t decode_buffer(uint8_t *buffer, size_t buffer_len, size_t *decoded_size);
 
 void rpi_setup() {
     // USART DMA TX Init
@@ -48,16 +59,25 @@ void rpi_setup() {
 }
 
 void rpi_loop() {
-    uint8_t peek_buffer[RX_BUFFER_LEN];
-    size_t peek_size;
-    peek_size = dma_rx_ring_buffer_peek(&uart_rx_dma_ring_buffer, 0, peek_buffer, sizeof(peek_buffer));
-    for (size_t i = 0; i < peek_size; i++) {
-        if (peek_buffer[i] == '\r' || peek_buffer[i] == '\n') {
-            i++;
-            peek_buffer[i] = '\0';
-            dma_rx_ring_buffer_skip(&uart_rx_dma_ring_buffer, i);
-            rpi_rx(peek_buffer, i);
+    uint8_t b;
+    while (dma_rx_ring_buffer_peek1(&uart_rx_dma_ring_buffer, &b)) {
+        if (b == PACKET_BEGIN) {
+            uint8_t peek_buffer[RX_BUFFER_LEN];
+            size_t peek_size = dma_rx_ring_buffer_peek(&uart_rx_dma_ring_buffer, 0, peek_buffer, sizeof(peek_buffer));
+            size_t decoded_size;
+            size_t encoded_packet_size = decode_buffer(peek_buffer, peek_size, &decoded_size);
+            if (encoded_packet_size > 0) {
+                rpi_packet_header *header = (rpi_packet_header *) peek_buffer;
+                if (RPI_PACKET_IS_VALID_TYPE(header->type) && header->size == decoded_size) {
+                    rpi_rx(header);
+                    dma_rx_ring_buffer_skip(&uart_rx_dma_ring_buffer, encoded_packet_size);
+                } else {
+                    dma_rx_ring_buffer_skip(&uart_rx_dma_ring_buffer, 1);
+                }
+            }
             break;
+        } else {
+            dma_rx_ring_buffer_skip(&uart_rx_dma_ring_buffer, 1);
         }
     }
 }
@@ -94,4 +114,44 @@ static void rpi_tx_begin_dma(struct dma_tx_ring_buffer_t *rb) {
     RPI_LL_DMA_ClearFlag_TX_GI();
     LL_USART_ClearFlag_TC(RPI_USART);
     LL_USART_EnableDMAReq_TX(RPI_USART);
+}
+
+static size_t decode_buffer(uint8_t *buffer, size_t buffer_len, size_t *decoded_size) {
+    uint8_t *read_ptr = buffer;
+    uint8_t *write_ptr = buffer;
+    uint8_t *end = buffer + buffer_len;
+
+    // begin
+    if (read_ptr > end || *read_ptr != PACKET_BEGIN) {
+        return 0;
+    }
+    *write_ptr++ = *read_ptr++;
+
+    // body
+    bool in_escape = false;
+    while (read_ptr < end) {
+        uint8_t b = *read_ptr;
+        if (b == PACKET_END) {
+            break;
+        } else if (b == PACKET_ESCAPE) {
+            in_escape = true;
+            read_ptr++;
+        } else {
+            if (in_escape) {
+                b = b | ~PACKET_MASK;
+                in_escape = false;
+            }
+            *write_ptr++ = b;
+            read_ptr++;
+        }
+    }
+
+    // end
+    if (read_ptr > end || *read_ptr != PACKET_END) {
+        return 0;
+    }
+    *write_ptr++ = *read_ptr++;
+
+    *decoded_size = write_ptr - buffer;
+    return read_ptr - buffer;
 }

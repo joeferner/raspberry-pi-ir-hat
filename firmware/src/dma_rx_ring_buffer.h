@@ -24,6 +24,8 @@ void dma_rx_ring_buffer_init(
 
 size_t dma_rx_ring_buffer_peek(dma_rx_ring_buffer *rb, uint32_t offset, uint8_t *buffer, size_t read_len);
 
+bool dma_rx_ring_buffer_peek1(dma_rx_ring_buffer *rb, uint8_t *b);
+
 void dma_rx_ring_buffer_skip(dma_rx_ring_buffer *rb, size_t len);
 
 #endif
