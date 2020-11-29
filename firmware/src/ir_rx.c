@@ -1,6 +1,7 @@
+#include <stdlib.h>
+#include <string.h>
 #include "config.h"
 #include "ir_rx.h"
-#include "lwrb/lwrb.h"
 #include "time.h"
 
 static ir_rx_value ir_rx_dma_data[IR_RX_BUFFER_SAMPLES];
