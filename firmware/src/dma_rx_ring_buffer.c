@@ -1,6 +1,6 @@
 #include "dma_rx_ring_buffer.h"
 
-static size_t _dma_ring_buffer_get_pos(dma_rx_ring_buffer *rb);
+static size_t dma_ring_buffer_get_pos(dma_rx_ring_buffer *rb);
 
 void dma_rx_ring_buffer_init(
     dma_rx_ring_buffer *rb,
@@ -16,12 +16,12 @@ void dma_rx_ring_buffer_init(
     rb->read_offset = 0;
 }
 
-static size_t _dma_ring_buffer_get_pos(dma_rx_ring_buffer *rb) {
+static size_t dma_ring_buffer_get_pos(dma_rx_ring_buffer *rb) {
     return rb->buffer_length - LL_DMA_GetDataLength(rb->dma, rb->dma_channel);
 }
 
 size_t dma_rx_ring_buffer_peek(dma_rx_ring_buffer *rb, uint32_t offset, uint8_t *buffer, size_t read_len) {
-    size_t write_offset = _dma_ring_buffer_get_pos(rb);
+    size_t write_offset = dma_ring_buffer_get_pos(rb);
     size_t pos = rb->read_offset;
 
     // skip offset
@@ -40,7 +40,7 @@ size_t dma_rx_ring_buffer_peek(dma_rx_ring_buffer *rb, uint32_t offset, uint8_t 
 }
 
 void dma_rx_ring_buffer_skip(dma_rx_ring_buffer *rb, size_t len) {
-    size_t write_offset = _dma_ring_buffer_get_pos(rb);
+    size_t write_offset = dma_ring_buffer_get_pos(rb);
 
     // empty
     if (write_offset == rb->read_offset) {

@@ -1,5 +1,5 @@
-#ifndef _dma_tx_ring_buffer_h_
-#define _dma_tx_ring_buffer_h_
+#ifndef DMA_TX_RING_BUFFER_H
+#define DMA_TX_RING_BUFFER_H
 
 #include "config.h"
 #include <stdint.h>

@@ -1,10 +1,9 @@
-#include <stdlib.h>
 #include "config.h"
 #include "rpi.h"
 #include "dma_tx_ring_buffer.h"
 #include "dma_rx_ring_buffer.h"
 
-#define RX_BUFFER_LEN 256
+#define RX_BUFFER_LEN 512
 
 static dma_tx_ring_buffer uart_tx_dma_ring_buffer;
 static uint8_t uart_tx_dma_ring_buffer_data[256] __attribute__ ((aligned (8)));
@@ -12,9 +11,9 @@ static uint8_t uart_tx_dma_ring_buffer_data[256] __attribute__ ((aligned (8)));
 static dma_rx_ring_buffer uart_rx_dma_ring_buffer;
 static uint8_t uart_rx_dma_ring_buffer_data[RX_BUFFER_LEN] __attribute__ ((aligned (8)));
 
-static void _rpi_dma_tx_complete();
+static void rpi_dma_tx_complete();
 
-static void _rpi_tx_begin_dma(struct dma_tx_ring_buffer_t *rb);
+static void rpi_tx_begin_dma(struct dma_tx_ring_buffer_t *rb);
 
 void rpi_setup() {
     // USART DMA TX Init
@@ -28,7 +27,7 @@ void rpi_setup() {
         sizeof(uart_tx_dma_ring_buffer_data),
         RPI_TX_DMA,
         RPI_TX_DMA_CH,
-        _rpi_tx_begin_dma
+        rpi_tx_begin_dma
     );
     dma_rx_ring_buffer_init(
         &uart_rx_dma_ring_buffer,
@@ -49,7 +48,7 @@ void rpi_setup() {
 }
 
 void rpi_loop() {
-    uint8_t peek_buffer[256];
+    uint8_t peek_buffer[RX_BUFFER_LEN];
     size_t peek_size;
     peek_size = dma_rx_ring_buffer_peek(&uart_rx_dma_ring_buffer, 0, peek_buffer, sizeof(peek_buffer));
     for (size_t i = 0; i < peek_size; i++) {
@@ -63,9 +62,6 @@ void rpi_loop() {
     }
 }
 
-/**
- * \brief do not call this in an interrupt
- */
 void rpi_tx(const uint8_t *data, size_t data_len) {
     dma_tx_ring_buffer_write(&uart_tx_dma_ring_buffer, data, data_len);
 }
@@ -73,7 +69,7 @@ void rpi_tx(const uint8_t *data, size_t data_len) {
 void rpi_dma_irq() {
     if (RPI_LL_DMA_IsActiveFlag_TX_TC()) {
         RPI_LL_DMA_ClearFlag_TX_GI();
-        _rpi_dma_tx_complete();
+        rpi_dma_tx_complete();
     }
 
     if (RPI_LL_DMA_IsActiveFlag_RX_TC()) {
@@ -89,11 +85,11 @@ void rpi_dma_irq() {
     }
 }
 
-void _rpi_dma_tx_complete() {
+void rpi_dma_tx_complete() {
     dma_tx_ring_buffer_irq(&uart_tx_dma_ring_buffer);
 }
 
-static void _rpi_tx_begin_dma(struct dma_tx_ring_buffer_t *rb) {
+static void rpi_tx_begin_dma(struct dma_tx_ring_buffer_t *rb) {
     LL_DMA_SetPeriphAddress(RPI_TX_DMA, RPI_TX_DMA_CH, LL_USART_DMA_GetRegAddr(RPI_USART, LL_USART_DMA_REG_DATA_TRANSMIT));
     RPI_LL_DMA_ClearFlag_TX_GI();
     LL_USART_ClearFlag_TC(RPI_USART);

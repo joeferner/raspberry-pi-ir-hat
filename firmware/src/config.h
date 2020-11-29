@@ -11,8 +11,8 @@
 
 extern void Error_Handler();
 
-#define CONCAT_(A,B) A ## B
-#define CONCAT(A,B) CONCAT_(A,B)
+#define CONCAT_(A, B) A ## B
+#define CONCAT(A, B) CONCAT_(A,B)
 
 #define DEBUG_USART        USART1
 #define DEBUG_TX_DMA       DMA1
@@ -61,6 +61,5 @@ extern void Error_Handler();
 #define IR_OUT_CARRIER_PRESCALER        0
 #define IR_OUT_SIGNAL_TIMER             TIM16
 #define IR_OUT_SIGNAL_CHANNEL           LL_TIM_CHANNEL_CH1
-#define IR_OUT_SIGNAL_IRQ               TIM16_IRQn
 #define IR_OUT_SIGNAL_TIM_OC_SetCompare(on) LL_TIM_OC_SetCompareCH1(IR_OUT_SIGNAL_TIMER, on)
 #define IR_OUT_SIGNAL_PRESCALER         10

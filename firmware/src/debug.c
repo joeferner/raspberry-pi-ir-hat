@@ -13,9 +13,9 @@ static uint8_t uart_tx_dma_ring_buffer_data[256] __attribute__ ((aligned (8)));
 static dma_rx_ring_buffer uart_rx_dma_ring_buffer;
 static uint8_t uart_rx_dma_ring_buffer_data[RX_BUFFER_LEN] __attribute__ ((aligned (8)));
 
-static void _debug_dma_tx_complete();
+static void debug_dma_tx_complete();
 
-static void _debug_tx_begin_dma(struct dma_tx_ring_buffer_t *rb);
+static void debug_tx_begin_dma(struct dma_tx_ring_buffer_t *rb);
 
 void debug_setup() {
     // USART DMA TX Init
@@ -29,7 +29,7 @@ void debug_setup() {
         sizeof(uart_tx_dma_ring_buffer_data),
         DEBUG_TX_DMA,
         DEBUG_TX_DMA_CH,
-        _debug_tx_begin_dma
+        debug_tx_begin_dma
     );
     dma_rx_ring_buffer_init(
         &uart_rx_dma_ring_buffer,
@@ -81,7 +81,7 @@ void debug_tx(const uint8_t *data, size_t data_len) {
 void debug_dma_irq() {
     if (DEBUG_LL_DMA_IsActiveFlag_TX_TC()) {
         DEBUG_LL_DMA_ClearFlag_TX_GI();
-        _debug_dma_tx_complete();
+        debug_dma_tx_complete();
     }
 
     if (DEBUG_LL_DMA_IsActiveFlag_RX_TC()) {
@@ -97,11 +97,11 @@ void debug_dma_irq() {
     }
 }
 
-void _debug_dma_tx_complete() {
+void debug_dma_tx_complete() {
     dma_tx_ring_buffer_irq(&uart_tx_dma_ring_buffer);
 }
 
-void _debug_tx_begin_dma(struct dma_tx_ring_buffer_t *rb) {
+void debug_tx_begin_dma(struct dma_tx_ring_buffer_t *rb) {
     LL_DMA_SetPeriphAddress(DEBUG_TX_DMA, DEBUG_TX_DMA_CH, LL_USART_DMA_GetRegAddr(DEBUG_USART, LL_USART_DMA_REG_DATA_TRANSMIT));
     DEBUG_LL_DMA_ClearFlag_TX_GI();
     LL_USART_ClearFlag_TC(DEBUG_USART);

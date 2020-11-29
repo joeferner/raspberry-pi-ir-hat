@@ -7,7 +7,7 @@
 static ir_rx_value ir_rx_dma_data[IR_RX_BUFFER_SAMPLES];
 static size_t ir_rx_dma_data_read_index = 0;
 
-volatile static size_t _ir_rx_get_pos();
+volatile static size_t ir_rx_get_pos();
 
 void ir_rx_setup() {
     uint32_t prescaler = __LL_TIM_CALC_PSC(SystemCoreClock, 1000000);
@@ -27,7 +27,7 @@ void ir_rx_setup() {
     LL_DMA_EnableChannel(IR_RX_DMA, IR_RX_DMA_CH);
 
     memset(ir_rx_dma_data, 0, sizeof(ir_rx_dma_data));
-    ir_rx_dma_data_read_index = _ir_rx_get_pos();
+    ir_rx_dma_data_read_index = ir_rx_get_pos();
 
     IR_RX_LL_TIM_EnableIT_CC();
     IR_RX_LL_TIM_EnableDMAReq_CC();
@@ -39,7 +39,7 @@ void ir_rx_loop() {
     static ir_rx_value last_value = 0;
     static uint32_t last_tick = 0;
 
-    while (_ir_rx_get_pos() != ir_rx_dma_data_read_index) {
+    while (ir_rx_get_pos() != ir_rx_dma_data_read_index) {
         ir_rx_value value = ir_rx_dma_data[ir_rx_dma_data_read_index++];
         if (ir_rx_dma_data_read_index >= IR_RX_BUFFER_SAMPLES) {
             ir_rx_dma_data_read_index = 0;
@@ -55,7 +55,7 @@ void ir_rx_loop() {
     }
 }
 
-volatile static size_t _ir_rx_get_pos() {
+volatile static size_t ir_rx_get_pos() {
     return (IR_RX_BUFFER_SAMPLES - LL_DMA_GetDataLength(IR_RX_DMA, IR_RX_DMA_CH));
 }
 

@@ -1,8 +1,8 @@
 #include "dma_tx_ring_buffer.h"
 
-static void _dma_tx_ring_buffer_begin_dma_transfer(dma_tx_ring_buffer *rb);
+static void dma_tx_ring_buffer_begin_dma_transfer(dma_tx_ring_buffer *rb);
 
-static bool _dma_tx_ring_buffer_is_full(dma_tx_ring_buffer *rb);
+static bool dma_tx_ring_buffer_is_full(dma_tx_ring_buffer *rb);
 
 void dma_tx_ring_buffer_init(
     dma_tx_ring_buffer *rb,
@@ -28,18 +28,18 @@ void dma_tx_ring_buffer_write(dma_tx_ring_buffer *rb, const uint8_t *data, size_
         Error_Handler();
     }
     while (data_len > 0) {
-        if (_dma_tx_ring_buffer_is_full(rb)) {
-            _dma_tx_ring_buffer_begin_dma_transfer(rb);
+        if (dma_tx_ring_buffer_is_full(rb)) {
+            dma_tx_ring_buffer_begin_dma_transfer(rb);
         } else {
             rb->buffer[rb->write_offset] = *data++;
             rb->write_offset = (rb->write_offset + 1) % rb->buffer_length;
             data_len--;
         }
     }
-    _dma_tx_ring_buffer_begin_dma_transfer(rb);
+    dma_tx_ring_buffer_begin_dma_transfer(rb);
 }
 
-static bool _dma_tx_ring_buffer_is_full(dma_tx_ring_buffer *rb) {
+static bool dma_tx_ring_buffer_is_full(dma_tx_ring_buffer *rb) {
     return ((rb->write_offset + 1) % rb->buffer_length) == rb->read_offset;
 }
 
@@ -47,11 +47,11 @@ void dma_tx_ring_buffer_irq(dma_tx_ring_buffer *rb) {
     if (LL_DMA_GetDataLength(rb->dma, rb->dma_channel) == 0) {
         rb->read_offset = (rb->read_offset + rb->tx_length) % rb->buffer_length;
         rb->tx_length = 0;
-        _dma_tx_ring_buffer_begin_dma_transfer(rb);
+        dma_tx_ring_buffer_begin_dma_transfer(rb);
     }
 }
 
-static void _dma_tx_ring_buffer_begin_dma_transfer(dma_tx_ring_buffer *rb) {
+static void dma_tx_ring_buffer_begin_dma_transfer(dma_tx_ring_buffer *rb) {
     if (!rb->begin_dma_lock) {
         rb->begin_dma_lock = true;
         if (LL_DMA_GetDataLength(rb->dma, rb->dma_channel) == 0) {

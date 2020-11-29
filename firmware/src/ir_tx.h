@@ -1,5 +1,5 @@
-#ifndef _ir_tx_h_
-#define _ir_tx_h_
+#ifndef IR_TX_H
+#define IR_TX_H
 
 #include <stdint.h>
 #include <stddef.h>

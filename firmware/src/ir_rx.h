@@ -1,5 +1,5 @@
-#ifndef _ir_rx_h_
-#define _ir_rx_h_
+#ifndef IR_RX_H
+#define IR_RX_H
 
 #include "stdint.h"
 
