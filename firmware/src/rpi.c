@@ -3,7 +3,7 @@
 #include "dma_tx_ring_buffer.h"
 #include "dma_rx_ring_buffer.h"
 
-// 0x7e
+// 0x7e (126)
 #define PACKET_BEGIN  0b01111110u
 // 0x7f
 #define PACKET_END    0b01111111u
@@ -25,6 +25,8 @@ static void rpi_dma_tx_complete();
 static void rpi_tx_begin_dma(struct dma_tx_ring_buffer_t *rb);
 
 static size_t decode_buffer(uint8_t *buffer, size_t buffer_len, size_t *decoded_size);
+
+static size_t encode_packet(uint8_t *dest, uint8_t *data, size_t data_len);
 
 void rpi_setup() {
     // USART DMA TX Init
@@ -82,8 +84,17 @@ void rpi_loop() {
     }
 }
 
-void rpi_tx(const uint8_t *data, size_t data_len) {
-    dma_tx_ring_buffer_write(&uart_tx_dma_ring_buffer, data, data_len);
+void rpi_ir_rx_received(uint32_t value) {
+    uint8_t buffer[(sizeof(rpi_packet_rx_ir) + 1 /* start */ + 1 /* end */) * 2 /* worst case each byte needs encoding */];
+
+    rpi_packet_rx_ir rx;
+    rx.header.begin = PACKET_BEGIN;
+    rx.header.type = RPI_PACKET_RX_IR;
+    rx.header.size = sizeof(rpi_packet_rx_ir);
+    rx.value = value;
+
+    size_t len = encode_packet(buffer, ((uint8_t *) &rx) + 1, sizeof(rpi_packet_rx_ir));
+    dma_tx_ring_buffer_write(&uart_tx_dma_ring_buffer, buffer, len);
 }
 
 void rpi_dma_irq() {
@@ -154,4 +165,23 @@ static size_t decode_buffer(uint8_t *buffer, size_t buffer_len, size_t *decoded_
 
     *decoded_size = write_ptr - buffer;
     return read_ptr - buffer;
+}
+
+static size_t encode_packet(uint8_t *dest, uint8_t *data, size_t data_len) {
+    uint8_t *p = dest;
+    *p++ = PACKET_BEGIN;
+
+    uint8_t *in = data;
+    while ((in - data) < data_len) {
+        uint8_t b = *in++;
+        if (b == PACKET_BEGIN || b == PACKET_END || b == PACKET_ESCAPE) {
+            *p++ = PACKET_ESCAPE;
+            *p++ = b & PACKET_MASK;
+        } else {
+            *p++ = b;
+        }
+    }
+
+    *p++ = PACKET_END;
+    return p - dest;
 }

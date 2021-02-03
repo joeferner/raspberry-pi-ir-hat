@@ -60,7 +60,11 @@ volatile static size_t ir_rx_get_pos() {
 }
 
 void ir_rx_irq() {
-    if (IR_RX_LL_TIM_IsActiveFlag_CC()) {
+    if (IR_RX_LL_DMA_IsActiveFlag_RX_TC()) {
+        IR_RX_LL_DMA_ClearFlag_RX_GI();
+    }
+
+    if (IR_RX_LL_DMA_IsActiveFlag_RX_GI()) {
         IR_RX_LL_DMA_ClearFlag_RX_GI();
     }
 }

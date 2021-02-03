@@ -3,6 +3,7 @@
 #include "ir_rx.h"
 #include "ir_tx.h"
 #include "time.h"
+#include "rpi.h"
 
 void NMI_Handler() {
 }
@@ -23,14 +24,20 @@ void SysTick_Handler() {
 
 void DMA1_Channel1_IRQHandler() {
     debug_dma_irq();
+    ir_rx_irq();
+    rpi_dma_irq();
 }
 
 void DMA1_Channel2_3_IRQHandler() {
     debug_dma_irq();
+    ir_rx_irq();
+    rpi_dma_irq();
 }
 
 void DMA1_Channel4_5_6_7_IRQHandler() {
+    debug_dma_irq();
     ir_rx_irq();
+    rpi_dma_irq();
 }
 
 void TIM3_IRQHandler() {

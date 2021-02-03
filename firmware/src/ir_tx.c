@@ -2,7 +2,7 @@
 #include "config.h"
 #include "ir_tx.h"
 
-static uint32_t *ir_tx_signal = NULL;
+static const uint32_t *ir_tx_signal = NULL;
 static uint32_t ir_tx_signal_length = 0;
 static uint32_t ir_tx_signal_idx = 0;
 static uint32_t ir_tx_temp_signal[] = {1000, 1000};
@@ -23,7 +23,7 @@ void ir_tx_setup() {
  * @brief the caller owns the signal buffer and must retain it until the send is complete which
  *        happens async
  */
-void ir_tx_send(uint32_t carrier_freq, uint32_t *signal, size_t signal_length) {
+void ir_tx_send(uint32_t carrier_freq, const uint32_t *signal, size_t signal_length) {
     ir_tx_signal = signal;
     ir_tx_signal_length = signal_length;
 

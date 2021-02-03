@@ -1,0 +1,57 @@
+{
+  "name": "raspberry-pi-ir-hat",
+  "version": "0.0.1",
+  "description": "Raspberry PI IR hat driver",
+  "main": "dist/index.js",
+  "scripts": {
+    "prepare": "rm -rf dist && npm run build",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "test": "jest",
+    "test:watch": "jest --notify --watch",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "eslint --fix --ext .ts .",
+    "lint-staged": "lint-staged",
+    "pre-commit": "npm run format && npm run lint-staged && npm run build && npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/joeferner/raspberry-pi-ir-hat.git"
+  },
+  "keywords": [
+    "raspberry",
+    "ir",
+    "rpi"
+  ],
+  "author": "Joe Ferner <joe@fernsroth.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/joeferner/raspberry-pi-ir-hat/issues"
+  },
+  "homepage": "https://github.com/joeferner/raspberry-pi-ir-hat#readme",
+  "dependencies": {
+    "debug": "4.3.x",
+    "serialport": "9.0.x"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "7.x",
+    "@babel/preset-typescript": "7.x",
+    "@types/debug": "4.x",
+    "@types/jest": "26.x",
+    "@types/node": "14.x",
+    "@types/serialport": "8.x",
+    "@typescript-eslint/eslint-plugin": "4.x",
+    "@typescript-eslint/parser": "4.x",
+    "eslint": "7.x",
+    "husky": "4.x",
+    "jest": "26.x",
+    "lint-staged": "10.x",
+    "prettier": "2.x",
+    "typescript": "4.x"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run pre-commit"
+    }
+  }
+}

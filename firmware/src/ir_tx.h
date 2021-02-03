@@ -8,7 +8,7 @@
 
 void ir_tx_setup();
 
-void ir_tx_send(uint32_t carrier_freq, uint32_t *signal, size_t signal_length);
+void ir_tx_send(uint32_t carrier_freq, const uint32_t *signal, size_t signal_length);
 
 void ir_tx_irq();
 
