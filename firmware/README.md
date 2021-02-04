@@ -24,7 +24,7 @@
    1. **IR Rx LED**: Set PA7 to GPIO_Output and name it `IR_IN_LED`
    1. **IR Rx TIM**
       - Enable TIM3 "Timers" -> "Channel1" -> "Input Capture direct mode"
-      - "Input Capture Channel 1" -> "Polarity Selection" -> "Both Edges"
+      - Parameter Settings: "Input Capture Channel 1" -> "Polarity Selection" -> "Both Edges"
       - DMA Settings: TIM3_CH1
         - Mode: Circular
       - NVIC Settings: Enable TIM3 global interrupt 

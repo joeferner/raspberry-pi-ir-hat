@@ -7,32 +7,33 @@ import {
     RxPacket,
     TxPacket,
 } from './packets';
+import Debug from 'debug';
+
+const debug = Debug('raspberry-pi-ir-hat:PacketDecoder');
 
 export class PacketDecoder extends Transform {
     _transform(chunk: Buffer, encoding: BufferEncoding, callback: TransformCallback): void {
-        try {
-            const size = chunk.readUInt16LE(1);
-            if (size !== chunk.length) {
-                return callback(new Error(`invalid packet size, expected ${chunk.length} found ${size}`));
-            } else {
-                switch (chunk[0]) {
-                    case PACKET_TYPE_TX_IR:
-                        this.push(JSON.stringify(PacketDecoder.decodeTxIr(chunk)));
-                        break;
-                    case PACKET_TYPE_RX_IR:
-                        this.push(JSON.stringify(PacketDecoder.decodeRxIr(chunk)));
-                        break;
-                    case PACKET_TYPE_RESPONSE:
-                        this.push(JSON.stringify(PacketDecoder.decodeResponse(chunk)));
-                        break;
-                    default:
-                        return callback(new Error(`invalid packet type: 0x${chunk[0].toString(16)}`));
-                }
+        const size = chunk.readUInt16LE(1);
+        if (size !== chunk.length) {
+            debug(`invalid packet size, expected ${chunk.length} found ${size}`);
+            return callback();
+        } else {
+            switch (chunk[0]) {
+                case PACKET_TYPE_TX_IR:
+                    this.push(JSON.stringify(PacketDecoder.decodeTxIr(chunk)));
+                    break;
+                case PACKET_TYPE_RX_IR:
+                    this.push(JSON.stringify(PacketDecoder.decodeRxIr(chunk)));
+                    break;
+                case PACKET_TYPE_RESPONSE:
+                    this.push(JSON.stringify(PacketDecoder.decodeResponse(chunk)));
+                    break;
+                default:
+                    debug(`invalid packet type: 0x${chunk[0].toString(16)}`);
+                    return callback();
             }
-            callback();
-        } catch (err) {
-            callback(err);
         }
+        return callback();
     }
 
     private static decodeResponse(chunk: Buffer): ResponsePacket {

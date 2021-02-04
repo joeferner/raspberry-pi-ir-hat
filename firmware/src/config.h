@@ -48,7 +48,7 @@ extern void Error_Handler();
 #define IR_RX_DMA             DMA1
 #define IR_RX_DMA_CH_NO       5
 #define IR_RX_DMA_CH          CONCAT(LL_DMA_CHANNEL_, IR_RX_DMA_CH_NO)
-#define IR_RX_BUFFER_SAMPLES  100
+#define IR_RX_BUFFER_SAMPLES  128
 #define IR_RX_CAPTURE_REG_ADDR            (&(IR_RX_TIMER->CCR1))
 #define IR_RX_LL_TIM_EnableIT_CC()        CONCAT(LL_TIM_EnableIT_CC, IR_RX_TIMER_CH_NO)(IR_RX_TIMER)
 #define IR_RX_LL_TIM_EnableDMAReq_CC()    CONCAT(LL_TIM_EnableDMAReq_CC, IR_RX_TIMER_CH_NO)(IR_RX_TIMER)

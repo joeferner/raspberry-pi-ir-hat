@@ -61,7 +61,7 @@ void rpi_rx_tx_ir(const rpi_packet_tx_ir *signal_packet) {
     ir_tx_send(signal_packet->frequency, signal, signal_packet->signal_length);
 }
 
-void ir_rx_received(ir_rx_value value) {
+void ir_rx_received(uint32_t value) {
     rpi_ir_rx_received(value);
 
     debug_send_string("P");

@@ -3,13 +3,11 @@
 
 #include "stdint.h"
 
-typedef uint32_t ir_rx_value;
-
 void ir_rx_setup();
 
 void ir_rx_loop();
 
-extern void ir_rx_received(ir_rx_value value);
+extern void ir_rx_received(uint32_t value);
 
 void ir_rx_irq();
 
