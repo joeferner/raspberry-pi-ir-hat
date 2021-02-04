@@ -14,6 +14,11 @@
     "lint-staged": "lint-staged",
     "pre-commit": "npm run format && npm run lint-staged && npm run build && npm run test"
   },
+  "bin": {
+    "irlearn": "./dist/irlearn.js",
+    "irplay": "./dist/irplay.js",
+    "irlisten": "./dist/irlisten.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/joeferner/raspberry-pi-ir-hat.git"

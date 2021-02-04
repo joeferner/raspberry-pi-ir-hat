@@ -1,7 +1,7 @@
-import { IrFile, RaspberryPiIrHat, readIrFile, writeIrFile } from './';
+#!/usr/bin/env node
+
+import { IrFile, RaspberryPiIrHat, readIrFile, Remote, Signal, writeIrFile } from './';
 import yargs from 'yargs';
-import { Signal } from './Signal';
-import { Remote } from './IrFile';
 
 interface Options {
     file: string;

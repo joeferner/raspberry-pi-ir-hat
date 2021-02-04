@@ -1,6 +1,6 @@
 import { RaspberryPiIrHatRaw } from './RaspberryPiIrHatRaw';
 import { AhoCorasick, AhoCorasickButton, AhoCorasickOptions } from './AhoCorasick';
-import { RxPacket, TxPacket } from './packets';
+import { NEC_CARRIER_FREQUENCY, PACKET_TYPE_TX_IR, RxPacket } from './packets';
 import * as events from 'events';
 import { IrFile } from './IrFile';
 import Debug from 'debug';
@@ -31,10 +31,12 @@ export class RaspberryPiIrHat extends events.EventEmitter {
     };
     private readonly _hat: RaspberryPiIrHatRaw;
     private readonly _ahoCorasick: AhoCorasick;
+    private readonly _buttons: IrFile;
 
     constructor(options: RaspberryPiIrHatOptions) {
         super();
         this._hat = new RaspberryPiIrHatRaw(options.serialPortPath);
+        this._buttons = options.buttons;
         this._ahoCorasick = new AhoCorasick(toAhoCorasickButtons(options.buttons), options.ahoCorasickOptions);
 
         this._hat.on('rxir', (packet) => {
@@ -46,8 +48,23 @@ export class RaspberryPiIrHat extends events.EventEmitter {
         return this._hat.open();
     }
 
-    transmit(packet: TxPacket): Promise<void> {
-        return this._hat.transmit(packet);
+    transmit(remoteName: string, buttonName: string): Promise<void> {
+        const remote = this._buttons.remotes[remoteName];
+        if (!remote) {
+            throw new Error(`Could not find remote: ${remoteName}`);
+        }
+        const button = remote.buttons[buttonName];
+        if (!button) {
+            throw new Error(`Could not find button ${buttonName} on remote ${remoteName}`);
+        }
+
+        const signal = button.signal.split(',').map((b) => parseInt(b));
+
+        return this._hat.transmit({
+            type: PACKET_TYPE_TX_IR,
+            frequency: NEC_CARRIER_FREQUENCY,
+            signal,
+        });
     }
 
     private _handleRxIrPacket(packet: RxPacket) {

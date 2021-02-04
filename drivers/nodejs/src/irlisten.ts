@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { RaspberryPiIrHat, readIrFile } from './';
 import yargs from 'yargs';
 
