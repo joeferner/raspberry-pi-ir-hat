@@ -24,9 +24,6 @@ void dma_tx_ring_buffer_init(
 }
 
 void dma_tx_ring_buffer_write(dma_tx_ring_buffer *rb, const uint8_t *data, size_t data_len) {
-    if (data_len > rb->buffer_length) {
-        Error_Handler();
-    }
     while (data_len > 0) {
         if (dma_tx_ring_buffer_is_full(rb)) {
             dma_tx_ring_buffer_begin_dma_transfer(rb);

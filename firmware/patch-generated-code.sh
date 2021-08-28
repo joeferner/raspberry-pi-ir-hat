@@ -47,5 +47,4 @@ done
 
 echo "#endif" >> Core/Inc/config_generated.h
 
-
 echo "complete"

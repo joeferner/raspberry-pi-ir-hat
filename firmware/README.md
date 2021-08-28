@@ -2,7 +2,7 @@
 
 1. Select MCU STM32G031F4
 1. Pinout & Configuration
-   1. **Programming Port**: Enable "System Core" -> "Mode" -> "Serial Wire"
+   1. **Programming Port**: Enable "System Core" -> "SYS" -> "Mode" -> "Serial Wire"
    1. **Debug USART**
       1. Enable USART1 "Connectivity" -> "USART1" -> "Mode" -> "Asynchronous"
       1. Baud Rate: 57600
@@ -28,10 +28,10 @@
       - DMA Settings: TIM3_CH1
         - Mode: Circular
       - NVIC Settings: Enable TIM3 global interrupt 
-   1. **Reset Pin**: Set PF2 to GPIO_Input
+   1. **Reset Pin**: Set PF2 to GPIO_Input and name it `RESET`
    1. Enable WWDG
 1. Project Manager
-   1. Project -> Toolchain/IDE -> STM32CubeIDE
+   1. Project -> Toolchain/IDE -> Makefile
    1. Advanced Settings -> Driver Selector -> Set all to LL (Low Level)
 
 # Enable STLink
