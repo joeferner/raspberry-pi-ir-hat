@@ -1,8 +1,8 @@
 #ifndef IR_TX_H
 #define IR_TX_H
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #define NEC_CARRIER_FREQ 38000
 
