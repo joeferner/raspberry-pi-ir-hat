@@ -6,7 +6,7 @@
 #include <stm32g0xx_ll_tim.h>
 #include <stm32g0xx_ll_dma.h>
 #include <stm32g0xx_ll_usart.h>
-#include <stm32g0xx_ll_wwdg.h>
+#include <stm32g0xx_ll_iwdg.h>
 #include "config_generated.h"
 
 extern void Error_Handler();

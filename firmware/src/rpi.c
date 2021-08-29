@@ -2,6 +2,8 @@
 #include "rpi.h"
 #include "dma_tx_ring_buffer.h"
 #include "dma_rx_ring_buffer.h"
+#include <stdlib.h>
+#include <string.h>
 
 #define RX_BUFFER_LEN 512
 
@@ -48,16 +50,36 @@ void rpi_setup()
 
 void rpi_loop()
 {
-    uint8_t b;
-    while (dma_rx_ring_buffer_peek1(&uart_rx_dma_ring_buffer, &b))
+    uint8_t peek_buffer[RX_BUFFER_LEN + 1];
+    size_t peek_size;
+    peek_size = dma_rx_ring_buffer_peek(&uart_rx_dma_ring_buffer, 0, peek_buffer, sizeof(peek_buffer));
+    for (size_t i = 0; i < peek_size; i++)
     {
-        dma_rx_ring_buffer_skip(&uart_rx_dma_ring_buffer, 1);
+        if (peek_buffer[i] == '\r' || peek_buffer[i] == '\n')
+        {
+            peek_buffer[i] = '\0';
+            dma_rx_ring_buffer_skip(&uart_rx_dma_ring_buffer, i + 1);
+            rpi_rx((const char *)peek_buffer);
+            break;
+        }
     }
 }
 
-void rpi_ir_rx_received(uint32_t value)
+void rpi_send_string(const char *str)
 {
-    // TODO send value
+    rpi_tx((const uint8_t *)str, strlen(str));
+}
+
+void rpi_send_uint32(uint32_t value)
+{
+    char buffer[15];
+    utoa(value, buffer, 10);
+    rpi_send_string(buffer);
+}
+
+void rpi_tx(const uint8_t *data, size_t data_len)
+{
+    dma_tx_ring_buffer_write(&uart_tx_dma_ring_buffer, data, data_len);
 }
 
 void rpi_dma_irq()

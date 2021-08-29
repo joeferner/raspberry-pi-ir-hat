@@ -19,9 +19,9 @@ if ! (cat Core/Src/main.c | grep -v extern | grep -qE 'loop\(\)'); then
   sed -i -e 's|/\* USER CODE END WHILE \*/|loop();\n    /* USER CODE END WHILE */|' Core/Src/main.c
 fi
 
-if cat Core/Src/main.c | grep -q 'LL_WWDG_Enable'; then
-  echo "patching Core/Src/main.c: removing LL_WWDG_Enable"
-  sed -i -e 's|.*LL_WWDG_Enable.*||' Core/Src/main.c
+if cat Core/Src/main.c | grep -q 'LL_IWDG_Enable'; then
+  echo "patching Core/Src/main.c: removing LL_IWDG_Enable"
+  sed -i -e 's|.*LL_IWDG_Enable.*||' Core/Src/main.c
 fi
 
 for f in Core/Src/stm32g0xx_it.c; do
