@@ -14,7 +14,7 @@ void rpi_send_uint32(uint32_t value);
 
 void rpi_tx(const uint8_t *data, size_t data_len);
 
-extern void rpi_rx(const char *data);
+extern void rpi_rx(char *data);
 
 void rpi_dma_irq();
 

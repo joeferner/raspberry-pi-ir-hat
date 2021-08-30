@@ -8,6 +8,8 @@
 #include "rpi.h"
 #include "time.h"
 
+#define IR_TX_BUFFER_LEN_BEFORE_SEND 10
+
 typedef void (*send_string)(const char *);
 
 void setup();
@@ -16,7 +18,7 @@ void setup_system_clock();
 
 void loop();
 
-void process_rx(const char *data, send_string send_string);
+void process_rx(char *data, send_string send_string);
 
 void setup() {
   time_setup();
@@ -24,8 +26,8 @@ void setup() {
   rpi_setup();
   ir_rx_setup();
   ir_tx_setup();
-  debug_send_string("READY\n");
-  LL_IWDG_Enable(IWDG);
+  debug_send_string("?READY\n");
+  //LL_IWDG_Enable(IWDG);
 }
 
 void loop() {
@@ -35,15 +37,37 @@ void loop() {
   ir_rx_loop();
 }
 
-void debug_rx(const char *data) { process_rx(data, debug_send_string); }
+void debug_rx(char *data) { process_rx(data, debug_send_string); }
 
-void rpi_rx(const char *data) { process_rx(data, rpi_send_string); }
+void rpi_rx(char *data) { process_rx(data, rpi_send_string); }
 
-void process_rx(const char *data, send_string send_string) {
+void process_rx(char *data, send_string send_string) {
   if (strcmp(data, "+iwdg") == 0) {
     send_string("+OK\n");
     while (1)
       ;
+  } else if (strcmp(data, "+send") == 0) {
+    ir_tx_send();
+    send_string("+OK\n");
+  } else if (strncmp(data, "+f", 2) == 0) {
+    uint32_t carrier_freq = atoi(data + 2);
+    ir_tx_reset(carrier_freq);
+    send_string("+OK\n");
+  } else if (strncmp(data, "+s", 2) == 0) {
+    char *pon = data + 2;
+    char *p = strchr(pon, ',');
+    if (p == NULL) {
+      send_string("-ERR missing comma\n");
+      return;
+    }
+    *p = '\0';
+    uint32_t t_on = atoi(pon);
+    uint32_t t_off = atoi(p + 1);
+    ir_tx_write(t_on, t_off);
+    if (ir_tx_buffer_length() > IR_TX_BUFFER_LEN_BEFORE_SEND) {
+      ir_tx_send();
+    }
+    send_string("+OK\n");
   } else {
     send_string("-ERR \"");
     send_string(data);
@@ -52,9 +76,10 @@ void process_rx(const char *data, send_string send_string) {
 }
 
 void ir_rx_received(uint32_t value) {
-  char buffer[15];
-  buffer[0] = 'P';
-  utoa(value, buffer + 1, 10);
+  char buffer[20];
+  buffer[0] = '!';
+  buffer[1] = 's';
+  utoa(value, buffer + 2, 10);
   strcat(buffer, "\n");
 
   rpi_send_string(buffer);

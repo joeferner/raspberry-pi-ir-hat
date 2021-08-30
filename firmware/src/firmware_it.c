@@ -36,7 +36,11 @@ void DMA1_Channel4_5_6_7_IRQHandler() {
   rpi_dma_irq();
 }
 
-void DMA1_Ch4_5_DMAMUX1_OVR_IRQHandler() {}
+void DMA1_Ch4_5_DMAMUX1_OVR_IRQHandler() {
+  debug_dma_irq();
+  ir_rx_irq();
+  rpi_dma_irq();
+}
 
 void TIM3_IRQHandler() { ir_rx_irq(); }
 

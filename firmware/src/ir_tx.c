@@ -3,11 +3,14 @@
 #include <stdbool.h>
 
 #include "config.h"
+#include "debug.h"
+#include "uint32_ring_buffer.h"
 
-static const uint32_t *ir_tx_signal = NULL;
-static uint32_t ir_tx_signal_length = 0;
-static uint32_t ir_tx_signal_idx = 0;
-static uint32_t ir_tx_temp_signal[] = {1000, 1000};
+static uint32_t ir_tx_buffer[50];
+static uint32_ring_buffer ir_tx_ring_buffer;
+static bool ir_tx_sending;
+
+static void ir_tx_stop();
 
 static void ir_tx_next_signal();
 
@@ -17,17 +20,17 @@ void ir_tx_setup() {
   ir_tx_enable_gpio(false);
   LL_SYSCFG_SetIRPolarity(LL_SYSCFG_IR_POL_INVERTED);
 
+  uint32_ring_buffer_init(&ir_tx_ring_buffer, ir_tx_buffer, sizeof(ir_tx_buffer) / sizeof(uint32_t));
+  ir_tx_sending = false;
+
   // Not sure why we need this but the first transmit is always wrong
-  ir_tx_send(38000, ir_tx_temp_signal, 2);
+  ir_tx_reset(38000);
+  ir_tx_write(1000, 1000);
+  ir_tx_send();
 }
 
-/**
- * @brief the caller owns the signal buffer and must retain it until the send is complete which
- *        happens async
- */
-void ir_tx_send(uint32_t carrier_freq, const uint32_t *signal, size_t signal_length) {
-  ir_tx_signal = signal;
-  ir_tx_signal_length = signal_length;
+void ir_tx_reset(uint32_t carrier_freq) {
+  ir_tx_stop();
 
   // init carrier timer
   uint32_t autoReload = __LL_TIM_CALC_ARR(SystemCoreClock, IR_OUT_CARRIER_PRESCALER, carrier_freq);
@@ -45,31 +48,49 @@ void ir_tx_send(uint32_t carrier_freq, const uint32_t *signal, size_t signal_len
   LL_TIM_CC_EnableChannel(IR_OUT_SIGNAL_TIMER, IR_OUT_SIGNAL_CHANNEL);
   IR_OUT_SIGNAL_TIM_OC_SetCompare(30000);
   LL_TIM_EnableAllOutputs(IR_OUT_SIGNAL_TIMER);
+}
 
-  // begin send
-  ir_tx_signal_idx = 0;
-  ir_tx_next_signal();
-  ir_tx_enable_gpio(true);
-  LL_TIM_EnableCounter(IR_OUT_CARRIER_TIMER);
-  LL_TIM_EnableCounter(IR_OUT_SIGNAL_TIMER);
+void ir_tx_write(const uint32_t t_on, const uint32_t t_off) {
+  uint32_ring_buffer_write(&ir_tx_ring_buffer, t_on);
+  uint32_ring_buffer_write(&ir_tx_ring_buffer, t_off);
+}
+
+void ir_tx_send() {
+  if (!ir_tx_sending) {
+    ir_tx_sending = true;
+
+    ir_tx_next_signal();
+    ir_tx_enable_gpio(true);
+    LL_TIM_EnableCounter(IR_OUT_CARRIER_TIMER);
+    LL_TIM_EnableCounter(IR_OUT_SIGNAL_TIMER);
+  }
+}
+
+size_t ir_tx_buffer_length() { return uint32_ring_buffer_length(&ir_tx_ring_buffer); }
+
+void ir_tx_stop() {
+  ir_tx_sending = false;
+  LL_TIM_DisableCounter(IR_OUT_CARRIER_TIMER);
+  LL_TIM_DisableCounter(IR_OUT_SIGNAL_TIMER);
+  ir_tx_enable_gpio(false);
 }
 
 void ir_tx_next_signal() {
-  if (ir_tx_signal_idx >= ir_tx_signal_length) {
-    ir_tx_signal_idx = 0;
-    LL_TIM_DisableCounter(IR_OUT_CARRIER_TIMER);
-    LL_TIM_DisableCounter(IR_OUT_SIGNAL_TIMER);
-    ir_tx_enable_gpio(false);
+  if (uint32_ring_buffer_length(&ir_tx_ring_buffer) < 2) {
+    ir_tx_stop();
+    debug_send_string("?send complete\n");
     return;
   }
 
-  uint32_t on_t = __LL_TIM_CALC_DELAY(SystemCoreClock, IR_OUT_SIGNAL_PRESCALER, ir_tx_signal[ir_tx_signal_idx]);
-  uint32_t off_t = __LL_TIM_CALC_DELAY(SystemCoreClock, IR_OUT_SIGNAL_PRESCALER, ir_tx_signal[ir_tx_signal_idx + 1]);
+  uint32_t t_on = uint32_ring_buffer_read(&ir_tx_ring_buffer);
+  uint32_t t_off = uint32_ring_buffer_read(&ir_tx_ring_buffer);
+
+  uint32_t on_t = __LL_TIM_CALC_DELAY(SystemCoreClock, IR_OUT_SIGNAL_PRESCALER, t_on);
+  uint32_t off_t = __LL_TIM_CALC_DELAY(SystemCoreClock, IR_OUT_SIGNAL_PRESCALER, t_off);
   uint32_t total_t = on_t + off_t;
 
   LL_TIM_SetAutoReload(IR_OUT_SIGNAL_TIMER, total_t);
   IR_OUT_SIGNAL_TIM_OC_SetCompare(on_t);
-  ir_tx_signal_idx += 2;
 }
 
 void ir_tx_irq() {

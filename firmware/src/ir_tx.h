@@ -8,8 +8,14 @@
 
 void ir_tx_setup();
 
-void ir_tx_send(uint32_t carrier_freq, const uint32_t *signal, size_t signal_length);
+void ir_tx_reset(uint32_t carrier_freq);
+
+void ir_tx_write(const uint32_t t_on, const uint32_t t_off);
+
+void ir_tx_send();
 
 void ir_tx_irq();
+
+size_t ir_tx_buffer_length();
 
 #endif

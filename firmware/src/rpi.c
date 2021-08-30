@@ -7,10 +7,11 @@
 #include "dma_rx_ring_buffer.h"
 #include "dma_tx_ring_buffer.h"
 
-#define RX_BUFFER_LEN 512
+#define RX_BUFFER_LEN RPI_RX_BUFFER_LEN
+#define TX_BUFFER_LEN RPI_TX_BUFFER_LEN
 
 static dma_tx_ring_buffer uart_tx_dma_ring_buffer;
-static uint8_t uart_tx_dma_ring_buffer_data[256] __attribute__((aligned(8)));
+static uint8_t uart_tx_dma_ring_buffer_data[TX_BUFFER_LEN] __attribute__((aligned(8)));
 
 static dma_rx_ring_buffer uart_rx_dma_ring_buffer;
 static uint8_t uart_rx_dma_ring_buffer_data[RX_BUFFER_LEN] __attribute__((aligned(8)));
@@ -48,7 +49,7 @@ void rpi_loop() {
     if (peek_buffer[i] == '\r' || peek_buffer[i] == '\n') {
       peek_buffer[i] = '\0';
       dma_rx_ring_buffer_skip(&uart_rx_dma_ring_buffer, i + 1);
-      rpi_rx((const char *)peek_buffer);
+      rpi_rx((char *)peek_buffer);
       break;
     }
   }

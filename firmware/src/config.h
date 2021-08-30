@@ -28,6 +28,8 @@ extern void Error_Handler();
 #define DEBUG_LL_DMA_ClearFlag_RX_GI() CONCAT(LL_DMA_ClearFlag_GI, DEBUG_RX_DMA_CH_NO)(DEBUG_RX_DMA)
 #define DEBUG_LL_DMA_IsActiveFlag_RX_TC() CONCAT(LL_DMA_IsActiveFlag_TC, DEBUG_RX_DMA_CH_NO)(DEBUG_RX_DMA)
 #define DEBUG_LL_DMA_IsActiveFlag_RX_GI() CONCAT(LL_DMA_IsActiveFlag_GI, DEBUG_RX_DMA_CH_NO)(DEBUG_RX_DMA)
+#define DEBUG_TX_BUFFER_LEN 50
+#define DEBUG_RX_BUFFER_LEN 20
 
 #define RPI_USART USART2
 #define RPI_TX_DMA DMA1
@@ -42,6 +44,8 @@ extern void Error_Handler();
 #define RPI_LL_DMA_ClearFlag_RX_GI() CONCAT(LL_DMA_ClearFlag_GI, RPI_RX_DMA_CH_NO)(RPI_RX_DMA)
 #define RPI_LL_DMA_IsActiveFlag_RX_TC() CONCAT(LL_DMA_IsActiveFlag_TC, RPI_RX_DMA_CH_NO)(RPI_RX_DMA)
 #define RPI_LL_DMA_IsActiveFlag_RX_GI() CONCAT(LL_DMA_IsActiveFlag_GI, RPI_RX_DMA_CH_NO)(RPI_RX_DMA)
+#define RPI_TX_BUFFER_LEN 200
+#define RPI_RX_BUFFER_LEN 200
 
 #define IR_RX_TIMER TIM3
 #define IR_RX_TIMER_CH_NO 1
