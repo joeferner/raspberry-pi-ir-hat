@@ -16,7 +16,7 @@ extern void Error_Handler();
 #define CONCAT(A, B) CONCAT_(A, B)
 
 #define DEBUG_USART USART1
-#define DEBUG_TX_BUFFER_LEN 200
+#define DEBUG_TX_BUFFER_LEN 500
 #define DEBUG_RX_BUFFER_LEN 20
 
 #define RPI_USART USART2
