@@ -1,9 +1,10 @@
 #ifndef _usart_it_h_
 #define _usart_it_h_
 
+#include <stdint.h>
+
 #include "config.h"
 #include "uint8_ring_buffer.h"
-#include <stdint.h>
 
 typedef struct {
   USART_TypeDef *usart;

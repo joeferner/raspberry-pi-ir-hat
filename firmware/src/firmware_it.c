@@ -18,21 +18,13 @@ void PendSV_Handler() {}
 
 void SysTick_Handler() { time_increment_tick(); }
 
-void DMA1_Channel1_IRQHandler() {
-  ir_rx_irq();
-}
+void DMA1_Channel1_IRQHandler() { ir_rx_irq(); }
 
-void DMA1_Channel2_3_IRQHandler() {
-  ir_rx_irq();
-}
+void DMA1_Channel2_3_IRQHandler() { ir_rx_irq(); }
 
-void DMA1_Channel4_5_6_7_IRQHandler() {
-  ir_rx_irq();
-}
+void DMA1_Channel4_5_6_7_IRQHandler() { ir_rx_irq(); }
 
-void DMA1_Ch4_5_DMAMUX1_OVR_IRQHandler() {
-  ir_rx_irq();
-}
+void DMA1_Ch4_5_DMAMUX1_OVR_IRQHandler() { ir_rx_irq(); }
 
 void TIM3_IRQHandler() { ir_rx_irq(); }
 

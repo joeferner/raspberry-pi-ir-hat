@@ -14,7 +14,7 @@ void debug_send_uint32(uint32_t value);
 
 void debug_tx(const uint8_t *data, size_t data_len);
 
-extern void debug_rx( char *data);
+extern void debug_rx(char *data);
 
 void debug_usart_irq();
 

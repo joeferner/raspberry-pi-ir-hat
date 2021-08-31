@@ -27,7 +27,7 @@ void setup() {
   ir_rx_setup();
   ir_tx_setup();
   debug_send_string("?READY\n");
-  //LL_IWDG_Enable(IWDG);
+  // LL_IWDG_Enable(IWDG);
 }
 
 void loop() {

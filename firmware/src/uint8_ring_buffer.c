@@ -44,14 +44,14 @@ uint8_t uint8_ring_buffer_read(uint8_ring_buffer* rb) {
   __set_PRIMASK(1);
   if (uint8_ring_buffer_is_empty(rb)) {
     Error_Handler();
-     __set_PRIMASK(primask);
+    __set_PRIMASK(primask);
     return 0;
   }
   uint8_t result = rb->buffer[rb->read];
   rb->buffer[rb->read] = GUARD_CHAR;
   rb->read = (rb->read + 1) % rb->buffer_count;
   rb->length--;
-   __set_PRIMASK(primask);
+  __set_PRIMASK(primask);
   return result;
 }
 
