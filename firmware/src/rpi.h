@@ -18,4 +18,6 @@ extern void rpi_rx(char *data);
 
 void rpi_dma_irq();
 
+void rpi_usart_irq();
+
 #endif

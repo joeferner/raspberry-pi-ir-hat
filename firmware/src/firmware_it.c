@@ -19,27 +19,19 @@ void PendSV_Handler() {}
 void SysTick_Handler() { time_increment_tick(); }
 
 void DMA1_Channel1_IRQHandler() {
-  debug_dma_irq();
   ir_rx_irq();
-  rpi_dma_irq();
 }
 
 void DMA1_Channel2_3_IRQHandler() {
-  debug_dma_irq();
   ir_rx_irq();
-  rpi_dma_irq();
 }
 
 void DMA1_Channel4_5_6_7_IRQHandler() {
-  debug_dma_irq();
   ir_rx_irq();
-  rpi_dma_irq();
 }
 
 void DMA1_Ch4_5_DMAMUX1_OVR_IRQHandler() {
-  debug_dma_irq();
   ir_rx_irq();
-  rpi_dma_irq();
 }
 
 void TIM3_IRQHandler() { ir_rx_irq(); }
@@ -51,15 +43,9 @@ void WWDG_IRQHandler() {
     ;
 }
 
-void USART1_IRQHandler() {
-  while (1)
-    ;
-}
+void USART1_IRQHandler() { debug_usart_irq(); }
 
-void USART2_IRQHandler() {
-  while (1)
-    ;
-}
+void USART2_IRQHandler() { rpi_usart_irq(); }
 
 void TIM2_IRQHandler() {
   while (1)

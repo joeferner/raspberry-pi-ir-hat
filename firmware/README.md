@@ -6,16 +6,10 @@
    1. **Debug USART**
       1. Enable USART1 "Connectivity" -> "USART1" -> "Mode" -> "Asynchronous"
       1. Baud Rate: 57600
-      1. DMA Settings: USART1_TX
-         - Default
-      1. DMA Settings: USART1_RX
-         - Mode: Circular
+      1. NVIC Settings: Enable global interrupt
    1. **Raspberry Pi USART**: Enable USART2 "Connectivity" -> "USART2" -> "Mode" -> "Asynchronous"
       1. Baud Rate: 57600
-      1. DMA Settings: USART1_TX
-         - Default
-      1. DMA Settings: USART1_RX
-         - Mode: Circular
+      1. NVIC Settings: Enable global interrupt
    1. **IR Tx TIM16**
       - Enable TIM16 "Timers" -> "Channel1" -> "PWM Generation No Output"
       - NVIC Settings: Enable TIM16 global interrupt
