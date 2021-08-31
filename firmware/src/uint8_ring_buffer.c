@@ -22,11 +22,10 @@ bool uint8_ring_buffer_is_empty(uint8_ring_buffer* rb) { return rb->length == 0;
 bool uint8_ring_buffer_is_full(uint8_ring_buffer* rb) { return rb->length == rb->buffer_count; }
 
 void uint8_ring_buffer_write(uint8_ring_buffer* rb, uint8_t item) {
-  uint32_t primask = __get_PRIMASK();
-  __set_PRIMASK(1);
+  DISABLE_IRQS();
   if (uint8_ring_buffer_is_full(rb)) {
     Error_Handler();
-    __set_PRIMASK(primask);
+    ENABLE_IRQS();
     return;
   }
   if (rb->buffer[rb->write] != GUARD_CHAR) {
@@ -36,28 +35,26 @@ void uint8_ring_buffer_write(uint8_ring_buffer* rb, uint8_t item) {
   rb->buffer[rb->write] = item;
   rb->write = (rb->write + 1) % rb->buffer_count;
   rb->length++;
-  __set_PRIMASK(primask);
+  ENABLE_IRQS();
 }
 
 uint8_t uint8_ring_buffer_read(uint8_ring_buffer* rb) {
-  uint32_t primask = __get_PRIMASK();
-  __set_PRIMASK(1);
+  DISABLE_IRQS();
   if (uint8_ring_buffer_is_empty(rb)) {
     Error_Handler();
-    __set_PRIMASK(primask);
+    ENABLE_IRQS();
     return 0;
   }
   uint8_t result = rb->buffer[rb->read];
   rb->buffer[rb->read] = GUARD_CHAR;
   rb->read = (rb->read + 1) % rb->buffer_count;
   rb->length--;
-  __set_PRIMASK(primask);
+  ENABLE_IRQS();
   return result;
 }
 
 size_t uint8_ring_buffer_peek(uint8_ring_buffer* rb, uint32_t offset, uint8_t* buffer, size_t read_len) {
-  uint32_t primask = __get_PRIMASK();
-  __set_PRIMASK(1);
+  DISABLE_IRQS();
   size_t write = rb->write;
   size_t read = rb->read;
 
@@ -75,18 +72,17 @@ size_t uint8_ring_buffer_peek(uint8_ring_buffer* rb, uint32_t offset, uint8_t* b
     read_len--;
   }
 
-  __set_PRIMASK(primask);
+  ENABLE_IRQS();
   return bytes_read;
 }
 
 void uint8_ring_buffer_skip(uint8_ring_buffer* rb, size_t skip) {
-  uint32_t primask = __get_PRIMASK();
-  __set_PRIMASK(1);
+  DISABLE_IRQS();
   while (skip > 0 && rb->read != rb->write) {
     rb->buffer[rb->read] = GUARD_CHAR;
     rb->read = (rb->read + 1) % rb->buffer_count;
     rb->length--;
     skip--;
   }
-  __set_PRIMASK(primask);
+  ENABLE_IRQS();
 }

@@ -12,6 +12,12 @@
 
 extern void Error_Handler();
 
+#define DISABLE_IRQS()                \
+  uint32_t primask = __get_PRIMASK(); \
+  __set_PRIMASK(1);
+
+#define ENABLE_IRQS() __set_PRIMASK(primask);
+
 #define CONCAT_(A, B) A##B
 #define CONCAT(A, B) CONCAT_(A, B)
 
