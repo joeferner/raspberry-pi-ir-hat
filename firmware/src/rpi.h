@@ -16,8 +16,6 @@ void rpi_tx(const uint8_t *data, size_t data_len);
 
 extern void rpi_rx(char *data);
 
-void rpi_dma_irq();
-
 void rpi_usart_irq();
 
 #endif

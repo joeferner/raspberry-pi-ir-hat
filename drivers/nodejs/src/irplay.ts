@@ -50,7 +50,12 @@ async function run(args: Options) {
     await hat.transmit(args.remote, args.button);
 }
 
-run(argv as Options).catch((err) => {
-    console.error('failed to initialize', err);
-    process.exit(1);
-});
+run(argv as Options)
+    .then(() => {
+        console.error('complete');
+        process.exit(0);
+    })
+    .catch((err) => {
+        console.error('failed to initialize', err);
+        process.exit(1);
+    });

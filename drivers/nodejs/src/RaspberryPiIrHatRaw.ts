@@ -1,19 +1,17 @@
 import Debug from 'debug';
 import SerialPort from 'serialport';
-import { RawPacketParser } from './RawPacketParser';
-import { PacketDecoder } from './PacketDecoder';
-import { Packet, PACKET_TYPE_RESPONSE, PACKET_TYPE_RX_IR, RxPacket, TxPacket } from './packets';
-import { PacketEncoder } from './PacketEncoder';
+import Readline from '@serialport/parser-readline';
 import * as events from 'events';
 
 const debug = Debug('raspberry-pi-ir-hat:RaspberryPiIrHatRaw');
 
 export declare interface RaspberryPiIrHatRaw {
-    on(event: 'rxir', listener: (packet: RxPacket) => void): this;
+    on(event: 'rxir', listener: (packet: number) => void): this;
 }
 
 export class RaspberryPiIrHatRaw extends events.EventEmitter {
     private readonly _port: SerialPort;
+    private _ack?: (err?: Error) => void;
 
     constructor(path: string) {
         super();
@@ -28,17 +26,28 @@ export class RaspberryPiIrHatRaw extends events.EventEmitter {
 
         debug(`opening serial port: ${path}`);
         this._port = new SerialPort(path, options);
-        this._port
-            .pipe(new RawPacketParser())
-            .pipe(new PacketDecoder())
-            .on('data', (packet) => {
-                try {
-                    const p = JSON.parse(packet);
-                    this.onPacket(p as Packet);
-                } catch (err) {
-                    debug('failed to decode packet: ' + packet);
+        this._port.pipe(new Readline({ delimiter: '\n' })).on('data', (packet: string) => {
+            try {
+                packet = packet.trim();
+                debug(`read: ${packet}`);
+                if (packet.startsWith('!s')) {
+                    this.emit('rxir', parseInt(packet.substr('!s'.length)));
+                } else if (packet.startsWith('+OK')) {
+                    if (this._ack) {
+                        this._ack();
+                    }
+                    this.emit('ack');
+                } else {
+                    throw new Error(`unhandled packet: ${packet}`);
                 }
-            });
+            } catch (err) {
+                debug(`failed to decode packet: ${packet}`, err);
+                if (this._ack) {
+                    this._ack(err);
+                }
+                this.emit('error', err);
+            }
+        });
     }
 
     open(): Promise<void> {
@@ -54,9 +63,10 @@ export class RaspberryPiIrHatRaw extends events.EventEmitter {
         });
     }
 
-    private write(packet: Buffer): Promise<void> {
+    private write(packet: string): Promise<void> {
         return new Promise((resolve, reject) => {
-            this._port.write(packet, (err) => {
+            debug(`write: ${packet}`);
+            this._port.write(`${packet}\n`, (err) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -66,23 +76,32 @@ export class RaspberryPiIrHatRaw extends events.EventEmitter {
         });
     }
 
-    private onPacket(packet: Packet): void {
-        switch (packet.type) {
-            case PACKET_TYPE_RESPONSE:
-                // OK
-                break;
-            case PACKET_TYPE_RX_IR: {
-                const p: RxPacket = packet as RxPacket;
-                this.emit('rxir', p);
-                break;
-            }
-            default:
-                debug(`unhandled packet ${packet.type}`);
-                break;
-        }
+    private waitForAck(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const t = setTimeout(() => {
+                reject(new Error('timeout'));
+            }, 1000);
+            this._ack = (err?: Error) => {
+                clearTimeout(t);
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            };
+        });
     }
 
-    transmit(packet: TxPacket): Promise<void> {
-        return this.write(PacketEncoder.encodeIrSignal(packet as TxPacket));
+    private async writeAndWaitForAck(packet: string): Promise<void> {
+        await this.write(packet);
+        await this.waitForAck();
+    }
+
+    async transmit(frequency: number, signal: number[]): Promise<void> {
+        await this.writeAndWaitForAck(`+f${frequency}`);
+        for (let i = 0; i < signal.length; i += 2) {
+            await this.writeAndWaitForAck(`+s${signal[i] || 0},${signal[i + 1] || 0}`);
+        }
+        await this.writeAndWaitForAck('+send');
     }
 }

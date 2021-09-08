@@ -5,7 +5,7 @@
 #include "debug.h"
 #include "ir_rx.h"
 #include "ir_tx.h"
-// TODO #include "rpi.h"
+#include "rpi.h"
 #include "time.h"
 
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
@@ -23,7 +23,7 @@ void process_rx(char *data, send_string send_string);
 void setup() {
   time_setup();
   debug_setup();
-  // TODO rpi_setup();
+  rpi_setup();
   ir_rx_setup();
   ir_tx_setup();
   debug_send_string("?READY\n");
@@ -33,13 +33,13 @@ void setup() {
 void loop() {
   LL_IWDG_ReloadCounter(IWDG);
   debug_loop();
-  // TODO rpi_loop();
+  rpi_loop();
   ir_rx_loop();
 }
 
 void debug_rx(char *data) { process_rx(data, debug_send_string); }
 
-// TODO void rpi_rx(char *data) { process_rx(data, rpi_send_string); }
+void rpi_rx(char *data) { process_rx(data, rpi_send_string); }
 
 void process_rx(char *data, send_string send_string) {
   if (strcmp(data, "+iwdg") == 0) {
@@ -82,6 +82,6 @@ void ir_rx_received(uint32_t value) {
   utoa(value, buffer + 2, 10);
   strcat(buffer, "\n");
 
-  // TODO rpi_send_string(buffer);
+  rpi_send_string(buffer);
   debug_send_string(buffer);
 }

@@ -7,7 +7,7 @@
     "prepare": "rm -rf dist && npm run build",
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "test:watch": "jest --notify --watch",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint --fix --ext .ts .",
@@ -35,9 +35,10 @@
   },
   "homepage": "https://github.com/joeferner/raspberry-pi-ir-hat#readme",
   "dependencies": {
+    "@serialport/parser-readline": "9.0.x",
     "debug": "4.3.x",
     "serialport": "9.0.x",
-    "yargs": "^16.2.0"
+    "yargs": "16.2.x"
   },
   "devDependencies": {
     "@babel/preset-env": "7.x",
@@ -46,7 +47,7 @@
     "@types/jest": "26.x",
     "@types/node": "14.x",
     "@types/serialport": "8.x",
-    "@types/yargs": "^16.0.0",
+    "@types/yargs": "16.0.x",
     "@typescript-eslint/eslint-plugin": "4.x",
     "@typescript-eslint/parser": "4.x",
     "eslint": "7.x",

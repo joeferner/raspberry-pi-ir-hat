@@ -1,11 +1,12 @@
 import { RaspberryPiIrHatRaw } from './RaspberryPiIrHatRaw';
 import { AhoCorasick, AhoCorasickButton, AhoCorasickOptions } from './AhoCorasick';
-import { NEC_CARRIER_FREQUENCY, PACKET_TYPE_TX_IR, RxPacket } from './packets';
 import * as events from 'events';
 import { IrFile } from './IrFile';
 import Debug from 'debug';
 
 const debug = Debug('raspberry-pi-ir-hat:RaspberryPiIrHat');
+
+export const NEC_CARRIER_FREQUENCY = 38000;
 
 export interface RaspberryPiIrHatOptions {
     serialPortPath: string;
@@ -19,7 +20,7 @@ export interface RxButton {
 }
 
 export declare interface RaspberryPiIrHat {
-    on(event: 'rxir', listener: (packet: RxPacket) => void): this;
+    on(event: 'rxir', listener: (packet: number) => void): this;
 
     on(event: 'rx', listener: (button: RxButton) => void): this;
 }
@@ -39,7 +40,7 @@ export class RaspberryPiIrHat extends events.EventEmitter {
         this._buttons = options.buttons;
         this._ahoCorasick = new AhoCorasick(toAhoCorasickButtons(options.buttons), options.ahoCorasickOptions);
 
-        this._hat.on('rxir', (packet) => {
+        this._hat.on('rxir', (packet: number) => {
             this._handleRxIrPacket(packet);
         });
     }
@@ -60,17 +61,13 @@ export class RaspberryPiIrHat extends events.EventEmitter {
 
         const signal = button.signal.split(',').map((b) => parseInt(b));
 
-        return this._hat.transmit({
-            type: PACKET_TYPE_TX_IR,
-            frequency: NEC_CARRIER_FREQUENCY,
-            signal,
-        });
+        return this._hat.transmit(NEC_CARRIER_FREQUENCY, signal);
     }
 
-    private _handleRxIrPacket(packet: RxPacket) {
+    private _handleRxIrPacket(packet: number) {
         this.emit('rxir', packet);
 
-        const result = this._ahoCorasick.appendFind(packet.value);
+        const result = this._ahoCorasick.appendFind(packet);
         if (result) {
             debug(`rx: ${result.remoteName}:${result.buttonName}`);
             this.emit('rx', result);

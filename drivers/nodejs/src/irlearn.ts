@@ -108,7 +108,7 @@ async function run(args: Options) {
         buttons,
     });
     hat.on('rxir', (packet) => {
-        currentSignal.push(packet.value);
+        currentSignal.push(packet);
         if (timeout === null) {
             timeout = setTimeout(() => {
                 endOfSignal().catch((err) => {
