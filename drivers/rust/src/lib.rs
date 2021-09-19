@@ -1,7 +1,11 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+mod config;
+pub use config::Config;
+
+mod raw_hat;
+pub use raw_hat::{RawHat, RawHatMessage};
+
+mod hat;
+pub use hat::Hat;
+
+mod button_press;
+pub use button_press::ButtonPress;
