@@ -118,7 +118,7 @@
                 "--tolerance",
                 "0.1",
                 "--port",
-                "/dev/pts/6"
+                "/dev/pts/4"
             ],
             "cwd": "${workspaceFolder}"
         },

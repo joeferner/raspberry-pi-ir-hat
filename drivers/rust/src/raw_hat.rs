@@ -9,8 +9,11 @@ use std::time::Duration;
 
 #[derive(Debug)]
 pub enum RawHatMessage {
-    Line(String),
-    Error(std::io::Error),
+    UnknownLine(String),
+    Signal(u32),
+    OkResponse(Option<String>),
+    ErrResponse(String),
+    Error(String),
 }
 
 pub struct RawHat {
@@ -64,8 +67,17 @@ impl RawHat {
                         for i in 0..d {
                             let c = temp[i] as char;
                             if c == '\n' {
-                                let line: String = buffer.iter().collect();
-                                callback(RawHatMessage::Line(line));
+                                let line: String =
+                                    buffer.iter().collect::<String>().trim().to_string();
+                                if line.starts_with("!s") {
+                                    parse_signal_line(line, &mut callback);
+                                } else if line.starts_with("+OK") {
+                                    parse_ok_line(line, &mut callback);
+                                } else if line.starts_with("-ERR") {
+                                    parse_err_line(line, &mut callback);
+                                } else {
+                                    callback(RawHatMessage::UnknownLine(line));
+                                }
                                 buffer.clear();
                             }
                             buffer.push(c);
@@ -73,7 +85,7 @@ impl RawHat {
                     }
                     Err(err) => {
                         if err.kind() != std::io::ErrorKind::TimedOut {
-                            callback(RawHatMessage::Error(err));
+                            callback(RawHatMessage::Error(format!("{}", err)));
                         }
                     }
                 }
@@ -89,6 +101,49 @@ impl Drop for RawHat {
         if self.read_thread.is_some() {
             self.should_stop.store(true, Ordering::Relaxed);
             self.read_thread.take().unwrap().join().unwrap();
+        }
+    }
+}
+
+fn parse_signal_line(line: String, callback: &mut Box<dyn FnMut(RawHatMessage) + Send>) {
+    match line.strip_prefix("!s") {
+        Some(val_str) => match val_str.parse::<u32>() {
+            Ok(val) => callback(RawHatMessage::Signal(val)),
+            Err(err) => callback(RawHatMessage::Error(format!(
+                "failed to parse line: {} => {}",
+                line, err
+            ))),
+        },
+        None => {
+            callback(RawHatMessage::UnknownLine(line));
+        }
+    }
+}
+
+fn parse_ok_line(line: String, callback: &mut Box<dyn FnMut(RawHatMessage) + Send>) {
+    match line.strip_prefix("+OK") {
+        Some(val_str) => {
+            let val_str = val_str.trim();
+            if val_str.len() > 0 {
+                callback(RawHatMessage::OkResponse(Option::Some(val_str.to_string())));
+            } else {
+                callback(RawHatMessage::OkResponse(Option::None));
+            }
+        }
+        None => {
+            callback(RawHatMessage::UnknownLine(line));
+        }
+    }
+}
+
+fn parse_err_line(line: String, callback: &mut Box<dyn FnMut(RawHatMessage) + Send>) {
+    match line.strip_prefix("-ERR") {
+        Some(val_str) => {
+            let val_str = val_str.trim();
+            callback(RawHatMessage::ErrResponse(val_str.to_string()));
+        }
+        None => {
+            callback(RawHatMessage::UnknownLine(line));
         }
     }
 }
