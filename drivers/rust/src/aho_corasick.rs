@@ -1,99 +1,86 @@
 use crate::Config;
-use std::cell::RefCell;
-use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::fmt;
-use std::rc::Rc;
-use std::sync::atomic::{AtomicU32, Ordering};
 
-static NEXT_ID: AtomicU32 = AtomicU32::new(0);
+static ROOT_ID: usize = 0;
+static NOT_SET_ID: usize = usize::MAX;
 
 pub struct AhoCorasick {
-    trie: Rc<RefCell<TrieNode>>,
-    cur_node: Rc<RefCell<TrieNode>>,
+    nodes: Vec<TrieNode>,
+    cur_node: usize,
     tolerance: f32,
 }
 
 pub struct TrieNode {
-    id: u32,
+    id: usize,
     signals: Vec<u32>,
     average_signal: u32,
-    output: Option<Rc<RefCell<Button>>>,
-    failure: Option<Rc<RefCell<TrieNode>>>,
-    children: HashMap<u32, Rc<RefCell<TrieNode>>>,
+    output: Option<Button>,
+    failure: usize,
+    children: Vec<usize>,
 }
 
 impl fmt::Debug for TrieNode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let failure = if self.failure.is_some() {
-            let failure = self.failure.as_ref().unwrap();
-            let failure = failure.borrow();
-            format!("{:?}", failure.id)
-        } else {
-            format!("NONE")
-        };
         write!(
             f,
-            "node: {{\n(id: {:?}, signals: {:?}, output: {:?}, failure: {:?}): {:?}\n}}",
-            self.id, self.signals, self.output, failure, self.children
+            "node: {{\n(id: {:?}, signals: {:?}, output: {:?}, failure: {:?}):\n  {:?}\n}}",
+            self.id, self.signals, self.output, self.failure, self.children
         )
     }
 }
 
 #[derive(Debug)]
 pub struct Button {
-    remote_name: String,
-    button_name: String,
+    pub remote_name: String,
+    pub button_name: String,
 }
 
 impl AhoCorasick {
     pub fn new(config: &Config, tolerance: f32) -> AhoCorasick {
-        let root = build_trie(config, tolerance);
         return AhoCorasick {
-            trie: root.clone(),
-            cur_node: root,
+            nodes: build_trie(config, tolerance),
+            cur_node: ROOT_ID,
             tolerance,
         };
     }
 
-    pub fn append_find(&mut self, signal: u32) -> Option<Rc<RefCell<Button>>> {
-        let child_key = find_child(&self.cur_node.borrow(), signal, self.tolerance);
-        match child_key {
-            Some(key) => {
-                let child_rc = self.cur_node.borrow().children[&key].clone();
-                self.cur_node = child_rc.clone();
-                let child = child_rc.borrow();
-                if child.output.is_some() {
-                    let output = child.output.as_ref();
-                    return Option::Some(output.unwrap().clone());
-                } else {
-                    return Option::None;
+    pub fn append_find(&mut self, signal: u32) -> Option<&Button> {
+        let child_index = find_child(&self.nodes, self.cur_node, signal, self.tolerance);
+        match child_index {
+            Some(child_index) => {
+                self.cur_node = child_index;
+                match &self.nodes[child_index].output {
+                    Some(output) => {
+                        return Option::Some(output);
+                    }
+                    None => {
+                        return Option::None;
+                    }
                 }
             }
             None => {
-                let has_failure = self.cur_node.borrow().failure.is_some();
-                if has_failure {
-                    let failure = self.cur_node.borrow().failure.as_ref().unwrap().clone();
-                    self.cur_node = failure;
-                    return self.append_find(signal);
-                } else {
-                    self.cur_node = self.trie.clone();
+                if self.nodes[self.cur_node].failure == self.cur_node {
                     return Option::None;
                 }
+                self.cur_node = self.nodes[self.cur_node].failure;
+                return self.append_find(signal);
             }
         }
     }
 }
 
-fn build_trie(config: &Config, tolerance: f32) -> Rc<RefCell<TrieNode>> {
-    let root = Rc::new(RefCell::new(TrieNode {
-        id: NEXT_ID.fetch_add(1, Ordering::SeqCst),
+fn build_trie(config: &Config, tolerance: f32) -> Vec<TrieNode> {
+    let mut nodes = Vec::new();
+    let root = TrieNode {
+        id: ROOT_ID,
         signals: Vec::new(),
         average_signal: 0,
         output: Option::None,
-        failure: Option::None,
-        children: HashMap::new(),
-    }));
+        failure: ROOT_ID,
+        children: Vec::new(),
+    };
+    nodes.push(root);
 
     for remote_name in config.remotes.keys() {
         let remote = config.remotes.get(remote_name).unwrap();
@@ -105,7 +92,8 @@ fn build_trie(config: &Config, tolerance: f32) -> Rc<RefCell<TrieNode>> {
                 .map(|s| s.trim().parse::<u32>().unwrap())
                 .collect();
             add(
-                &root,
+                &mut nodes,
+                ROOT_ID,
                 signals.as_slice(),
                 remote_name.to_string(),
                 button_name.to_string(),
@@ -114,59 +102,77 @@ fn build_trie(config: &Config, tolerance: f32) -> Rc<RefCell<TrieNode>> {
         }
     }
 
-    update_failures(&root, tolerance);
+    update_failures(&mut nodes, tolerance);
 
-    return root;
+    return nodes;
 }
 
 fn add(
-    node: &Rc<RefCell<TrieNode>>,
+    nodes: &mut Vec<TrieNode>,
+    node_index: usize,
     signals: &[u32],
     remote_name: String,
     button_name: String,
     tolerance: f32,
 ) {
     if signals.len() == 0 {
-        node.borrow_mut().output = Option::Some(Rc::new(RefCell::new(Button {
+        nodes[node_index].output = Option::Some(Button {
             remote_name,
             button_name,
-        })));
+        });
         return;
     }
-    let child_key = find_child(&node.borrow(), signals[0], tolerance);
-    match child_key {
-        Some(c) => {
-            let cell = &node.borrow().children[&c];
-            {
-                let mut cell_mut = cell.borrow_mut();
-                cell_mut.signals.push(signals[0]);
-                cell_mut.average_signal = average(&cell_mut.signals);
-            }
-            add(&cell, &signals[1..], remote_name, button_name, tolerance);
+    let child_index = find_child(&nodes, node_index, signals[0], tolerance);
+    match child_index {
+        Some(child_index) => {
+            nodes[child_index].signals.push(signals[0]);
+            nodes[child_index].average_signal = average(&nodes[child_index].signals);
+            add(
+                nodes,
+                child_index,
+                &signals[1..],
+                remote_name,
+                button_name,
+                tolerance,
+            );
         }
         None => {
-            let child_signals = vec![signals[0]];
-            let c = Rc::new(RefCell::new(TrieNode {
-                id: NEXT_ID.fetch_add(1, Ordering::SeqCst),
-                signals: child_signals,
+            let new_node_id = nodes.len();
+            let new_node = TrieNode {
+                id: new_node_id,
+                signals: vec![signals[0]],
                 average_signal: signals[0],
                 output: Option::None,
-                failure: Option::None,
-                children: HashMap::new(),
-            }));
-            add(&c, &signals[1..], remote_name, button_name, tolerance);
-            node.borrow_mut().children.insert(signals[0], c);
+                failure: NOT_SET_ID,
+                children: Vec::new(),
+            };
+            nodes.push(new_node);
+            nodes[node_index].children.push(new_node_id);
+            add(
+                nodes,
+                new_node_id,
+                &signals[1..],
+                remote_name,
+                button_name,
+                tolerance,
+            );
         }
     }
 }
 
-fn find_child(node: &TrieNode, signal: u32, tolerance: f32) -> Option<u32> {
-    for key in node.children.keys() {
-        let c = node.children[key].borrow();
-        let diff =
-            f32::abs(((signal as f32) - (c.average_signal as f32)) / (c.average_signal as f32));
+fn find_child(
+    nodes: &Vec<TrieNode>,
+    node_index: usize,
+    signal: u32,
+    tolerance: f32,
+) -> Option<usize> {
+    for child_index in &nodes[node_index].children {
+        let child = &nodes[*child_index];
+        let diff = f32::abs(
+            ((signal as f32) - (child.average_signal as f32)) / (child.average_signal as f32),
+        );
         if diff < tolerance {
-            return Option::Some(*key);
+            return Option::Some(*child_index);
         }
     }
     return Option::None;
@@ -180,59 +186,50 @@ fn average(signals: &Vec<u32>) -> u32 {
     return sum / signals.len() as u32;
 }
 
-fn update_failures(node_rc: &Rc<RefCell<TrieNode>>, tolerance: f32) {
-    let node = node_rc.borrow();
-
-    let mut queue: VecDeque<Rc<RefCell<TrieNode>>> = VecDeque::new();
-    for key in node.children.keys() {
-        let mut c = node.children[key].borrow_mut();
-        c.failure = Option::Some(node_rc.clone());
-        queue.push_back(node.children[key].clone());
+fn update_failures(nodes: &mut Vec<TrieNode>, tolerance: f32) {
+    let mut queue: VecDeque<usize> = VecDeque::new();
+    for child_index in nodes[ROOT_ID].children.to_vec() {
+        nodes[child_index].failure = ROOT_ID;
+        queue.push_back(child_index);
     }
 
-    while let Some(c) = queue.pop_front() {
-        let c_mut = c.borrow();
-        for child_key in c_mut.children.keys() {
-            let child = &c_mut.children[child_key];
-            let failure = Option::Some(find_failure(&child.borrow(), &c, tolerance));
-            {
-                child.borrow_mut().failure = failure;
-            }
-            queue.push_back(child.clone());
+    while let Some(node_index) = queue.pop_front() {
+        for child_index in &mut nodes[node_index].children.to_vec() {
+            nodes[node_index].failure = find_failure(nodes, *child_index, node_index, tolerance);
+            queue.push_back(*child_index);
         }
     }
 }
 
 fn find_failure(
-    node: &TrieNode,
-    parent: &Rc<RefCell<TrieNode>>,
+    nodes: &Vec<TrieNode>,
+    node_index: usize,
+    parent_index: usize,
     tolerance: f32,
-) -> Rc<RefCell<TrieNode>> {
-    let mut failure: Rc<RefCell<TrieNode>> = parent.clone();
+) -> usize {
+    let mut failure_index = parent_index;
     loop {
-        let failure_clone = failure.clone();
-        let mut failure_node = failure_clone.borrow();
-        let mut matching_child_key = find_child(&mut failure_node, node.signals[0], tolerance);
-        if matching_child_key.is_some()
-            && failure_node.children[&matching_child_key.unwrap()]
-                .borrow()
-                .id
-                == node.id
+        let mut matching_child_index = find_child(
+            nodes,
+            failure_index,
+            nodes[node_index].signals[0],
+            tolerance,
+        );
+        if matching_child_index.is_some()
+            && nodes[matching_child_index.unwrap()].id == nodes[node_index].id
         {
-            matching_child_key = Option::None;
+            matching_child_index = Option::None;
         }
-        match matching_child_key {
-            Some(matching_child_key) => {
-                return failure_node.children[&matching_child_key].clone();
+        match matching_child_index {
+            Some(matching_child_index) => {
+                return matching_child_index;
             }
-            None => match &failure_node.failure {
-                Some(f) => {
-                    failure = f.clone();
+            None => {
+                if failure_index != NOT_SET_ID {
+                    return failure_index;
                 }
-                None => {
-                    return failure.clone();
-                }
-            },
+                failure_index = nodes[failure_index].failure;
+            }
         }
     }
 }
@@ -242,6 +239,7 @@ mod tests {
     use super::*;
     use crate::ConfigButton;
     use crate::ConfigRemote;
+    use std::collections::HashMap;
 
     #[test]
     fn test_empty() {
@@ -299,7 +297,7 @@ mod tests {
         let r = aho.append_find(700);
         assert!(r.is_some());
         let r = r.unwrap();
-        assert_eq!(r.borrow().remote_name, "remote1");
-        assert_eq!(r.borrow().button_name, "button3");
+        assert_eq!(r.remote_name, "remote1");
+        assert_eq!(r.button_name, "button3");
     }
 }
