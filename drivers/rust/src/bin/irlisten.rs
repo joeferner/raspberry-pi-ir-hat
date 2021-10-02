@@ -45,7 +45,7 @@ fn main() {
         }
     };
 
-    let config = match Config::read(filename, true) {
+    let config = match Config::read(filename, false) {
         Ok(c) => c,
         Err(e) => {
             println!("{}", e);
