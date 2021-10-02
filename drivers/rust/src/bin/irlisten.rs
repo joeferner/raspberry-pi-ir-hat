@@ -57,8 +57,8 @@ fn main() {
         config,
         port,
         tolerance,
-        Box::new(|button_press| {
-            println!("{:#?}", button_press);
+        Box::new(|message| {
+            println!("{:#?}", message);
         }),
     );
     if let Err(e) = hat.open() {

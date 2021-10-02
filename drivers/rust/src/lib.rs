@@ -11,3 +11,6 @@ mod button_press;
 pub use button_press::ButtonPress;
 
 mod aho_corasick;
+
+mod signal;
+pub use signal::Signal;
