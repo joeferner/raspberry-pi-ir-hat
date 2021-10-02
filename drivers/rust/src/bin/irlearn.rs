@@ -1,7 +1,11 @@
 use clap::App;
 use clap::Arg;
 use raspberry_pi_ir_hat::Signal;
-use raspberry_pi_ir_hat::{Config, RawHat};
+use raspberry_pi_ir_hat::{Config, RawHat, RawHatMessage};
+use std::sync::Arc;
+use std::sync::Mutex;
+use std::time::Duration;
+use std::time::SystemTime;
 use std::{thread, time};
 
 fn main() {
@@ -112,6 +116,13 @@ fn main() {
             std::process::exit(1);
         }
     };
+    let timeout_duration = match args.value_of("timeout").unwrap().parse::<u64>() {
+        Ok(p) => Duration::from_millis(p),
+        _ => {
+            println!("invalid timeout: {}", args.value_of("timeout").unwrap());
+            std::process::exit(1);
+        }
+    };
 
     let config = match Config::read(filename, false) {
         Ok(c) => c,
@@ -126,11 +137,29 @@ fn main() {
         minimum_signals,
         number_of_matching_signals_by_length,
     );
+    let current_signal = Arc::new(Mutex::new(Vec::new()));
+    let timeout = Arc::new(Mutex::new(Option::None));
 
+    let hat_current_signal = current_signal.clone();
+    let hat_timeout = timeout.clone();
     let mut hat = RawHat::new(
         port,
-        Box::new(|message| {
-            println!("{:#?}", message);
+        Box::new(move |message| match message {
+            RawHatMessage::UnknownLine(line) => {
+                println!("unknown line: {}", line);
+            }
+            RawHatMessage::Signal(s) => {
+                hat_current_signal.lock().unwrap().push(s);
+                let mut timeout = hat_timeout.lock().unwrap();
+                *timeout = Option::Some(SystemTime::now() + timeout_duration);
+            }
+            RawHatMessage::OkResponse(_) => {}
+            RawHatMessage::ErrResponse(err) => {
+                println!("error response: {}", err);
+            }
+            RawHatMessage::Error(err) => {
+                println!("error: {}", err);
+            }
         }),
     );
     if let Err(e) = hat.open() {
@@ -139,6 +168,13 @@ fn main() {
     }
     println!("press ctrl+c to exit");
     loop {
-        thread::sleep(time::Duration::from_secs(1));
+        thread::sleep(Duration::from_millis(100));
+        let mut t = timeout.lock().unwrap();
+        if let Some(some_t) = *t {
+            if SystemTime::now() > some_t {
+                println!("timeout");
+                *t = Option::None;
+            }
+        }
     }
 }

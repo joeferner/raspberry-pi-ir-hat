@@ -8,4 +8,6 @@ impl Signal {
     ) -> Signal {
         return Signal {};
     }
+
+    pub fn push(&mut self, s: u32) {}
 }

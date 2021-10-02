@@ -38,7 +38,18 @@
                     "kind": "bin"
                 }
             },
-            "args": [],
+            "args": [
+                "--file",
+                "example.config.json",
+                "--tolerance",
+                "0.1",
+                "--port",
+                "/dev/pts/4",
+                "--remote",
+                "testRemote",
+                "--button",
+                "testButton"
+            ],
             "cwd": "${workspaceFolder}"
         },
         {
