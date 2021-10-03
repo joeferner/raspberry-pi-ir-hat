@@ -44,8 +44,37 @@ impl Config {
         return match config {
             Ok(f) => Result::Ok(f),
             Err(err) => {
+                return Result::Err(format!("could not read file: {}: {}", filename, err));
+            }
+        };
+    }
+
+    pub fn set_button(&mut self, remote: &str, button: &str, signal: &str, debounce: Option<u32>) {
+        let config_remote =
+            self.remotes
+                .entry(remote.to_string())
+                .or_insert_with(|| ConfigRemote {
+                    buttons: HashMap::new(),
+                });
+        config_remote.buttons.insert(
+            button.to_string(),
+            ConfigButton {
+                debounce,
+                signal: signal.to_string(),
+            },
+        );
+    }
+
+    pub fn write(&self, filename: &str) -> Result<(), String> {
+        let file = match File::open(filename) {
+            Ok(f) => f,
+            Err(err) => {
                 return Result::Err(format!("invalid file: {}: {}", filename, err));
             }
+        };
+        return match serde_json::to_writer(file, self) {
+            Result::Ok(_) => Result::Ok(()),
+            Result::Err(err) => Result::Err(format!("could not write file: {}: {}", filename, err)),
         };
     }
 }

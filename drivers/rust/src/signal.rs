@@ -9,5 +9,11 @@ impl Signal {
         return Signal {};
     }
 
-    pub fn push(&mut self, s: u32) {}
+    pub fn push(&mut self, s: &Vec<u32>) -> Result<bool, String> {
+        return Result::Ok(false);
+    }
+
+    pub fn get_result(&self) -> String {
+        return "".to_string();
+    }
 }
