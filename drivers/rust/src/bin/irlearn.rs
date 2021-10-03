@@ -143,6 +143,39 @@ fn main() {
             std::process::exit(1);
         }
     };
+
+    let results = learn(
+        port,
+        tolerance,
+        minimum_signals,
+        number_of_matching_signals_by_length,
+        timeout_duration,
+        remote,
+        button,
+    );
+
+    config.set_button(remote, button, &results, debounce);
+    match config.write(filename) {
+        Result::Ok(_) => {
+            println!("button saved");
+            std::process::exit(0);
+        }
+        Result::Err(err) => {
+            println!("{}", err);
+            std::process::exit(1);
+        }
+    };
+}
+
+fn learn(
+    port: &str,
+    tolerance: f32,
+    minimum_signals: usize,
+    number_of_matching_signals_by_length: usize,
+    timeout_duration: Duration,
+    remote: &str,
+    button: &str,
+) -> String {
     let mut signal = Signal::new(
         tolerance,
         minimum_signals,
@@ -186,17 +219,7 @@ fn main() {
                 let mut s = current_signal.lock().unwrap();
                 match signal.push(&*s) {
                     Result::Ok(results) => {
-                        config.set_button(remote, button, &results, debounce);
-                        match config.write(filename) {
-                            Result::Ok(_) => {
-                                println!("button saved");
-                                std::process::exit(0);
-                            }
-                            Result::Err(err) => {
-                                println!("{}", err);
-                                std::process::exit(1);
-                            }
-                        };
+                        return results;
                     }
                     Result::Err(err) => {
                         println!("{}", err);
@@ -210,5 +233,36 @@ fn main() {
                 *t = Option::None;
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use raspberry_pi_ir_hat::socat::socat;
+
+    #[test]
+    fn test_it() {
+        let (port, mut sp, mut stop) = socat();
+
+        thread::spawn(move || {
+            sp.write("!s100\n!s200\n!s300\n".as_bytes()).unwrap();
+            thread::sleep(Duration::from_millis(100));
+            sp.write("!s100\n!s200\n!s300\n".as_bytes()).unwrap();
+            thread::sleep(Duration::from_millis(100));
+            sp.write("!s100\n!s200\n!s300\n".as_bytes()).unwrap();
+        });
+
+        let results = learn(
+            &port,
+            0.15,
+            3,
+            3,
+            Duration::from_millis(50),
+            "remote1",
+            "button1",
+        );
+        assert_eq!("100,200,300", results);
+        stop();
     }
 }
