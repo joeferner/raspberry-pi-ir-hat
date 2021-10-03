@@ -94,7 +94,7 @@ fn main() {
             std::process::exit(1);
         }
     };
-    let minimum_signals = match args.value_of("minimumSignals").unwrap().parse::<u32>() {
+    let minimum_signals = match args.value_of("minimumSignals").unwrap().parse::<usize>() {
         Ok(p) => p,
         _ => {
             println!(
@@ -107,7 +107,7 @@ fn main() {
     let number_of_matching_signals_by_length = match args
         .value_of("numberOfMatchingSignalsByLength")
         .unwrap()
-        .parse::<u32>()
+        .parse::<usize>()
     {
         Ok(p) => p,
         _ => {
@@ -185,28 +185,25 @@ fn main() {
             if SystemTime::now() > some_t {
                 let mut s = current_signal.lock().unwrap();
                 match signal.push(&*s) {
-                    Result::Ok(complete) => {
-                        if complete {
-                            config.set_button(remote, button, &signal.get_result(), debounce);
-                            match config.write(filename) {
-                                Result::Ok(_) => {
-                                    println!("button saved");
-                                    std::process::exit(0);
-                                }
-                                Result::Err(err) => {
-                                    println!("{}", err);
-                                    std::process::exit(1);
-                                }
-                            };
-                        } else {
-                            println!(
-                                "Press the \"{}\" on the \"{}\" remote again",
-                                button, remote
-                            );
-                        }
+                    Result::Ok(results) => {
+                        config.set_button(remote, button, &results, debounce);
+                        match config.write(filename) {
+                            Result::Ok(_) => {
+                                println!("button saved");
+                                std::process::exit(0);
+                            }
+                            Result::Err(err) => {
+                                println!("{}", err);
+                                std::process::exit(1);
+                            }
+                        };
                     }
                     Result::Err(err) => {
-                        println!("Button failed: {}", err);
+                        println!("{}", err);
+                        println!(
+                            "Press the \"{}\" on the \"{}\" remote again",
+                            button, remote
+                        );
                     }
                 }
                 *s = Vec::new();
