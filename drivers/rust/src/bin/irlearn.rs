@@ -240,17 +240,30 @@ fn learn(
 mod tests {
     use super::*;
     use raspberry_pi_ir_hat::socat::socat;
+    use std::sync::atomic::{AtomicBool, Ordering};
 
     #[test]
-    fn test_it() {
-        let (port, mut sp, mut stop) = socat();
+    fn test_irlearn() {
+        let mut socat_result = socat();
+        let port = socat_result.get_port();
+        let mut sp = socat_result.get_serial_port();
+        let complete = Arc::new(Mutex::new(AtomicBool::new(false)));
 
+        let thread_complete = complete.clone();
         thread::spawn(move || {
             sp.write("!s100\n!s200\n!s300\n".as_bytes()).unwrap();
             thread::sleep(Duration::from_millis(100));
             sp.write("!s100\n!s200\n!s300\n".as_bytes()).unwrap();
             thread::sleep(Duration::from_millis(100));
             sp.write("!s100\n!s200\n!s300\n".as_bytes()).unwrap();
+            thread::sleep(Duration::from_millis(100));
+            // TODO shouldn't need this extra signal here
+            sp.write("!s100\n!s200\n!s300\n".as_bytes()).unwrap();
+            thread::sleep(Duration::from_millis(100));
+            assert_eq!(
+                true,
+                thread_complete.lock().unwrap().load(Ordering::Relaxed)
+            );
         });
 
         let results = learn(
@@ -263,6 +276,6 @@ mod tests {
             "button1",
         );
         assert_eq!("100,200,300", results);
-        stop();
+        complete.lock().unwrap().store(true, Ordering::Relaxed);
     }
 }

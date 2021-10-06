@@ -5,7 +5,29 @@ use std::process::Command;
 use std::process::Stdio;
 use std::time::Duration;
 
-pub fn socat() -> (String, Box<dyn SerialPort>, Box<dyn FnMut()>) {
+pub struct SocatResult {
+    port: Option<String>,
+    serial_port: Option<Box<dyn SerialPort>>,
+    stop: Box<dyn FnMut()>,
+}
+
+impl SocatResult {
+    pub fn get_port(&mut self) -> String {
+        return self.port.take().unwrap();
+    }
+
+    pub fn get_serial_port(&mut self) -> Box<dyn SerialPort> {
+        return self.serial_port.take().unwrap();
+    }
+}
+
+impl Drop for SocatResult {
+    fn drop(&mut self) {
+        (self.stop)();
+    }
+}
+
+pub fn socat() -> SocatResult {
     let mut port1: Option<String> = Option::None;
     let port2: Option<String>;
     let child = Command::new("socat")
@@ -34,14 +56,14 @@ pub fn socat() -> (String, Box<dyn SerialPort>, Box<dyn FnMut()>) {
         .timeout(Duration::from_secs(1))
         .open()
         .unwrap();
-    return (
-        port1.unwrap(),
-        sp,
-        Box::new(move || {
+    return SocatResult {
+        port: Option::Some(port1.unwrap()),
+        serial_port: Option::Some(sp),
+        stop: Box::new(move || {
             Command::new("kill")
                 .args([child_pid.to_string()])
                 .spawn()
                 .unwrap();
         }),
-    );
+    };
 }

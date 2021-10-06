@@ -84,8 +84,10 @@ mod tests {
     use std::time::Duration;
 
     #[test]
-    fn test_it() {
-        let (port, mut sp, mut stop) = socat();
+    fn test_irlisten() {
+        let mut socat_result = socat();
+        let port = socat_result.get_port();
+        let mut sp = socat_result.get_serial_port();
 
         let mut remote1_buttons: HashMap<String, ConfigButton> = HashMap::new();
         remote1_buttons.insert(
@@ -176,6 +178,5 @@ mod tests {
             }
         }
         assert_eq!(3, message_index);
-        stop();
     }
 }
