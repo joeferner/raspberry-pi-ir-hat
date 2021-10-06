@@ -52,6 +52,7 @@ impl AhoCorasick {
                 self.cur_node = child_index;
                 match &self.nodes[child_index].output {
                     Some(output) => {
+                        self.cur_node = ROOT_ID;
                         return Option::Some(output);
                     }
                     None => {
@@ -166,6 +167,7 @@ fn find_child(
     signal: u32,
     tolerance: f32,
 ) -> Option<usize> {
+    assert_ne!(node_index, NOT_SET_ID, "node_index not set");
     for child_index in &nodes[node_index].children {
         let child = &nodes[*child_index];
         let diff = f32::abs(
@@ -299,5 +301,14 @@ mod tests {
         let r = r.unwrap();
         assert_eq!(r.remote_name, "remote1");
         assert_eq!(r.button_name, "button3");
+
+        // another match
+        assert!(aho.append_find(100).is_none());
+        assert!(aho.append_find(200).is_none());
+        let r = aho.append_find(300);
+        assert!(r.is_some());
+        let r = r.unwrap();
+        assert_eq!(r.remote_name, "remote1");
+        assert_eq!(r.button_name, "button1");
     }
 }
