@@ -247,22 +247,20 @@ mod tests {
         let mut socat_result = socat();
         let port = socat_result.get_port();
         let mut sp = socat_result.get_serial_port();
-        let complete = Arc::new(Mutex::new(AtomicBool::new(false)));
+        let complete = Arc::new(AtomicBool::new(false));
 
         let thread_complete = complete.clone();
         thread::spawn(move || {
-            sp.write("!s100\n!s200\n!s300\n".as_bytes()).unwrap();
             thread::sleep(Duration::from_millis(100));
             sp.write("!s100\n!s200\n!s300\n".as_bytes()).unwrap();
             thread::sleep(Duration::from_millis(100));
             sp.write("!s100\n!s200\n!s300\n".as_bytes()).unwrap();
             thread::sleep(Duration::from_millis(100));
-            // TODO shouldn't need this extra signal here
             sp.write("!s100\n!s200\n!s300\n".as_bytes()).unwrap();
-            thread::sleep(Duration::from_millis(100));
+            thread::sleep(Duration::from_millis(500));
             assert_eq!(
                 true,
-                thread_complete.lock().unwrap().load(Ordering::Relaxed)
+                thread_complete.load(Ordering::Relaxed)
             );
         });
 
@@ -276,6 +274,6 @@ mod tests {
             "button1",
         );
         assert_eq!("100,200,300", results);
-        complete.lock().unwrap().store(true, Ordering::Relaxed);
+        complete.store(true, Ordering::Relaxed);
     }
 }
