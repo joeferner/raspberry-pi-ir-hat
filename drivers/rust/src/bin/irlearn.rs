@@ -8,7 +8,7 @@ use std::thread;
 use std::time::Duration;
 use std::time::SystemTime;
 
-fn main() {
+fn main() -> Result<(), String> {
     let args = App::new("Raspberry Pi IrHat - irlearn")
         .version("1.0.0")
         .author("Joe Ferner <joe@fernsroth.com>")
@@ -87,62 +87,65 @@ fn main() {
     let port = args.value_of("port").unwrap();
     let remote = args.value_of("remote").unwrap();
     let button = args.value_of("button").unwrap();
-    let tolerance = match args.value_of("tolerance").unwrap().parse::<f32>() {
-        Ok(p) => p,
-        _ => {
-            println!("invalid tolerance: {}", args.value_of("tolerance").unwrap());
-            std::process::exit(1);
-        }
-    };
-    let minimum_signals = match args.value_of("minimumSignals").unwrap().parse::<usize>() {
-        Ok(p) => p,
-        _ => {
-            println!(
-                "invalid minimumSignals: {}",
-                args.value_of("minimumSignals").unwrap()
-            );
-            std::process::exit(1);
-        }
-    };
-    let number_of_matching_signals_by_length = match args
+    let tolerance = args
+        .value_of("tolerance")
+        .unwrap()
+        .parse::<f32>()
+        .map_err(|err| {
+            format!(
+                "invalid tolerance: {} ({})",
+                args.value_of("tolerance").unwrap(),
+                err
+            )
+        })?;
+    let minimum_signals = args
+        .value_of("minimumSignals")
+        .unwrap()
+        .parse::<usize>()
+        .map_err(|err| {
+            format!(
+                "invalid minimumSignals: {} ({})",
+                args.value_of("minimumSignals").unwrap(),
+                err
+            )
+        })?;
+    let number_of_matching_signals_by_length = args
         .value_of("numberOfMatchingSignalsByLength")
         .unwrap()
         .parse::<usize>()
-    {
-        Ok(p) => p,
-        _ => {
-            println!(
-                "invalid numberOfMatchingSignalsByLength: {}",
-                args.value_of("numberOfMatchingSignalsByLength").unwrap()
-            );
-            std::process::exit(1);
-        }
-    };
-    let timeout_duration = match args.value_of("timeout").unwrap().parse::<u64>() {
-        Ok(p) => Duration::from_millis(p),
-        _ => {
-            println!("invalid timeout: {}", args.value_of("timeout").unwrap());
-            std::process::exit(1);
-        }
-    };
-    let debounce = match args.value_of("debounce") {
-        Option::None => Option::None,
-        Option::Some(s) => match s.parse::<u32>() {
-            Ok(v) => Option::Some(v),
-            _ => {
-                println!("invalid debounce: {}", args.value_of("debounce").unwrap());
-                std::process::exit(1);
-            }
-        },
-    };
+        .map_err(|err| {
+            format!(
+                "invalid numberOfMatchingSignalsByLength: {} ({})",
+                args.value_of("numberOfMatchingSignalsByLength").unwrap(),
+                err
+            )
+        })?;
+    let timeout_duration = Duration::from_millis(
+        args.value_of("timeout")
+            .unwrap()
+            .parse::<u64>()
+            .map_err(|err| {
+                format!(
+                    "invalid timeout: {} ({})",
+                    args.value_of("timeout").unwrap(),
+                    err
+                )
+            })?,
+    );
+    let debounce = args
+        .value_of("debounce")
+        .map(|s| {
+            s.parse::<u32>().map_err(|err| {
+                format!(
+                    "invalid debounce: {} ({})",
+                    args.value_of("debounce").unwrap(),
+                    err
+                )
+            })
+        })
+        .transpose()?;
 
-    let mut config = match Config::read(filename, false) {
-        Ok(c) => c,
-        Err(e) => {
-            println!("{}", e);
-            std::process::exit(1);
-        }
-    };
+    let mut config = Config::read(filename, false)?;
 
     let results = learn(
         port,
@@ -152,19 +155,12 @@ fn main() {
         timeout_duration,
         remote,
         button,
-    );
+    )?;
 
     config.set_button(remote, button, &results, debounce);
-    match config.write(filename) {
-        Result::Ok(_) => {
-            println!("button saved");
-            std::process::exit(0);
-        }
-        Result::Err(err) => {
-            println!("{}", err);
-            std::process::exit(1);
-        }
-    };
+    config.write(filename)?;
+    println!("button saved");
+    return Result::Ok(());
 }
 
 fn learn(
@@ -175,7 +171,7 @@ fn learn(
     timeout_duration: Duration,
     remote: &str,
     button: &str,
-) -> String {
+) -> Result<String, String> {
     let mut signal = Signal::new(
         tolerance,
         minimum_signals,
@@ -207,8 +203,7 @@ fn learn(
         }),
     );
     if let Err(e) = hat.open() {
-        println!("{}", e);
-        std::process::exit(1);
+        return Result::Err(format!("{}", e));
     }
     println!("press ctrl+c to cancel and exit");
     loop {
@@ -219,7 +214,7 @@ fn learn(
                 let mut s = current_signal.lock().unwrap();
                 match signal.push(&*s) {
                     Result::Ok(results) => {
-                        return results;
+                        return Result::Ok(results);
                     }
                     Result::Err(err) => {
                         println!("{}", err);
@@ -258,10 +253,7 @@ mod tests {
             thread::sleep(Duration::from_millis(100));
             sp.write("!s100\n!s200\n!s300\n".as_bytes()).unwrap();
             thread::sleep(Duration::from_millis(500));
-            assert_eq!(
-                true,
-                thread_complete.load(Ordering::Relaxed)
-            );
+            assert_eq!(true, thread_complete.load(Ordering::Relaxed));
         });
 
         let results = learn(
@@ -272,7 +264,7 @@ mod tests {
             Duration::from_millis(50),
             "remote1",
             "button1",
-        );
+        ).unwrap();
         assert_eq!("100,200,300", results);
         complete.store(true, Ordering::Relaxed);
     }
