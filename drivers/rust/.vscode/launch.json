@@ -86,7 +86,16 @@
                     "kind": "bin"
                 }
             },
-            "args": [],
+            "args": [
+                "--file",
+                "example.config.json",
+                "--port",
+                "/dev/pts/4",
+                "--remote",
+                "testRemote",
+                "--button",
+                "testButton"
+            ],
             "cwd": "${workspaceFolder}"
         },
         {

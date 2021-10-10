@@ -2,10 +2,10 @@ pub mod config;
 pub use config::{Config, ConfigButton, ConfigRemote};
 
 pub mod raw_hat;
-pub use raw_hat::{RawHat, RawHatMessage};
+pub use raw_hat::{RawHat, RawHatMessage, RawHatError};
 
 pub mod hat;
-pub use hat::Hat;
+pub use hat::{Hat, HatError};
 
 pub mod button_press;
 pub use button_press::ButtonPress;

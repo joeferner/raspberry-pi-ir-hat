@@ -1,4 +1,6 @@
 use serialport::SerialPort;
+use std::error::Error;
+use std::fmt;
 use std::io::prelude::*;
 use std::option::Option;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -24,6 +26,31 @@ pub struct RawHat {
     callback: Option<Box<dyn FnMut(RawHatMessage) + Send>>,
 }
 
+#[derive(Debug)]
+pub enum RawHatError {
+    NotOpen,
+    SerialPortError(serialport::Error),
+    StdIoError(std::io::Error),
+    WriteErrorLengthMismatch { expected: usize, actual: usize },
+}
+
+impl fmt::Display for RawHatError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            RawHatError::NotOpen => write!(f, "port not open"),
+            RawHatError::SerialPortError(err) => write!(f, "serial port error: {}", err),
+            RawHatError::StdIoError(err) => write!(f, "io error: {}", err),
+            RawHatError::WriteErrorLengthMismatch { expected, actual } => write!(
+                f,
+                "write length mismatch, expected {}, actual {}",
+                expected, actual
+            ),
+        }
+    }
+}
+
+impl Error for RawHatError {}
+
 impl RawHat {
     pub fn new(port_path: &str, callback: Box<dyn FnMut(RawHatMessage) + Send>) -> RawHat {
         return RawHat {
@@ -35,22 +62,14 @@ impl RawHat {
         };
     }
 
-    pub fn open(&mut self) -> Result<(), String> {
-        let port = match serialport::new(self.port_path.clone(), 57600)
+    pub fn open(&mut self) -> Result<(), RawHatError> {
+        let port = serialport::new(self.port_path.clone(), 57600)
             .timeout(Duration::from_secs(1))
             .open()
-        {
-            Ok(p) => p,
-            Err(e) => {
-                return Result::Err(format!("failed to open port: {}", e));
-            }
-        };
-        let mut read_port = match port.try_clone() {
-            Ok(p) => p,
-            Err(e) => {
-                return Result::Err(format!("failed to clone open port: {}", e));
-            }
-        };
+            .map_err(|err| RawHatError::SerialPortError(err))?;
+        let mut read_port = port
+            .try_clone()
+            .map_err(|err| RawHatError::SerialPortError(err))?;
         self.port = Option::Some(port);
         self.should_stop.store(false, Ordering::Relaxed);
         let mut callback = self.callback.take().unwrap();
@@ -94,6 +113,35 @@ impl RawHat {
 
         return Result::Ok(());
     }
+
+    pub fn send_carrier_frequency(&mut self, frequency: u32) -> Result<(), RawHatError> {
+        let s = format!("+f{}\n", frequency);
+        return self.send(&s);
+    }
+
+    pub fn send_signal(&mut self, signal: u32) -> Result<(), RawHatError> {
+        let s = format!("+s{}\n", signal);
+        return self.send(&s);
+    }
+
+    pub fn send_signal_complete(&mut self) -> Result<(), RawHatError> {
+        return self.send("+send\n");
+    }
+
+    pub fn send(&mut self, value: &str) -> Result<(), RawHatError> {
+        let port = self.port.as_mut().ok_or(RawHatError::NotOpen)?;
+        let value_bytes = value.as_bytes();
+        let bytes_written = port
+            .write(value_bytes)
+            .map_err(|err| RawHatError::StdIoError(err))?;
+        if bytes_written != value_bytes.len() {
+            return Result::Err(RawHatError::WriteErrorLengthMismatch {
+                expected: value_bytes.len(),
+                actual: bytes_written,
+            });
+        }
+        return Result::Ok(());
+    }
 }
 
 impl Drop for RawHat {
@@ -107,14 +155,14 @@ impl Drop for RawHat {
 
 fn parse_signal_line(line: String, callback: &mut Box<dyn FnMut(RawHatMessage) + Send>) {
     match line.strip_prefix("!s") {
-        Some(val_str) => match val_str.parse::<u32>() {
-            Ok(val) => callback(RawHatMessage::Signal(val)),
-            Err(err) => callback(RawHatMessage::Error(format!(
+        Option::Some(val_str) => match val_str.parse::<u32>() {
+            Result::Ok(val) => callback(RawHatMessage::Signal(val)),
+            Result::Err(err) => callback(RawHatMessage::Error(format!(
                 "failed to parse line: {} => {}",
                 line, err
             ))),
         },
-        None => {
+        Option::None => {
             callback(RawHatMessage::UnknownLine(line));
         }
     }
@@ -122,7 +170,7 @@ fn parse_signal_line(line: String, callback: &mut Box<dyn FnMut(RawHatMessage) +
 
 fn parse_ok_line(line: String, callback: &mut Box<dyn FnMut(RawHatMessage) + Send>) {
     match line.strip_prefix("+OK") {
-        Some(val_str) => {
+        Option::Some(val_str) => {
             let val_str = val_str.trim();
             if val_str.len() > 0 {
                 callback(RawHatMessage::OkResponse(Option::Some(val_str.to_string())));
@@ -130,7 +178,7 @@ fn parse_ok_line(line: String, callback: &mut Box<dyn FnMut(RawHatMessage) + Sen
                 callback(RawHatMessage::OkResponse(Option::None));
             }
         }
-        None => {
+        Option::None => {
             callback(RawHatMessage::UnknownLine(line));
         }
     }
@@ -138,11 +186,11 @@ fn parse_ok_line(line: String, callback: &mut Box<dyn FnMut(RawHatMessage) + Sen
 
 fn parse_err_line(line: String, callback: &mut Box<dyn FnMut(RawHatMessage) + Send>) {
     match line.strip_prefix("-ERR") {
-        Some(val_str) => {
+        Option::Some(val_str) => {
             let val_str = val_str.trim();
             callback(RawHatMessage::ErrResponse(val_str.to_string()));
         }
-        None => {
+        Option::None => {
             callback(RawHatMessage::UnknownLine(line));
         }
     }

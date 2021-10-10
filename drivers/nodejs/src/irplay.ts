@@ -28,13 +28,13 @@ const argv = yargs
         alias: 'r',
         type: 'string',
         require: true,
-        description: 'Name of the remote to learn',
+        description: 'Name of the remote to play',
     })
     .option('button', {
         alias: 'b',
         type: 'string',
         require: true,
-        description: 'Name of the button to learn',
+        description: 'Name of the button to play',
     }).argv;
 
 async function run(args: Options) {

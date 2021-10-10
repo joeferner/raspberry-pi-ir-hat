@@ -77,4 +77,17 @@ impl Config {
             Result::Err(err) => Result::Err(format!("could not write file: {}: {}", filename, err)),
         };
     }
+
+    pub fn get_button(&self, remote_name: &str, button_name: &str) -> Option<&ConfigButton> {
+        return self
+            .remotes
+            .get(remote_name)
+            .and_then(|f| f.get_button(button_name));
+    }
+}
+
+impl ConfigRemote {
+    pub fn get_button(&self, button_name: &str) -> Option<&ConfigButton> {
+        return self.buttons.get(button_name);
+    }
 }
