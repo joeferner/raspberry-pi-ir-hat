@@ -64,3 +64,77 @@ fn main() -> Result<(), String> {
         .map_err(|err| format!("failed to transmit {}", err))?;
     return Result::Ok(());
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use raspberry_pi_ir_hat::socat::socat;
+    use raspberry_pi_ir_hat::ConfigButton;
+    use raspberry_pi_ir_hat::ConfigRemote;
+    use std::collections::HashMap;
+    use std::io::Read;
+    use std::str;
+    use std::thread;
+
+    #[test]
+    fn test_irplay() {
+        let mut socat_result = socat();
+        let port = socat_result.get_port();
+        let mut sp = socat_result.take_serial_port();
+
+        let mut remote1_buttons: HashMap<String, ConfigButton> = HashMap::new();
+        remote1_buttons.insert(
+            "button1".to_string(),
+            ConfigButton {
+                debounce: Option::None,
+                signal: "100,200,300".to_string(),
+            },
+        );
+        let remote1 = ConfigRemote {
+            buttons: remote1_buttons,
+        };
+        let mut remotes: HashMap<String, ConfigRemote> = HashMap::new();
+        remotes.insert("remote1".to_string(), remote1);
+
+        let config = Config { remotes };
+
+        thread::spawn(move || {
+            let read_line = |sp: &mut dyn Read| {
+                let mut buf = [0; 100];
+                let bytes_read = sp.read(&mut buf).unwrap();
+                return str::from_utf8(&buf[0..bytes_read]).unwrap().to_string();
+            };
+
+            let line = read_line(&mut sp);
+            assert_eq!("+f38000\n", line);
+            sp.write("+OK\n".as_bytes()).unwrap();
+
+            let line = read_line(&mut sp);
+            assert_eq!("+s100\n", line);
+            sp.write("+OK\n".as_bytes()).unwrap();
+
+            let line = read_line(&mut sp);
+            assert_eq!("+s200\n", line);
+            sp.write("+OK\n".as_bytes()).unwrap();
+
+            let line = read_line(&mut sp);
+            assert_eq!("+s300\n", line);
+            sp.write("+OK\n".as_bytes()).unwrap();
+
+            let line = read_line(&mut sp);
+            assert_eq!("+send\n", line);
+            sp.write("+OK\n".as_bytes()).unwrap();
+        });
+
+        let mut hat = Hat::new(
+            config,
+            &port,
+            0.15,
+            Box::new(move |message| {
+                println!("{:?}", message);
+            }),
+        );
+        hat.open().unwrap();
+        hat.transmit("remote1", "button1").unwrap();
+    }
+}

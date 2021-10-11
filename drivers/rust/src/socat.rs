@@ -16,7 +16,7 @@ impl SocatResult {
         return self.port.take().unwrap();
     }
 
-    pub fn get_serial_port(&mut self) -> Box<dyn SerialPort> {
+    pub fn take_serial_port(&mut self) -> Box<dyn SerialPort> {
         return self.serial_port.take().unwrap();
     }
 }

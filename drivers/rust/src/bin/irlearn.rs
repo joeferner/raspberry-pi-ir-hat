@@ -241,7 +241,7 @@ mod tests {
     fn test_irlearn() {
         let mut socat_result = socat();
         let port = socat_result.get_port();
-        let mut sp = socat_result.get_serial_port();
+        let mut sp = socat_result.take_serial_port();
         let complete = Arc::new(AtomicBool::new(false));
 
         let thread_complete = complete.clone();

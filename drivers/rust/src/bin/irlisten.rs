@@ -84,7 +84,7 @@ mod tests {
     fn test_irlisten() {
         let mut socat_result = socat();
         let port = socat_result.get_port();
-        let mut sp = socat_result.get_serial_port();
+        let mut sp = socat_result.take_serial_port();
 
         let mut remote1_buttons: HashMap<String, ConfigButton> = HashMap::new();
         remote1_buttons.insert(
