@@ -1,3 +1,5 @@
+use rppal::gpio;
+use rppal::gpio::OutputPin;
 use serialport::SerialPort;
 use std::error::Error;
 use std::fmt;
@@ -9,8 +11,15 @@ use std::thread;
 use std::thread::JoinHandle;
 use std::time::Duration;
 
+#[cfg(target_arch = "arm")]
+use rppal::gpio::{Gpio, OutputPin};
+
+#[cfg(target_arch = "arm")]
+const GPIO_RESET: u8 = 17;
+
 #[derive(Debug)]
 pub enum RawHatMessage {
+    Ready,
     UnknownLine(String),
     Signal(u32),
     OkResponse(Option<String>),
@@ -22,6 +31,7 @@ pub struct RawHat {
     port_path: String,
     port: Option<Box<dyn SerialPort>>,
     read_thread: Option<JoinHandle<()>>,
+    reset_pin: Option<OutputPin>,
     should_stop: Arc<AtomicBool>,
     callback: Option<Box<dyn FnMut(RawHatMessage) + Send>>,
 }
@@ -32,6 +42,7 @@ pub enum RawHatError {
     SerialPortError(serialport::Error),
     StdIoError(std::io::Error),
     WriteErrorLengthMismatch { expected: usize, actual: usize },
+    GpioError(gpio::Error),
 }
 
 impl fmt::Display for RawHatError {
@@ -40,6 +51,7 @@ impl fmt::Display for RawHatError {
             RawHatError::NotOpen => write!(f, "port not open"),
             RawHatError::SerialPortError(err) => write!(f, "serial port error: {}", err),
             RawHatError::StdIoError(err) => write!(f, "io error: {}", err),
+            RawHatError::GpioError(err) => write!(f, "gpio error: {}", err),
             RawHatError::WriteErrorLengthMismatch { expected, actual } => write!(
                 f,
                 "write length mismatch, expected {}, actual {}",
@@ -57,12 +69,15 @@ impl RawHat {
             port_path: port_path.to_string(),
             port: Option::None,
             read_thread: Option::None,
+            reset_pin: Option::None,
             should_stop: Arc::new(AtomicBool::new(false)),
             callback: Option::Some(callback),
         };
     }
 
     pub fn open(&mut self) -> Result<(), RawHatError> {
+        self.reset_pin = RawHat::get_reset_pin()?;
+
         let port = serialport::new(self.port_path.clone(), 57600)
             .timeout(Duration::from_secs(1))
             .open()
@@ -90,6 +105,8 @@ impl RawHat {
                                     buffer.iter().collect::<String>().trim().to_string();
                                 if line.starts_with("!s") {
                                     parse_signal_line(line, &mut callback);
+                                } else if line.starts_with("?READY") {
+                                    callback(RawHatMessage::Ready);
                                 } else if line.starts_with("+OK") {
                                     parse_ok_line(line, &mut callback);
                                 } else if line.starts_with("-ERR") {
@@ -140,6 +157,38 @@ impl RawHat {
                 actual: bytes_written,
             });
         }
+        return Result::Ok(());
+    }
+
+    #[cfg(target_arch = "arm")]
+    fn get_reset_pin() -> Result<Option<OutputPin>, RawHatError> {
+        let mut reset_pin = Gpio::new()
+            .map_err(|err| RawHatError::GpioError(err))?
+            .get(GPIO_RESET)
+            .map_err(|err| RawHatError::GpioError(err))?
+            .into_output();
+        reset_pin.set_low();
+        thread::sleep(Duration::from_millis(500));
+        reset_pin.set_high();
+        return Result::Ok(Option::Some(reset_pin));
+    }
+
+    #[cfg(not(target_arch = "arm"))]
+    fn get_reset_pin() -> Result<Option<OutputPin>, RawHatError> {
+        return Result::Ok(Option::None);
+    }
+
+    #[cfg(target_arch = "arm")]
+    pub fn reset(&mut self) -> Result<(), RawHatError> {
+        let reset_pin = self.reset_pin.as_mut().ok_or(RawHatError::NotOpen)?;
+        reset_pin.set_low();
+        thread::sleep(Duration::from_millis(500));
+        reset_pin.set_high();
+        return Result::Ok(());
+    }
+
+    #[cfg(not(target_arch = "arm"))]
+    pub fn reset(&mut self) -> Result<(), RawHatError> {
         return Result::Ok(());
     }
 }

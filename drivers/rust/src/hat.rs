@@ -68,10 +68,11 @@ impl Hat {
         return Hat {
             config,
             response_queue: receiver,
-            timeout: Duration::from_secs(10),
+            timeout: Duration::from_secs(1),
             raw_hat: RawHat::new(
                 port_path,
                 Box::new(move |msg| match msg {
+                    RawHatMessage::Ready => {}
                     RawHatMessage::UnknownLine(line) => {
                         local_callback(HatMessage::Error(format!("Unknown line: {}", line)));
                     }
@@ -166,20 +167,36 @@ impl Hat {
     }
 
     fn wait_for_response(&mut self) -> Result<(), HatError> {
-        return match self
-            .response_queue
-            .recv_timeout(self.timeout)
-            .map_err(|err| HatError::Timeout(err))?
-        {
-            RawHatMessage::OkResponse(_) => Result::Ok(()),
-            RawHatMessage::ErrResponse(err) => Result::Err(HatError::ErrResponse(err)),
-            RawHatMessage::Error(err) => Result::Err(HatError::ErrResponse(err)),
-            RawHatMessage::Signal(_) => {
-                Result::Err(HatError::ErrResponse(format!("unexpected signal response")))
-            }
-            RawHatMessage::UnknownLine(line) => {
-                Result::Err(HatError::ErrResponse(format!("unknown line: {}", line)))
-            }
-        };
+        loop {
+            match self
+                .response_queue
+                .recv_timeout(self.timeout)
+                .map_err(|err| {
+                    if let Result::Err(err) = self.reset() {
+                        return err;
+                    }
+                    HatError::Timeout(err)
+                })? {
+                RawHatMessage::Ready => {}
+                RawHatMessage::OkResponse(_) => return Result::Ok(()),
+                RawHatMessage::ErrResponse(err) => return Result::Err(HatError::ErrResponse(err)),
+                RawHatMessage::Error(err) => return Result::Err(HatError::ErrResponse(err)),
+                RawHatMessage::Signal(_) => {
+                    return Result::Err(HatError::ErrResponse(format!(
+                        "unexpected signal response"
+                    )))
+                }
+                RawHatMessage::UnknownLine(line) => {
+                    return Result::Err(HatError::ErrResponse(format!("unknown line: {}", line)))
+                }
+            };
+        }
+    }
+
+    pub fn reset(&mut self) -> Result<(), HatError> {
+        return self
+            .raw_hat
+            .reset()
+            .map_err(|err| HatError::RawHatError(err));
     }
 }

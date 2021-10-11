@@ -185,6 +185,7 @@ fn learn(
     let mut hat = RawHat::new(
         port,
         Box::new(move |message| match message {
+            RawHatMessage::Ready => {}
             RawHatMessage::UnknownLine(line) => {
                 println!("unknown line: {}", line);
             }
@@ -264,7 +265,8 @@ mod tests {
             Duration::from_millis(50),
             "remote1",
             "button1",
-        ).unwrap();
+        )
+        .unwrap();
         assert_eq!("100,200,300", results);
         complete.store(true, Ordering::Relaxed);
     }
