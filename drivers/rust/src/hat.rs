@@ -113,6 +113,10 @@ impl Hat {
         };
     }
 
+    pub fn get_config(&self) -> &Config {
+        return &self.config;
+    }
+
     pub fn open(&mut self) -> Result<(), HatError> {
         return self
             .raw_hat
