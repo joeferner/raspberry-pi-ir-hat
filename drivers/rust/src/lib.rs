@@ -5,7 +5,7 @@ pub mod raw_hat;
 pub use raw_hat::{RawHat, RawHatMessage, RawHatError};
 
 pub mod hat;
-pub use hat::{Hat, HatError};
+pub use hat::{Hat, HatError, HatMessage};
 
 pub mod button_press;
 pub use button_press::ButtonPress;
