@@ -132,11 +132,7 @@ impl Hat {
                 remote_name: remote_name.to_string(),
                 button_name: button_name.to_string(),
             })?;
-        let signals: Vec<u32> = button
-            .signal
-            .split(",")
-            .map(|s| s.trim().parse::<u32>().unwrap())
-            .collect();
+        let signals: Vec<u32> = button.get_signals();
 
         return self.send_signals(38000, &signals);
     }

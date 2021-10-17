@@ -83,15 +83,11 @@ fn build_trie(config: &Config, tolerance: f32) -> Vec<TrieNode> {
     };
     nodes.push(root);
 
-    for remote_name in config.remotes.keys() {
-        let remote = config.remotes.get(remote_name).unwrap();
-        for button_name in remote.buttons.keys() {
-            let button = remote.buttons.get(button_name).unwrap();
-            let signals: Vec<u32> = button
-                .signal
-                .split(",")
-                .map(|s| s.trim().parse::<u32>().unwrap())
-                .collect();
+    for remote_name in config.get_remote_names() {
+        let remote = config.get_remote(&remote_name).unwrap();
+        for button_name in remote.get_button_names() {
+            let button = remote.get_button(&button_name).unwrap();
+            let signals: Vec<u32> = button.get_signals();
             add(
                 &mut nodes,
                 ROOT_ID,
@@ -239,15 +235,10 @@ fn find_failure(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ConfigButton;
-    use crate::ConfigRemote;
-    use std::collections::HashMap;
-
+    use serde_json::json;
     #[test]
     fn test_empty() {
-        let config = Config {
-            remotes: HashMap::new(),
-        };
+        let config = Config::from_json(json!({})).unwrap();
         let mut aho = AhoCorasick::new(&config, 0.1);
         assert!(aho.append_find(100).is_none());
         assert!(aho.append_find(200).is_none());
@@ -255,37 +246,24 @@ mod tests {
 
     #[test]
     fn test_multiple_buttons() {
-        let mut remote1_buttons: HashMap<String, ConfigButton> = HashMap::new();
-        remote1_buttons.insert(
-            "button1".to_string(),
-            ConfigButton {
-                debounce: Option::None,
-                signal: "100,200,300".to_string(),
-            },
-        );
-        remote1_buttons.insert(
-            "button2".to_string(),
-            ConfigButton {
-                debounce: Option::None,
-                signal: "100,300,300".to_string(),
-            },
-        );
-        remote1_buttons.insert(
-            "button3".to_string(),
-            ConfigButton {
-                debounce: Option::None,
-                signal: "200,500,600,700".to_string(),
-            },
-        );
-
-        let remote1 = ConfigRemote {
-            buttons: remote1_buttons,
-        };
-
-        let mut remotes: HashMap<String, ConfigRemote> = HashMap::new();
-        remotes.insert("remote1".to_string(), remote1);
-
-        let config = Config { remotes };
+        let config = Config::from_json(json!({
+            "remotes":{
+                "remote1":{
+                    "buttons":{
+                        "button1":{
+                            "signal": "100,200,300"
+                        },
+                        "button2":{
+                            "signal": "100,300,300"
+                        },
+                        "button3":{
+                            "signal": "200,500,600,700"
+                        }
+                    }
+                }
+            }
+        }))
+        .unwrap();
         let mut aho = AhoCorasick::new(&config, 0.1);
 
         // no match

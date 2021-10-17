@@ -69,9 +69,7 @@ fn main() -> Result<(), String> {
 mod tests {
     use super::*;
     use raspberry_pi_ir_hat::socat::socat;
-    use raspberry_pi_ir_hat::ConfigButton;
-    use raspberry_pi_ir_hat::ConfigRemote;
-    use std::collections::HashMap;
+    use serde_json::json;
     use std::io::Read;
     use std::str;
     use std::thread;
@@ -82,21 +80,17 @@ mod tests {
         let port = socat_result.get_port();
         let mut sp = socat_result.take_serial_port();
 
-        let mut remote1_buttons: HashMap<String, ConfigButton> = HashMap::new();
-        remote1_buttons.insert(
-            "button1".to_string(),
-            ConfigButton {
-                debounce: Option::None,
-                signal: "100,200,300".to_string(),
-            },
-        );
-        let remote1 = ConfigRemote {
-            buttons: remote1_buttons,
-        };
-        let mut remotes: HashMap<String, ConfigRemote> = HashMap::new();
-        remotes.insert("remote1".to_string(), remote1);
-
-        let config = Config { remotes };
+        let config = Config::from_json(json!({
+            "remotes": {
+                "remote1": {
+                    "buttons": {
+                        "button1": {
+                            "signal": "100,200,300"
+                        }
+                    }
+                }
+            }
+        })).unwrap();
 
         thread::spawn(move || {
             let read_line = |sp: &mut dyn Read| {

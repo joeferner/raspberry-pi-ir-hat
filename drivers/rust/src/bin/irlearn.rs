@@ -145,7 +145,8 @@ fn main() -> Result<(), String> {
         })
         .transpose()?;
 
-    let mut config = Config::read(filename, false)?;
+    let mut config =
+        Config::read(filename, false).or_else(|err| Result::Err(format!("{}", err)))?;
 
     let results = learn(
         port,
@@ -158,7 +159,9 @@ fn main() -> Result<(), String> {
     )?;
 
     config.set_button(remote, button, &results, debounce);
-    config.write(filename)?;
+    config
+        .write(filename)
+        .or_else(|err| Result::Err(format!("{}", err)))?;
     println!("button saved");
     return Result::Ok(());
 }
