@@ -5,7 +5,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Config {
     data: serde_json::Map<String, serde_json::Value>,
 }
@@ -338,6 +338,10 @@ impl Config {
             });
         });
     }
+
+    pub fn to_json_string(&self) -> Result<String, serde_json::Error> {
+        return serde_json::to_string(&self.data);
+    }
 }
 
 impl<'a> ConfigRemote<'a> {
@@ -397,6 +401,10 @@ impl<'a> ConfigButton<'a> {
                     .unwrap()
             })
             .collect();
+    }
+
+    pub fn get_json(&self) -> &'a serde_json::Map<String, serde_json::Value> {
+        return self.data;
     }
 }
 
