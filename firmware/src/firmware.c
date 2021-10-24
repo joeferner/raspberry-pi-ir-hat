@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "config.h"
+#include "current_sensor.h"
 #include "debug.h"
 #include "ir_rx.h"
 #include "ir_tx.h"
@@ -26,8 +27,9 @@ void setup() {
   rpi_setup();
   ir_rx_setup();
   ir_tx_setup();
+  current_sensor_setup();
   debug_send_string("?READY\n");
-  // LL_IWDG_Enable(IWDG);
+  LL_IWDG_Enable(IWDG);
 }
 
 void loop() {
@@ -35,6 +37,7 @@ void loop() {
   debug_loop();
   rpi_loop();
   ir_rx_loop();
+  current_sensor_loop();
 }
 
 void debug_rx(char *data) { process_rx(data, debug_send_string); }
@@ -84,4 +87,10 @@ void ir_rx_received(uint32_t value) {
 
   rpi_send_string(buffer);
   debug_send_string(buffer);
+}
+
+void current_sensor_overrun_error() {
+  const char *str = "-ERR current sensor overrun\n";
+  rpi_send_string(str);
+  debug_send_string(str);
 }

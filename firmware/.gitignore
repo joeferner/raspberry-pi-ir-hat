@@ -8,7 +8,6 @@ build/
 .mxproject
 .project
 CMakeLists.txt
-Makefile
 *_FLASH.ld
 *.bak
 STM32Make.make

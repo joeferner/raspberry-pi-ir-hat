@@ -7,6 +7,8 @@
 #include <stm32g0xx_ll_tim.h>
 #include <stm32g0xx_ll_usart.h>
 #include <stm32g0xx_ll_utils.h>
+#include <stm32g0xx_ll_adc.h>
+#include <stm32_assert.h>
 
 #include "config_generated.h"
 

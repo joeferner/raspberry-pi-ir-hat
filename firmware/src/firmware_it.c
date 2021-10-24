@@ -1,4 +1,5 @@
 #include "config.h"
+#include "current_sensor.h"
 #include "debug.h"
 #include "ir_rx.h"
 #include "ir_tx.h"
@@ -54,7 +55,19 @@ void TIM1_BRK_UP_TRG_COM_IRQHandler() {
     ;
 }
 
-void ADC1_IRQHandler() {
-  while (1)
-    ;
+void ADC1_IRQHandler(void) {
+  if (LL_ADC_IsActiveFlag_EOC(ADC1)) {
+    LL_ADC_ClearFlag_EOC(ADC1);
+    current_sensor_end_of_conversion();
+  }
+
+  if (LL_ADC_IsActiveFlag_EOS(ADC1)) {
+    LL_ADC_ClearFlag_EOS(ADC1);
+    current_sensor_end_of_sequence();
+  }
+
+  if (LL_ADC_IsActiveFlag_OVR(ADC1)) {
+    LL_ADC_ClearFlag_OVR(ADC1);
+    current_sensor_overrun_error();
+  }
 }

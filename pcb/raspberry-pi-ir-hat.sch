@@ -346,17 +346,13 @@ $EndComp
 Wire Wire Line
 	8100 2400 7500 2400
 Text Label 7500 2400 0    50   ~ 0
-IO1
+IORP1
 Text Label 6850 1750 2    50   ~ 0
-IO2
+CUR2
 Text Label 6850 1650 2    50   ~ 0
-IO3
-Text Label 3650 6800 0    50   ~ 0
-IO1
-Text Label 3650 6900 0    50   ~ 0
-IO2
+CUR1
 Text Label 3650 7000 0    50   ~ 0
-IO3
+IORP1
 Wire Wire Line
 	3900 6800 3650 6800
 Wire Wire Line
@@ -735,10 +731,7 @@ Wire Notes Line style solid
 	650  1000 3450 1000
 NoConn ~ 6250 2850
 NoConn ~ 6250 2250
-NoConn ~ 6250 2150
 NoConn ~ 6250 2050
-NoConn ~ 6250 1350
-NoConn ~ 6250 1250
 Wire Notes Line style solid
 	650  6000 3450 6000
 Wire Notes Line style solid
@@ -875,189 +868,71 @@ Wire Wire Line
 Wire Wire Line
 	6850 1750 6250 1750
 $Comp
-L device:R R?
+L device:R R7
 U 1 1 61793E70
-P 7200 4750
-F 0 "R?" V 7280 4750 50  0000 C CNN
-F 1 "100" V 7200 4750 50  0000 C CNN
-F 2 "Resistor_SMD:R_0805_2012Metric" V 7130 4750 50  0001 C CNN
-F 3 "~" H 7200 4750 50  0001 C CNN
-	1    7200 4750
+P 7950 4750
+F 0 "R7" V 8030 4750 50  0000 C CNN
+F 1 "DNP" V 7950 4750 50  0000 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 7880 4750 50  0001 C CNN
+F 3 "~" H 7950 4750 50  0001 C CNN
+	1    7950 4750
 	1    0    0    -1  
 $EndComp
 $Comp
-L kicad-library:AudioJack2_Ground J?
+L kicad-library:AudioJack2_Ground J5
 U 1 1 617A007F
-P 6750 4500
-F 0 "J?" H 6750 4850 50  0000 C CNN
-F 1 "RX" H 6750 4750 50  0000 C CNN
-F 2 "kicad-library:CUIDEVICES-SJ1-3523NG" H 6750 4500 50  0001 C CNN
-F 3 "~" H 6750 4500 50  0001 C CNN
-	1    6750 4500
+P 7500 4500
+F 0 "J5" H 7500 4850 50  0000 C CNN
+F 1 "RX" H 7500 4750 50  0000 C CNN
+F 2 "kicad-library:CUIDEVICES-SJ1-3523NG" H 7500 4500 50  0001 C CNN
+F 3 "~" H 7500 4500 50  0001 C CNN
+	1    7500 4500
 	1    0    0    -1  
 $EndComp
 $Comp
-L device:R R?
+L device:R R9
 U 1 1 617B5FAA
-P 7850 4750
-F 0 "R?" V 7930 4750 50  0000 C CNN
-F 1 "10K" V 7850 4750 50  0000 C CNN
-F 2 "Resistor_SMD:R_0805_2012Metric" V 7780 4750 50  0001 C CNN
-F 3 "~" H 7850 4750 50  0001 C CNN
-	1    7850 4750
-	1    0    0    -1  
-$EndComp
-$Comp
-L device:R R?
-U 1 1 617B9D60
-P 7850 5400
-F 0 "R?" V 7930 5400 50  0000 C CNN
-F 1 "10K" V 7850 5400 50  0000 C CNN
-F 2 "Resistor_SMD:R_0805_2012Metric" V 7780 5400 50  0001 C CNN
-F 3 "~" H 7850 5400 50  0001 C CNN
-	1    7850 5400
-	1    0    0    -1  
-$EndComp
-$Comp
-L device:C C?
-U 1 1 617C52F0
-P 7200 5400
-F 0 "C?" H 7225 5500 50  0000 L CNN
-F 1 "47uF" H 7225 5300 50  0000 L CNN
-F 2 "Capacitor_SMD:C_0805_2012Metric" H 7238 5250 50  0001 C CNN
-F 3 "~" H 7200 5400 50  0001 C CNN
-	1    7200 5400
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:GND #PWR?
-U 1 1 617CABF7
-P 7850 5750
-F 0 "#PWR?" H 7850 5500 50  0001 C CNN
-F 1 "GND" H 7850 5600 50  0000 C CNN
-F 2 "" H 7850 5750 50  0001 C CNN
-F 3 "" H 7850 5750 50  0001 C CNN
-	1    7850 5750
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	7200 5550 7200 5650
-Wire Wire Line
-	7200 5650 7850 5650
-Wire Wire Line
-	7850 5650 7850 5550
-Wire Wire Line
-	7850 5650 7850 5750
-Connection ~ 7850 5650
-Wire Wire Line
-	7850 5250 7850 5050
-Wire Wire Line
-	7850 5050 7200 5050
-Wire Wire Line
-	7200 5050 7200 5250
-Connection ~ 7850 5050
-Wire Wire Line
-	7850 5050 7850 4900
-Wire Wire Line
-	7200 5050 7200 4900
-Connection ~ 7200 5050
-Wire Wire Line
-	7850 4600 7850 4500
-$Comp
-L power:VCC #PWR?
-U 1 1 617E9691
-P 7850 4500
-F 0 "#PWR?" H 7850 4350 50  0001 C CNN
-F 1 "VCC" H 7850 4650 50  0000 C CNN
-F 2 "" H 7850 4500 50  0001 C CNN
-F 3 "" H 7850 4500 50  0001 C CNN
-	1    7850 4500
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	6750 4700 6750 5050
-Wire Wire Line
-	6750 5050 7200 5050
-Wire Wire Line
-	7200 4500 7200 4600
-Wire Wire Line
-	6950 4500 7200 4500
-NoConn ~ 6950 4400
-Wire Wire Line
-	7200 4500 7200 4350
-Wire Wire Line
-	7200 4350 7500 4350
-Connection ~ 7200 4500
-Text Label 7500 4350 2    50   ~ 0
-CUR1
-$Comp
-L device:R R?
-U 1 1 6184DC85
-P 9150 4750
-F 0 "R?" V 9230 4750 50  0000 C CNN
-F 1 "100" V 9150 4750 50  0000 C CNN
-F 2 "Resistor_SMD:R_0805_2012Metric" V 9080 4750 50  0001 C CNN
-F 3 "~" H 9150 4750 50  0001 C CNN
-	1    9150 4750
-	1    0    0    -1  
-$EndComp
-$Comp
-L kicad-library:AudioJack2_Ground J?
-U 1 1 6184DC8B
-P 8700 4500
-F 0 "J?" H 8700 4850 50  0000 C CNN
-F 1 "RX" H 8700 4750 50  0000 C CNN
-F 2 "kicad-library:CUIDEVICES-SJ1-3523NG" H 8700 4500 50  0001 C CNN
-F 3 "~" H 8700 4500 50  0001 C CNN
-	1    8700 4500
-	1    0    0    -1  
-$EndComp
-$Comp
-L device:R R?
-U 1 1 6184DC91
 P 9800 4750
-F 0 "R?" V 9880 4750 50  0000 C CNN
-F 1 "10K" V 9800 4750 50  0000 C CNN
+F 0 "R9" V 9880 4750 50  0000 C CNN
+F 1 "100K" V 9800 4750 50  0000 C CNN
 F 2 "Resistor_SMD:R_0805_2012Metric" V 9730 4750 50  0001 C CNN
 F 3 "~" H 9800 4750 50  0001 C CNN
 	1    9800 4750
 	1    0    0    -1  
 $EndComp
 $Comp
-L device:R R?
-U 1 1 6184DC97
+L device:R R10
+U 1 1 617B9D60
 P 9800 5400
-F 0 "R?" V 9880 5400 50  0000 C CNN
-F 1 "10K" V 9800 5400 50  0000 C CNN
+F 0 "R10" V 9880 5400 50  0000 C CNN
+F 1 "100K" V 9800 5400 50  0000 C CNN
 F 2 "Resistor_SMD:R_0805_2012Metric" V 9730 5400 50  0001 C CNN
 F 3 "~" H 9800 5400 50  0001 C CNN
 	1    9800 5400
 	1    0    0    -1  
 $EndComp
 $Comp
-L device:C C?
-U 1 1 6184DC9D
-P 9150 5400
-F 0 "C?" H 9175 5500 50  0000 L CNN
-F 1 "47uF" H 9175 5300 50  0000 L CNN
-F 2 "Capacitor_SMD:C_0805_2012Metric" H 9188 5250 50  0001 C CNN
-F 3 "~" H 9150 5400 50  0001 C CNN
-	1    9150 5400
+L device:C C3
+U 1 1 617C52F0
+P 9150 5350
+F 0 "C3" H 9175 5450 50  0000 L CNN
+F 1 "47uF" H 9175 5250 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0805_2012Metric" H 9188 5200 50  0001 C CNN
+F 3 "~" H 9150 5350 50  0001 C CNN
+	1    9150 5350
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GND #PWR?
-U 1 1 6184DCA3
+L power:GND #PWR022
+U 1 1 617CABF7
 P 9800 5750
-F 0 "#PWR?" H 9800 5500 50  0001 C CNN
+F 0 "#PWR022" H 9800 5500 50  0001 C CNN
 F 1 "GND" H 9800 5600 50  0000 C CNN
 F 2 "" H 9800 5750 50  0001 C CNN
 F 3 "" H 9800 5750 50  0001 C CNN
 	1    9800 5750
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	9150 5550 9150 5650
 Wire Wire Line
 	9150 5650 9800 5650
 Wire Wire Line
@@ -1069,27 +944,64 @@ Wire Wire Line
 	9800 5250 9800 5050
 Wire Wire Line
 	9800 5050 9150 5050
-Wire Wire Line
-	9150 5050 9150 5250
 Connection ~ 9800 5050
 Wire Wire Line
 	9800 5050 9800 4900
 Wire Wire Line
-	9150 5050 9150 4900
-Connection ~ 9150 5050
+	7950 5050 7950 4900
 Wire Wire Line
 	9800 4600 9800 4500
 $Comp
-L power:VCC #PWR?
-U 1 1 6184DCB6
+L power:VCC #PWR021
+U 1 1 617E9691
 P 9800 4500
-F 0 "#PWR?" H 9800 4350 50  0001 C CNN
+F 0 "#PWR021" H 9800 4350 50  0001 C CNN
 F 1 "VCC" H 9800 4650 50  0000 C CNN
 F 2 "" H 9800 4500 50  0001 C CNN
 F 3 "" H 9800 4500 50  0001 C CNN
 	1    9800 4500
 	1    0    0    -1  
 $EndComp
+Wire Wire Line
+	7500 4700 7500 5050
+Wire Wire Line
+	7500 5050 7950 5050
+Wire Wire Line
+	7950 4500 7950 4600
+Wire Wire Line
+	7700 4500 7950 4500
+NoConn ~ 7700 4400
+Wire Wire Line
+	7950 4500 7950 4350
+Wire Wire Line
+	7950 4350 8250 4350
+Connection ~ 7950 4500
+Text Label 8250 4350 2    50   ~ 0
+CUR1
+$Comp
+L device:R R8
+U 1 1 6184DC85
+P 9150 4750
+F 0 "R8" V 9230 4750 50  0000 C CNN
+F 1 "DNP" V 9150 4750 50  0000 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric" V 9080 4750 50  0001 C CNN
+F 3 "~" H 9150 4750 50  0001 C CNN
+	1    9150 4750
+	1    0    0    -1  
+$EndComp
+$Comp
+L kicad-library:AudioJack2_Ground J9
+U 1 1 6184DC8B
+P 8700 4500
+F 0 "J9" H 8700 4850 50  0000 C CNN
+F 1 "RX" H 8700 4750 50  0000 C CNN
+F 2 "kicad-library:CUIDEVICES-SJ1-3523NG" H 8700 4500 50  0001 C CNN
+F 3 "~" H 8700 4500 50  0001 C CNN
+	1    8700 4500
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9150 5050 9150 4900
 Wire Wire Line
 	8700 4700 8700 5050
 Wire Wire Line
@@ -1106,8 +1018,37 @@ Wire Wire Line
 Connection ~ 9150 4500
 Text Label 9450 4350 2    50   ~ 0
 CUR2
-Text Notes 7350 4800 0    50   ~ 0
+Text Notes 8100 4800 0    50   ~ 0
 BURDEN\nRESISTOR
 Text Notes 6050 6550 0    50   ~ 0
 1) Convert maximum RMS current to peak-current by multiplying by √2.\n     Primary peak-current = RMS current × √2 = 10 A × 1.414 = 14.14A\n2) Divide the peak-current by the number of turns in the CT to give the peak-current in the secondary coil.\n    Secondary peak-current = Primary peak-current / no. of turns = 14.14 A / 2000 = 0.00707A\n3) To maximise measurement resolution, the voltage across the burden resistor at peak-current should\n     be equal to one-half of the Arduino analog reference voltage. (AREF / 2)\n    Ideal burden resistance = floor((AREF/2) / Secondary peak-current) = floor(1.65 V / 0.00707 A) = 233 Ω
+Connection ~ 9150 5050
+Wire Wire Line
+	9150 5050 9150 5200
+Wire Wire Line
+	9150 5500 9150 5650
+Wire Wire Line
+	8700 5050 7950 5050
+Connection ~ 8700 5050
+Connection ~ 7950 5050
+Text Label 10200 5050 2    50   ~ 0
+CURREF
+Text Label 6850 1250 2    50   ~ 0
+CURREF
+Wire Wire Line
+	6850 1250 6250 1250
+Wire Wire Line
+	6250 1350 6850 1350
+Text Label 6850 1350 2    50   ~ 0
+STMIO1
+Text Label 3650 6800 0    50   ~ 0
+STMIO1
+Text Label 3650 6900 0    50   ~ 0
+STMIO2
+Text Label 6850 2150 2    50   ~ 0
+STMIO2
+Wire Wire Line
+	6850 2150 6250 2150
+Wire Wire Line
+	10200 5050 9800 5050
 $EndSCHEMATC

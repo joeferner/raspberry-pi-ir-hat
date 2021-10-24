@@ -1,3 +1,7 @@
+# STMicroelectronics Documentation
+
+https://github.com/STMicroelectronics/STM32CubeG0
+
 # STM32CubeMX Project Setup
 
 1. Select MCU STM32G031F4 (https://github.com/STMicroelectronics/STM32CubeG0)
@@ -23,6 +27,14 @@
         - Mode: Circular
       - NVIC Settings: Enable TIM3 global interrupt 
    1. **Reset Pin**: Set PF2 to GPIO_Input and name it `RESET`
+   1. **ADC1**: Enable ADC1
+      - Enable IN0 (PA0), IN4 (PA4), IN5 (PA5)
+      - Scan Conversion Mode: Enabled
+      - Number of Conversion: 3
+      - Rank 1: Channel 0
+      - Rank 2: Channel 4
+      - Rank 3: Channel 5
+      - NVIC Settings -> ADC1 interrupt: Enabled
    1. Enable IWDG
 1. Project Manager
    1. Project -> Toolchain/IDE -> Makefile

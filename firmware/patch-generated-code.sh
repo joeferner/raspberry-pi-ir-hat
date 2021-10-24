@@ -4,6 +4,8 @@ set -e
 DIR=$(cd "$(dirname "$0")" && pwd)
 cd "${DIR}"
 
+dos2unix Makefile
+
 if ! grep -q 'extern void setup\(\)' Core/Src/main.c; then
   echo "patching Core/Src/main.c: adding declarations"
   sed -i -e 's|/\* USER CODE BEGIN 0 \*/|/* USER CODE BEGIN 0 */\nextern void setup();\nextern void loop();\n|' Core/Src/main.c
