@@ -15,8 +15,7 @@ static uint8_t usart_tx_buffer[TX_BUFFER_LEN];
 static uint8_t usart_rx_buffer[RX_BUFFER_LEN];
 
 void rpi_setup() {
-  usart_it_init(&usart, RPI_USART, usart_tx_buffer, sizeof(usart_tx_buffer), usart_rx_buffer,
-                sizeof(usart_rx_buffer));
+  usart_it_init(&usart, RPI_USART, usart_tx_buffer, sizeof(usart_tx_buffer), usart_rx_buffer, sizeof(usart_rx_buffer));
 }
 
 void rpi_loop() {
