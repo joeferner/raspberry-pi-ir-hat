@@ -30,6 +30,7 @@ https://github.com/STMicroelectronics/STM32CubeG0
    1. **ADC1**: Enable ADC1
       - Enable IN0 (PA0), IN4 (PA4), IN5 (PA5)
       - Scan Conversion Mode: Enabled
+      - Discontinuous Conversion Mode: Enabled
       - Number of Conversion: 3
       - Rank 1: Channel 0
       - Rank 2: Channel 4
