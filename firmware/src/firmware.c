@@ -88,3 +88,9 @@ void ir_rx_received(uint32_t value) {
   rpi_send_string(buffer);
   debug_send_string(buffer);
 }
+
+void current_sensor_overrun_error() {
+  const char *str = "-ERR current sensor overrun\n";
+  rpi_send_string(str);
+  debug_send_string(str);
+}
