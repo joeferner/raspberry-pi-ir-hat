@@ -29,7 +29,7 @@ void setup() {
   ir_tx_setup();
   current_sensor_setup();
   debug_send_string("?READY\n");
-  LL_IWDG_Enable(IWDG);
+  // TODO LL_IWDG_Enable(IWDG);
 }
 
 void loop() {
