@@ -71,6 +71,14 @@ void process_rx(char *data, send_string send_string) {
       ir_tx_send();
     }
     send_string("+OK\n");
+  } else if (strncmp(data, "+c", 2) == 0) {
+    char buffer[50];
+    strcpy(buffer, "+OK ");
+    itoa(current_sensor_get1(), buffer + strlen(buffer), 10);
+    strcat(buffer, ",");
+    itoa(current_sensor_get2(), buffer + strlen(buffer), 10);
+    strcat(buffer, "\n");
+    send_string(buffer);
   } else {
     send_string("-ERR \"");
     send_string(data);
