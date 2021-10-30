@@ -72,11 +72,18 @@ void process_rx(char *data, send_string send_string) {
     }
     send_string("+OK\n");
   } else if (strncmp(data, "+c", 2) == 0) {
+    uint16_t d;
+    if (data[2] == '1') {
+      d = current_sensor_get1();
+    } else if (data[2] == '2') {
+      d = current_sensor_get2();
+    } else {
+      send_string("-ERR invalid channel\n");
+      return;
+    }
     char buffer[50];
     strcpy(buffer, "+OK ");
-    itoa(current_sensor_get1(), buffer + strlen(buffer), 10);
-    strcat(buffer, ",");
-    itoa(current_sensor_get2(), buffer + strlen(buffer), 10);
+    itoa(d, buffer + strlen(buffer), 10);
     strcat(buffer, "\n");
     send_string(buffer);
   } else {

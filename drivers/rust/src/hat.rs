@@ -149,24 +149,39 @@ impl Hat {
         self.raw_hat
             .send_carrier_frequency(frequency)
             .map_err(|err| HatError::RawHatError(err))?;
-        return self.wait_for_response();
+        return self.wait_for_response().map(|_| ());
     }
 
     fn send_signal(&mut self, signal: u32) -> Result<(), HatError> {
         self.raw_hat
             .send_signal(signal)
             .map_err(|err| HatError::RawHatError(err))?;
-        return self.wait_for_response();
+        return self.wait_for_response().map(|_| ());
     }
 
     fn send_signal_complete(&mut self) -> Result<(), HatError> {
         self.raw_hat
             .send_signal_complete()
             .map_err(|err| HatError::RawHatError(err))?;
-        return self.wait_for_response();
+        return self.wait_for_response().map(|_| ());
     }
 
-    fn wait_for_response(&mut self) -> Result<(), HatError> {
+    #[allow(non_snake_case)]
+    pub fn get_current_mV(&mut self, channel: u32) -> Result<u32, HatError> {
+        self.raw_hat
+            .send_get_current(channel)
+            .map_err(|err| HatError::RawHatError(err))?;
+        return self.wait_for_response().and_then(|value| match value {
+            Option::None => Result::Err(HatError::ErrResponse(
+                "invalid response for get current (no value)".to_string(),
+            )),
+            Option::Some(s) => Result::Ok(s.parse::<u32>().map_err(|err| {
+                HatError::ErrResponse(format!("invalid response {}: {}", s, err))
+            })?),
+        });
+    }
+
+    fn wait_for_response(&mut self) -> Result<Option<String>, HatError> {
         loop {
             match self
                 .response_queue
@@ -178,7 +193,7 @@ impl Hat {
                     HatError::Timeout(err)
                 })? {
                 RawHatMessage::Ready => {}
-                RawHatMessage::OkResponse(_) => return Result::Ok(()),
+                RawHatMessage::OkResponse(value) => return Result::Ok(value),
                 RawHatMessage::ErrResponse(err) => return Result::Err(HatError::ErrResponse(err)),
                 RawHatMessage::Error(err) => return Result::Err(HatError::ErrResponse(err)),
                 RawHatMessage::Signal(_) => {

@@ -43,6 +43,7 @@ pub enum RawHatError {
     StdIoError(std::io::Error),
     WriteErrorLengthMismatch { expected: usize, actual: usize },
     GpioError(gpio::Error),
+    InvalidArgument(String),
 }
 
 impl fmt::Display for RawHatError {
@@ -52,6 +53,7 @@ impl fmt::Display for RawHatError {
             RawHatError::SerialPortError(err) => write!(f, "serial port error: {}", err),
             RawHatError::StdIoError(err) => write!(f, "io error: {}", err),
             RawHatError::GpioError(err) => write!(f, "gpio error: {}", err),
+            RawHatError::InvalidArgument(err) => write!(f, "invalid argument error: {}", err),
             RawHatError::WriteErrorLengthMismatch { expected, actual } => write!(
                 f,
                 "write length mismatch, expected {}, actual {}",
@@ -143,6 +145,17 @@ impl RawHat {
 
     pub fn send_signal_complete(&mut self) -> Result<(), RawHatError> {
         return self.send("+send\n");
+    }
+
+    pub fn send_get_current(&mut self, channel: u32) -> Result<(), RawHatError> {
+        if channel >= 2 {
+            return Result::Err(RawHatError::InvalidArgument(format!(
+                "expected 0 or 1, found {}",
+                channel
+            )));
+        }
+        let cmd = format!("+c{}\n", channel);
+        return self.send(&cmd);
     }
 
     pub fn send(&mut self, value: &str) -> Result<(), RawHatError> {
