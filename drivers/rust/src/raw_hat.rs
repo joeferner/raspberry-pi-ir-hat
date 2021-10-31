@@ -27,6 +27,12 @@ pub enum RawHatMessage {
     Error(String),
 }
 
+#[derive(Copy, Clone)]
+pub enum CurrentChannel {
+    Channel0 = 0,
+    Channel1 = 1,
+}
+
 pub struct RawHat {
     port_path: String,
     port: Option<Box<dyn SerialPort>>,
@@ -147,14 +153,8 @@ impl RawHat {
         return self.send("+send\n");
     }
 
-    pub fn send_get_current(&mut self, channel: u32) -> Result<(), RawHatError> {
-        if channel >= 2 {
-            return Result::Err(RawHatError::InvalidArgument(format!(
-                "expected 0 or 1, found {}",
-                channel
-            )));
-        }
-        let cmd = format!("+c{}\n", channel);
+    pub fn send_get_current(&mut self, channel: CurrentChannel) -> Result<(), RawHatError> {
+        let cmd = format!("+c{}\n", channel as u32);
         return self.send(&cmd);
     }
 

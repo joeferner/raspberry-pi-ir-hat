@@ -1,6 +1,7 @@
 use crate::aho_corasick::AhoCorasick;
 use crate::ButtonPress;
 use crate::Config;
+use crate::CurrentChannel;
 use crate::RawHatError;
 use crate::{RawHat, RawHatMessage};
 use std::error::Error;
@@ -20,6 +21,10 @@ pub struct Hat {
     response_queue: mpsc::Receiver<RawHatMessage>,
     raw_hat: RawHat,
     timeout: Duration,
+}
+
+pub struct Current {
+    pub milliamps: u32,
 }
 
 #[derive(Debug)]
@@ -166,8 +171,7 @@ impl Hat {
         return self.wait_for_response().map(|_| ());
     }
 
-    #[allow(non_snake_case)]
-    pub fn get_current_mV(&mut self, channel: u32) -> Result<u32, HatError> {
+    pub fn get_current(&mut self, channel: CurrentChannel) -> Result<Current, HatError> {
         self.raw_hat
             .send_get_current(channel)
             .map_err(|err| HatError::RawHatError(err))?;
@@ -175,9 +179,13 @@ impl Hat {
             Option::None => Result::Err(HatError::ErrResponse(
                 "invalid response for get current (no value)".to_string(),
             )),
-            Option::Some(s) => Result::Ok(s.parse::<u32>().map_err(|err| {
-                HatError::ErrResponse(format!("invalid response {}: {}", s, err))
-            })?),
+            Option::Some(s) => Result::Ok(
+                s.parse::<u32>()
+                    .map(|v| Current { milliamps: v })
+                    .map_err(|err| {
+                        HatError::ErrResponse(format!("invalid response {}: {}", s, err))
+                    })?,
+            ),
         });
     }
 
