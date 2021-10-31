@@ -73,10 +73,10 @@ void process_rx(char *data, send_string send_string) {
     send_string("+OK\n");
   } else if (strncmp(data, "+c", 2) == 0) {
     uint16_t d;
-    if (data[2] == '1') {
+    if (data[2] == '0') {
+      d = current_sensor_get0();
+    } else if (data[2] == '1') {
       d = current_sensor_get1();
-    } else if (data[2] == '2') {
-      d = current_sensor_get2();
     } else {
       send_string("-ERR invalid channel\n");
       return;

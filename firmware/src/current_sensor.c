@@ -18,16 +18,16 @@
 
 typedef enum {
   CurrentReadRank_Reference,
-  CurrentReadRank_Current2,
   CurrentReadRank_Current1,
+  CurrentReadRank_Current0,
   CurrentReadRank_Unknown,
 } CurrentReadRank;
 
 static uint16_t current_reference_mV;
+static uint16_t current_0_mV;
+static uint16_t current_0_local_max_mV;
 static uint16_t current_1_mV;
 static uint16_t current_1_local_max_mV;
-static uint16_t current_2_mV;
-static uint16_t current_2_local_max_mV;
 static uint16_t sequence_count;
 static CurrentReadRank current_read_rank;
 static volatile bool end_of_conversion;
@@ -38,10 +38,10 @@ static uint16_t to_mA(uint16_t mV);
 void current_sensor_setup() {
   end_of_conversion = false;
   end_of_sequence = false;
-  current_1_mV = current_2_mV = current_reference_mV = 3300 / 2;
-  current_1_local_max_mV = current_2_local_max_mV = 0;
+  current_0_mV = current_1_mV = current_reference_mV = 3300 / 2;
+  current_0_local_max_mV = current_1_local_max_mV = 0;
   sequence_count = 0;
-  current_read_rank = CurrentReadRank_Current2;  // CurrentReadRank_Reference
+  current_read_rank = CurrentReadRank_Current1;  // CurrentReadRank_Reference
   LL_ADC_EnableIT_EOC(ADC1);
   LL_ADC_EnableIT_EOS(ADC1);
   LL_ADC_EnableIT_OVR(ADC1);
@@ -58,15 +58,15 @@ void current_sensor_loop() {
 
     if (current_read_rank == CurrentReadRank_Reference) {
       current_reference_mV = ((VREF_DECAY * data_mV) + ((100 - VREF_DECAY) * current_reference_mV)) / 100;
-      current_read_rank = CurrentReadRank_Current1;
-    } else if (current_read_rank == CurrentReadRank_Current1 || current_read_rank == CurrentReadRank_Current2) {
+      current_read_rank = CurrentReadRank_Current0;
+    } else if (current_read_rank == CurrentReadRank_Current0 || current_read_rank == CurrentReadRank_Current1) {
       uint16_t diff = abs((int32_t)current_reference_mV - (int32_t)data_mV);
 
-      if (current_read_rank == CurrentReadRank_Current1) {
+      if (current_read_rank == CurrentReadRank_Current0) {
+        current_0_local_max_mV = MAX(diff, current_0_local_max_mV);
+        current_read_rank = CurrentReadRank_Unknown;  // TODO CurrentReadRank_Current1
+      } else if (current_read_rank == CurrentReadRank_Current1) {
         current_1_local_max_mV = MAX(diff, current_1_local_max_mV);
-        current_read_rank = CurrentReadRank_Unknown;  // TODO CurrentReadRank_Current2
-      } else if (current_read_rank == CurrentReadRank_Current2) {
-        current_2_local_max_mV = MAX(diff, current_2_local_max_mV);
         current_read_rank = CurrentReadRank_Reference;  // TODO CurrentReadRank_Unknown
       } else {
         assert_param(false);
@@ -78,14 +78,14 @@ void current_sensor_loop() {
   }
 
   if (end_of_sequence) {
-    current_read_rank = CurrentReadRank_Current2;  // TODO CurrentReadRank_Reference
+    current_read_rank = CurrentReadRank_Current1;  // TODO CurrentReadRank_Reference
     end_of_sequence = false;
     sequence_count++;
     if (sequence_count > LOCAL_SEQUENCE_COUNT) {
+      current_0_mV = ((CURRENT_DECAY * current_0_local_max_mV) + ((100 - CURRENT_DECAY) * current_0_mV)) / 100;
+      current_0_local_max_mV = 0;
       current_1_mV = ((CURRENT_DECAY * current_1_local_max_mV) + ((100 - CURRENT_DECAY) * current_1_mV)) / 100;
       current_1_local_max_mV = 0;
-      current_2_mV = ((CURRENT_DECAY * current_2_local_max_mV) + ((100 - CURRENT_DECAY) * current_2_mV)) / 100;
-      current_2_local_max_mV = 0;
       sequence_count = 0;
     }
   }
@@ -101,9 +101,9 @@ void current_sensor_end_of_sequence() { end_of_sequence = true; }
 
 uint16_t current_sensor_get_ref() { return current_reference_mV; }
 
-uint16_t current_sensor_get1() { return to_mA(current_1_mV); }
+uint16_t current_sensor_get0() { return to_mA(current_0_mV); }
 
-uint16_t current_sensor_get2() { return to_mA(current_2_mV); }
+uint16_t current_sensor_get1() { return to_mA(current_1_mV); }
 
 static uint16_t to_mA(uint16_t mV) {
   uint32_t data = MAX(0, mV - 15);
