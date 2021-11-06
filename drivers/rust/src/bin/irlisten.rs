@@ -73,7 +73,6 @@ mod tests {
     use super::*;
     use raspberry_pi_ir_hat::hat::HatMessage::ButtonPress;
     use raspberry_pi_ir_hat::socat::socat;
-    use serde_json::json;
     use std::sync::Arc;
     use std::sync::Mutex;
     use std::time::Duration;
@@ -83,23 +82,19 @@ mod tests {
         let port = socat_result.get_port();
         let mut sp = socat_result.take_serial_port();
 
-        let config = Config::from_json(json!({
-            "remotes":{
-                "remote1":{
-                    "buttons":{
-                        "button1":{
-                            "signal": "100,200,300"
-                        },
-                        "button2":{
-                            "signal": "100,300,300"
-                        },
-                        "button3":{
-                            "signal": "200,500,600,700"
-                        }
-                    }
-                }
-            }
-        }))
+        let config = Config::from_str(
+            r#"
+remotes:
+  remote1:
+    buttons:
+      button1:
+        signal: "100,200,300"
+      button2:
+        signal: "100,300,300"
+      button3:
+        signal: "200,500,600,700"
+"#,
+        )
         .unwrap();
 
         thread::spawn(move || {

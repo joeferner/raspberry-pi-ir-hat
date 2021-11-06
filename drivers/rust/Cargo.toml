@@ -22,7 +22,7 @@ path = "src/bin/irlisten.rs"
 [dependencies]
 clap = "2.33.3"
 serde = { version = "1.0.130", features = ["derive"] }
-serde_json = "1.0.68"
+serde_yaml = "0.8.21"
 serialport = "4.0.1"
 itertools = "0.10.1"
 rppal = "0.13.0"

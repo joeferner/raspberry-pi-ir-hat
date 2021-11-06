@@ -135,13 +135,15 @@ fn main() -> Result<(), String> {
     let debounce = args
         .value_of("debounce")
         .map(|s| {
-            s.parse::<u32>().map_err(|err| {
-                format!(
-                    "invalid debounce: {} ({})",
-                    args.value_of("debounce").unwrap(),
-                    err
-                )
-            })
+            s.parse::<u64>()
+                .map_err(|err| {
+                    format!(
+                        "invalid debounce: {} ({})",
+                        args.value_of("debounce").unwrap(),
+                        err
+                    )
+                })
+                .map(|millis| Duration::from_millis(millis))
         })
         .transpose()?;
 

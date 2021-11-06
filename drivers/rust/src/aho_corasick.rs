@@ -235,10 +235,9 @@ fn find_failure(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
     #[test]
     fn test_empty() {
-        let config = Config::from_json(json!({})).unwrap();
+        let config = Config::new();
         let mut aho = AhoCorasick::new(&config, 0.1);
         assert!(aho.append_find(100).is_none());
         assert!(aho.append_find(200).is_none());
@@ -246,24 +245,21 @@ mod tests {
 
     #[test]
     fn test_multiple_buttons() {
-        let config = Config::from_json(json!({
-            "remotes":{
-                "remote1":{
-                    "buttons":{
-                        "button1":{
-                            "signal": "100,200,300"
-                        },
-                        "button2":{
-                            "signal": "100,300,300"
-                        },
-                        "button3":{
-                            "signal": "200,500,600,700"
-                        }
-                    }
-                }
-            }
-        }))
+        let config = Config::from_str(
+            r#"
+remotes:
+  remote1:
+    buttons:
+      button1:
+        signal: "100,200,300"
+      button2:
+        signal: "100,300,300"
+      button3:
+        signal: "200,500,600,700"
+"#,
+        )
         .unwrap();
+
         let mut aho = AhoCorasick::new(&config, 0.1);
 
         // no match

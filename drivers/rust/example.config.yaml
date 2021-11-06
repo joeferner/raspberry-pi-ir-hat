@@ -1,0 +1,7 @@
+remotes:
+    test:
+        buttons:
+            volumeUp:
+                signal: "100,200,300"
+            volumeDown:
+                signal: "100,200,400"

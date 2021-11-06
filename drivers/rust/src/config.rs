@@ -1,34 +1,37 @@
-use serde_json::json;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
+use std::time::Duration;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Config {
-    data: serde_json::Map<String, serde_json::Value>,
+    remotes: HashMap<String, ConfigRemote>,
 }
 
-#[derive(Debug)]
-pub struct ConfigRemote<'a> {
-    data: &'a serde_json::Map<String, serde_json::Value>,
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct ConfigRemote {
+    buttons: HashMap<String, ConfigButton>,
 }
 
-#[derive(Debug)]
-pub struct ConfigButton<'a> {
-    /// signal - comma separated list of signals
-    /// debounce - Number of milliseconds between consecutive presses of this button
-    data: &'a serde_json::Map<String, serde_json::Value>,
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct ConfigButton {
+    /// comma separated list of signals
+    signal: String,
+    /// Number of milliseconds between consecutive presses of this button
+    debounce: Option<Duration>,
 }
 
 #[derive(Debug)]
 pub enum ConfigError {
     WriteError(String, std::io::Error),
-    WriteJsonError(String, serde_json::Error),
-    JsonReadError(String, std::io::Error),
-    JsonParseError(String, serde_json::Error),
-    JsonParseGenericError(String),
+    WriteYamlError(String, serde_yaml::Error),
+    YamlReadError(String, std::io::Error),
+    YamlParseError(String, serde_yaml::Error),
+    YamlParseGenericError(String),
 }
 
 impl fmt::Display for ConfigError {
@@ -37,17 +40,17 @@ impl fmt::Display for ConfigError {
             ConfigError::WriteError(message, cause) => {
                 write!(f, "write error: {}: {}", message, cause)
             }
-            ConfigError::WriteJsonError(message, cause) => {
-                write!(f, "write json error: {}: {}", message, cause)
+            ConfigError::WriteYamlError(message, cause) => {
+                write!(f, "write yaml error: {}: {}", message, cause)
             }
-            ConfigError::JsonReadError(message, err) => {
-                write!(f, "json read error: {}: {}", message, err)
+            ConfigError::YamlReadError(message, err) => {
+                write!(f, "yaml read error: {}: {}", message, err)
             }
-            ConfigError::JsonParseError(message, err) => {
-                write!(f, "json parse error: {}: {}", message, err)
+            ConfigError::YamlParseError(message, err) => {
+                write!(f, "yaml parse error: {}: {}", message, err)
             }
-            ConfigError::JsonParseGenericError(message) => {
-                write!(f, "json parse error: {}", message)
+            ConfigError::YamlParseGenericError(message) => {
+                write!(f, "yaml parse error: {}", message)
             }
         }
     }
@@ -56,147 +59,61 @@ impl fmt::Display for ConfigError {
 impl Error for ConfigError {}
 
 impl Config {
-    pub fn from_json(json: serde_json::Value) -> Result<Config, ConfigError> {
-        return Config::validate_config_json(json);
+    pub fn new() -> Config {
+        return Config {
+            remotes: HashMap::new(),
+        };
+    }
+
+    pub fn from_str(yaml: &str) -> Result<Config, ConfigError> {
+        let config: Config = serde_yaml::from_str(yaml).map_err(|err| {
+            ConfigError::YamlParseError(
+                format!("could not read config: contained invalid yaml values"),
+                err,
+            )
+        })?;
+        Config::validate_config_yaml(&config)?;
+        return Result::Ok(config);
+    }
+
+    pub fn from_yaml(yaml: serde_yaml::Value) -> Result<Config, ConfigError> {
+        let config: Config = serde_yaml::from_value(yaml).map_err(|err| {
+            ConfigError::YamlParseError(
+                format!("could not read config: contained invalid yaml values"),
+                err,
+            )
+        })?;
+        Config::validate_config_yaml(&config)?;
+        return Result::Ok(config);
     }
 
     pub fn read(filename: &str, create: bool) -> Result<Config, ConfigError> {
         if create && !Path::new(filename).exists() {
-            let data = match json!({
-                "remotes": {}
-            }) {
-                serde_json::Value::Object(obj) => obj,
-                _ => panic!("parse failed"),
-            };
-            let config = Config { data };
+            let config = Config::new();
             return Result::Ok(config);
         }
 
         let file = File::open(filename).map_err(|err| {
-            ConfigError::JsonReadError(format!("failed to read file: {}", filename), err)
+            ConfigError::YamlReadError(format!("failed to read file: {}", filename), err)
         })?;
         let reader = BufReader::new(file);
-        let json = serde_json::from_reader(reader).map_err(|err| {
-            ConfigError::JsonParseError(
-                format!("could not read file: {}: contained invalid json", filename),
+        let config: Config = serde_yaml::from_reader(reader).map_err(|err| {
+            ConfigError::YamlParseError(
+                format!("could not read file: {}: contained invalid yaml", filename),
                 err,
             )
         })?;
-        return Config::validate_config_json(json);
+        Config::validate_config_yaml(&config)?;
+        return Result::Ok(config);
     }
 
-    fn validate_config_json(json: serde_json::Value) -> Result<Config, ConfigError> {
-        return match json {
-            serde_json::Value::Object(data) => {
-                match data.get("remotes") {
-                    Option::Some(remotes_value) => {
-                        Config::validate_remotes(remotes_value)?;
-                    }
-                    Option::None => {}
-                }
-                Result::Ok(Config { data: data })
-            }
-            _ => Result::Err(ConfigError::JsonParseGenericError(
-                "json must be an object".to_string(),
-            )),
-        };
-    }
-
-    fn validate_remotes(remotes_value: &serde_json::Value) -> Result<(), ConfigError> {
-        match remotes_value {
-            serde_json::Value::Object(remotes) => {
-                for remote_name in remotes.keys() {
-                    match remotes.get(remote_name).unwrap() {
-                        serde_json::Value::Object(remote) => match remote.get("buttons") {
-                            Option::Some(buttons_value) => {
-                                Config::validate_buttons(remote_name, buttons_value)?;
-                            }
-                            Option::None => {}
-                        },
-                        _ => {
-                            return Result::Err(ConfigError::JsonParseGenericError(format!(
-                                "remote {} must be an object",
-                                remote_name
-                            )))
-                        }
-                    }
-                }
-            }
-            _ => {
-                return Result::Err(ConfigError::JsonParseGenericError(format!(
-                    "remotes must be an object"
-                )))
-            }
-        }
-        return Result::Ok(());
-    }
-
-    fn validate_buttons(
-        remote_name: &str,
-        buttons_value: &serde_json::Value,
-    ) -> Result<(), ConfigError> {
-        match buttons_value {
-            serde_json::Value::Object(buttons) => {
-                for button_name in buttons.keys() {
-                    match buttons.get(button_name).unwrap() {
-                        serde_json::Value::Object(button) => {
-                            Config::validate_button(remote_name, button_name, &button)?;
-                        }
-                        _ => {
-                            return Result::Err(ConfigError::JsonParseGenericError(format!(
-                                "button {}:{} must be an object",
-                                remote_name, button_name
-                            )))
-                        }
-                    }
-                }
-            }
-            _ => {
-                return Result::Err(ConfigError::JsonParseGenericError(format!(
-                    "remote {} buttons must be an object",
-                    remote_name
-                )))
-            }
-        }
-        return Result::Ok(());
-    }
-
-    fn validate_button(
-        remote_name: &str,
-        button_name: &str,
-        button: &serde_json::Map<String, serde_json::Value>,
-    ) -> Result<(), ConfigError> {
-        match button.get("signal") {
-            Option::Some(signal_value) => {
-                Config::validate_signal(remote_name, button_name, signal_value)?;
-            }
-            Option::None => {
-                return Result::Err(ConfigError::JsonParseGenericError(format!(
-                    "button {}:{} missing signal",
-                    remote_name, button_name
-                )));
-            }
-        }
-        match button.get("debounce") {
-            Option::Some(debounce) => {
-                Config::validate_debounce(remote_name, button_name, debounce)?;
-            }
-            Option::None => {}
-        }
-        return Result::Ok(());
-    }
-
-    fn validate_signal(
-        remote_name: &str,
-        button_name: &str,
-        signal_value: &serde_json::Value,
-    ) -> Result<(), ConfigError> {
-        match signal_value {
-            serde_json::Value::String(signal) => {
-                for s in signal.split(",") {
+    fn validate_config_yaml(config: &Config) -> Result<(), ConfigError> {
+        for (remote_name, remote) in &config.remotes {
+            for (button_name, button) in &remote.buttons {
+                for s in button.signal.split(",") {
                     match s.trim().parse::<u32>() {
                         Result::Err(err) => {
-                            return Result::Err(ConfigError::JsonParseGenericError(format!(
+                            return Result::Err(ConfigError::YamlParseGenericError(format!(
                                 "{}:{} signal parse error: {}",
                                 remote_name, button_name, err
                             )))
@@ -204,29 +121,6 @@ impl Config {
                         Result::Ok(_) => {}
                     }
                 }
-            }
-            _ => {
-                return Result::Err(ConfigError::JsonParseGenericError(format!(
-                    "{}:{} signal must be a string",
-                    remote_name, button_name
-                )));
-            }
-        }
-        return Result::Ok(());
-    }
-
-    fn validate_debounce(
-        remote_name: &str,
-        button_name: &str,
-        debounce_value: &serde_json::Value,
-    ) -> Result<(), ConfigError> {
-        match debounce_value {
-            serde_json::Value::Number(_) => {}
-            _ => {
-                return Result::Err(ConfigError::JsonParseGenericError(format!(
-                    "{}:{} debounce must be a number",
-                    remote_name, button_name
-                )));
             }
         }
         return Result::Ok(());
@@ -243,33 +137,21 @@ impl Config {
         remote_name: &str,
         button_name: &str,
         signal: &str,
-        debounce: Option<u32>,
+        debounce: Option<Duration>,
     ) {
-        let button = self
-            .data
-            .entry("remotes")
-            .or_insert_with(|| json!({}))
-            .as_object_mut()
-            .expect("remotes is not an object")
-            .entry(remote_name)
-            .or_insert_with(|| json!({}))
-            .as_object_mut()
-            .unwrap_or_else(|| panic!("remote {} is not an object", remote_name))
-            .entry(button_name)
-            .or_insert_with(|| json!({}))
-            .as_object_mut()
-            .unwrap_or_else(|| panic!("button {}:{} is not an object", remote_name, button_name));
-
-        button.insert(
-            "signal".to_string(),
-            serde_json::Value::String(signal.to_string()),
+        let remote = self
+            .remotes
+            .entry(remote_name.to_string())
+            .or_insert_with(|| ConfigRemote {
+                buttons: HashMap::new(),
+            });
+        remote.buttons.insert(
+            button_name.to_string(),
+            ConfigButton {
+                signal: signal.to_string(),
+                debounce,
+            },
         );
-        if let Option::Some(d) = debounce {
-            button.insert(
-                "debounce".to_string(),
-                serde_json::Value::Number(serde_json::Number::from(d)),
-            );
-        }
     }
 
     pub fn write(&self, filename: &str) -> Result<(), ConfigError> {
@@ -282,117 +164,56 @@ impl Config {
                 ));
             }
         };
-        return match serde_json::to_writer(file, &self.data) {
+        return match serde_yaml::to_writer(file, &self) {
             Result::Ok(_) => Result::Ok(()),
-            Result::Err(err) => Result::Err(ConfigError::WriteJsonError(
+            Result::Err(err) => Result::Err(ConfigError::WriteYamlError(
                 format!("could not write file: {}", filename),
                 err,
             )),
         };
     }
 
-    fn get_remotes(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
-        return self.data.get("remotes").and_then(|value| {
-            return match value {
-                serde_json::Value::Object(obj) => Option::Some(obj),
-                _ => panic!("invalid config"),
-            };
-        });
-    }
-
     pub fn get_remote_names(&self) -> Vec<String> {
-        return match self.get_remotes() {
-            Option::None => Vec::new(),
-            Option::Some(remotes) => {
-                let mut result = Vec::new();
-                for f in remotes.keys() {
-                    result.push(f.to_owned());
-                }
-                result
-            }
-        };
-    }
-
-    pub fn get_remote(&self, remote_name: &str) -> Option<ConfigRemote> {
-        return self.data.get("remotes").and_then(|remotes| {
-            return remotes.get(remote_name).and_then(|remote| {
-                return remote
-                    .as_object()
-                    .and_then(|remote| Option::Some(ConfigRemote::new(remote)));
-            });
-        });
-    }
-
-    pub fn get_button(&self, remote_name: &str, button_name: &str) -> Option<ConfigButton> {
-        return self.data.get("remotes").and_then(|remotes| {
-            return remotes.get(remote_name).and_then(|remote| {
-                return remote.as_object().and_then(|remote| {
-                    return remote.get("buttons").and_then(|buttons| {
-                        return buttons.get(button_name).and_then(|button| {
-                            return button.as_object().and_then(|button| {
-                                return Option::Some(ConfigButton::new(button));
-                            });
-                        });
-                    });
-                });
-            });
-        });
-    }
-
-    pub fn to_json_string(&self) -> Result<String, serde_json::Error> {
-        return serde_json::to_string(&self.data);
-    }
-}
-
-impl<'a> ConfigRemote<'a> {
-    pub fn new(data: &'a serde_json::Map<String, serde_json::Value>) -> ConfigRemote<'a> {
-        return ConfigRemote { data };
-    }
-
-    pub fn get_button_names(&self) -> Vec<String> {
-        let mut result = Vec::new();
-        for f in self
-            .data
-            .get("buttons")
-            .expect("missing buttons")
-            .as_object()
-            .expect("buttons should be an object")
-            .keys()
-        {
-            result.push(f.to_owned());
+        let mut remote_names = Vec::new();
+        for remote_name in self.remotes.keys() {
+            remote_names.push(remote_name.clone());
         }
-        return result;
+        return remote_names;
     }
 
-    pub fn get_button(&self, button_name: &str) -> Option<ConfigButton> {
+    pub fn get_remote(&self, remote_name: &str) -> Option<&ConfigRemote> {
+        return self.remotes.get(remote_name);
+    }
+
+    pub fn get_button(&self, remote_name: &str, button_name: &str) -> Option<&ConfigButton> {
         return self
-            .data
-            .get("buttons")
-            .expect("missing buttons")
-            .as_object()
-            .expect("buttons should be an object")
-            .get(button_name)
-            .and_then(|value| {
-                return match value {
-                    serde_json::Value::Object(obj) => Option::Some(ConfigButton::new(obj)),
-                    _ => panic!("invalid config"),
-                };
-            });
+            .get_remote(remote_name)
+            .and_then(|remote| remote.buttons.get(button_name));
+    }
+
+    pub fn to_yaml_string(&self) -> Result<String, serde_yaml::Error> {
+        return serde_yaml::to_string(&self);
     }
 }
 
-impl<'a> ConfigButton<'a> {
-    pub fn new(data: &'a serde_json::Map<String, serde_json::Value>) -> ConfigButton<'a> {
-        return ConfigButton { data };
+impl ConfigRemote {
+    pub fn get_button_names(&self) -> Vec<String> {
+        let mut button_names = Vec::new();
+        for button_name in self.buttons.keys() {
+            button_names.push(button_name.clone());
+        }
+        return button_names;
     }
 
+    pub fn get_button(&self, button_name: &str) -> Option<&ConfigButton> {
+        return self.buttons.get(button_name);
+    }
+}
+
+impl ConfigButton {
     pub fn get_signals(&self) -> Vec<u32> {
         return self
-            .data
-            .get("signal")
-            .expect("missing signal")
-            .as_str()
-            .expect("signal should be a string")
+            .signal
             .split(",")
             .map(|s| {
                 s.trim()
@@ -402,29 +223,22 @@ impl<'a> ConfigButton<'a> {
             })
             .collect();
     }
-
-    pub fn get_json(&self) -> &'a serde_json::Map<String, serde_json::Value> {
-        return self.data;
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::json;
     #[test]
     fn test_bad_signal_value() {
-        Config::from_json(json!({
-            "remotes": {
-                "remote1": {
-                    "buttons": {
-                        "button1": {
-                            "signal": ""
-                        }
-                    }
-                }
-            }
-        }))
+        Config::from_str(
+            r#"
+remotes:
+  remote1:
+    buttons:
+      button1:
+        signal: ""
+"#,
+        )
         .expect_err("expected bad signal error");
     }
 }
