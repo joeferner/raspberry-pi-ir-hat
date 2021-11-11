@@ -3,7 +3,7 @@ use clap::Arg;
 use log::info;
 use raspberry_pi_ir_hat::Signal;
 use raspberry_pi_ir_hat::{Config, RawHat, RawHatMessage};
-use simple_logger::SimpleLogger;
+use simple_logger;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
@@ -11,9 +11,7 @@ use std::time::Duration;
 use std::time::SystemTime;
 
 fn main() -> Result<(), String> {
-    SimpleLogger::new()
-        .init()
-        .map_err(|err| format!("{}", err))?;
+    simple_logger::init_with_env().map_err(|err| format!("{}", err))?;
     info!("starting");
 
     let args = App::new("Raspberry Pi IrHat - irlearn")
