@@ -144,8 +144,13 @@ impl Hat {
 
     fn send_signals(&mut self, frequency: u32, signals: &Vec<u32>) -> Result<(), HatError> {
         self.send_carrier_frequency(frequency)?;
-        for s in signals {
-            self.send_signal(*s)?;
+        for s in signals.chunks(2) {
+            let signal_on = s[0];
+            let signal_off = match s.len() {
+                2 => s[1],
+                _ => 1,
+            };
+            self.send_signal(signal_on, signal_off)?;
         }
         return self.send_signal_complete();
     }
@@ -157,9 +162,9 @@ impl Hat {
         return self.wait_for_response().map(|_| ());
     }
 
-    fn send_signal(&mut self, signal: u32) -> Result<(), HatError> {
+    fn send_signal(&mut self, signal_on: u32, signal_off: u32) -> Result<(), HatError> {
         self.raw_hat
-            .send_signal(signal)
+            .send_signal(signal_on, signal_off)
             .map_err(|err| HatError::RawHatError(err))?;
         return self.wait_for_response().map(|_| ());
     }

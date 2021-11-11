@@ -20,3 +20,15 @@ the `serialport` dependency requires the libudev headers. To install them `sudo 
 ```
 ./target/debug/irlearn --file ~/pi-ir.yaml --remote tv --button power
 ```
+
+# Listen
+
+```
+./target/debug/irlisten --file ~/pi-ir.yaml
+```
+
+# Play
+
+```
+./target/debug/irplay --file ~/pi-ir.yaml --remote tv --button power
+```

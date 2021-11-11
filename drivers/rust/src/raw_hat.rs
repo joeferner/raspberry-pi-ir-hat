@@ -12,7 +12,7 @@ use std::thread::JoinHandle;
 use std::time::Duration;
 
 #[cfg(target_arch = "arm")]
-use rppal::gpio::{Gpio};
+use rppal::gpio::Gpio;
 
 #[cfg(target_arch = "arm")]
 const GPIO_RESET: u8 = 17;
@@ -144,8 +144,8 @@ impl RawHat {
         return self.send(&s);
     }
 
-    pub fn send_signal(&mut self, signal: u32) -> Result<(), RawHatError> {
-        let s = format!("+s{}\n", signal);
+    pub fn send_signal(&mut self, signal_on: u32, signal_off: u32) -> Result<(), RawHatError> {
+        let s = format!("+s{},{}\n", signal_on, signal_off);
         return self.send(&s);
     }
 

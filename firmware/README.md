@@ -31,6 +31,8 @@ https://github.com/STMicroelectronics/STM32CubeG0
       - Enable IN0 (PA0), IN4 (PA4), IN5 (PA5)
       - Scan Conversion Mode: Enabled
       - Discontinuous Conversion Mode: Enabled
+      - SamplingTime Common 1: 12.5 Cycles
+      - SamplingTime Common 2: 12.5 Cycles
       - Number of Conversion: 3
       - Rank 1: Channel 0
       - Rank 2: Channel 4
