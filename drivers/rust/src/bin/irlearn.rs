@@ -1,7 +1,9 @@
 use clap::App;
 use clap::Arg;
+use log::info;
 use raspberry_pi_ir_hat::Signal;
 use raspberry_pi_ir_hat::{Config, RawHat, RawHatMessage};
+use simple_logger::SimpleLogger;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
@@ -9,6 +11,11 @@ use std::time::Duration;
 use std::time::SystemTime;
 
 fn main() -> Result<(), String> {
+    SimpleLogger::new()
+        .init()
+        .map_err(|err| format!("{}", err))?;
+    info!("starting");
+
     let args = App::new("Raspberry Pi IrHat - irlearn")
         .version("1.0.0")
         .author("Joe Ferner <joe@fernsroth.com>")
@@ -147,8 +154,7 @@ fn main() -> Result<(), String> {
         })
         .transpose()?;
 
-    let mut config =
-        Config::read(filename, true).or_else(|err| Result::Err(format!("{}", err)))?;
+    let mut config = Config::read(filename, true).or_else(|err| Result::Err(format!("{}", err)))?;
 
     let results = learn(
         port,

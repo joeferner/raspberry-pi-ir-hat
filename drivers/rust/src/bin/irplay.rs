@@ -1,8 +1,15 @@
 use clap::App;
 use clap::Arg;
+use log::info;
 use raspberry_pi_ir_hat::{Config, Hat};
+use simple_logger::SimpleLogger;
 
 fn main() -> Result<(), String> {
+    SimpleLogger::new()
+        .init()
+        .map_err(|err| format!("{}", err))?;
+    info!("starting");
+
     let args = App::new("Raspberry Pi IrHat - irplay")
         .version("1.0.0")
         .author("Joe Ferner <joe@fernsroth.com>")

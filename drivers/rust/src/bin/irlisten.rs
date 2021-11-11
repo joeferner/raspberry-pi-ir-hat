@@ -1,9 +1,16 @@
 use clap::App;
 use clap::Arg;
+use log::info;
 use raspberry_pi_ir_hat::{Config, Hat};
+use simple_logger::SimpleLogger;
 use std::{thread, time};
 
 fn main() -> Result<(), String> {
+    SimpleLogger::new()
+        .init()
+        .map_err(|err| format!("{}", err))?;
+    info!("starting");
+
     let args = App::new("Raspberry Pi IrHat - irlisten")
         .version("1.0.0")
         .author("Joe Ferner <joe@fernsroth.com>")

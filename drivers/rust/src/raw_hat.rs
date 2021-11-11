@@ -1,3 +1,4 @@
+use log::debug;
 use rppal::gpio;
 use rppal::gpio::OutputPin;
 use serialport::SerialPort;
@@ -111,6 +112,7 @@ impl RawHat {
                             if c == '\n' {
                                 let line: String =
                                     buffer.iter().collect::<String>().trim().to_string();
+                                debug!("received {}", line);
                                 if line.starts_with("!s") {
                                     parse_signal_line(line, &mut callback);
                                 } else if line.starts_with("?READY") {
@@ -159,6 +161,7 @@ impl RawHat {
     }
 
     pub fn send(&mut self, value: &str) -> Result<(), RawHatError> {
+        debug!("sending {}", value.trim());
         let port = self.port.as_mut().ok_or(RawHatError::NotOpen)?;
         let value_bytes = value.as_bytes();
         let bytes_written = port
