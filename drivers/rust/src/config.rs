@@ -155,11 +155,11 @@ impl Config {
     }
 
     pub fn write(&self, filename: &str) -> Result<(), ConfigError> {
-        let file = match File::open(filename) {
+        let file = match File::create(filename) {
             Ok(f) => f,
             Err(err) => {
                 return Result::Err(ConfigError::WriteError(
-                    format!("could not open file: {}", filename),
+                    format!("could not open file for writing: {}", filename),
                     err,
                 ));
             }
