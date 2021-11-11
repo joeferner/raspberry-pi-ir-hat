@@ -48,3 +48,13 @@ From the RaspberryPi
 gpio -g mode 18 in
 gpio -g mode 17 in
 ```
+
+OR
+
+```
+echo "18" > /sys/class/gpio/export
+echo "in" > /sys/class/gpio/gpio18/direction
+
+echo "17" > /sys/class/gpio/export
+echo "in" > /sys/class/gpio/gpio17/direction
+```

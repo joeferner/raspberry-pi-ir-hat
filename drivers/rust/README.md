@@ -10,3 +10,7 @@ socat -d -d pty,raw,echo=0 pty,raw,echo=0
 cargo run --bin irlisten -- --file test.json --port /dev/pts/6
 echo '!s123' > /dev/pts/7
 ```
+
+# Raspberry Pi
+
+the `serialport` dependency requires the libudev headers. To install them `sudo apt-get install libudev-dev`

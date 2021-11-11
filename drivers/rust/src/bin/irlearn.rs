@@ -148,7 +148,7 @@ fn main() -> Result<(), String> {
         .transpose()?;
 
     let mut config =
-        Config::read(filename, false).or_else(|err| Result::Err(format!("{}", err)))?;
+        Config::read(filename, true).or_else(|err| Result::Err(format!("{}", err)))?;
 
     let results = learn(
         port,

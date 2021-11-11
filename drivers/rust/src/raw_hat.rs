@@ -12,7 +12,7 @@ use std::thread::JoinHandle;
 use std::time::Duration;
 
 #[cfg(target_arch = "arm")]
-use rppal::gpio::{Gpio, OutputPin};
+use rppal::gpio::{Gpio};
 
 #[cfg(target_arch = "arm")]
 const GPIO_RESET: u8 = 17;
