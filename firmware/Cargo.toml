@@ -1,0 +1,11 @@
+[package]
+name = "firmware"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cortex-m = "0.7.3"
+cortex-m-rt = { version="0.7.0", features=["device"] }
+stm32g0 = { version="0.14.0", features=["stm32g031", "rt"] }

@@ -1,6 +1,38 @@
 # STMicroelectronics Documentation
 
-https://github.com/STMicroelectronics/STM32CubeG0
+STM32G031F4 - https://github.com/STMicroelectronics/STM32CubeG0
+
+# Development Environment
+
+```
+# Cortex-M0+
+rustup target add thumbv6m-none-eabi
+```
+
+# Pins
+
+| Pin | Pin  | Description       |
+| --- | ---- | ----------------- |
+|  1  | PB7  | USART1 Rx (Debug) |
+|  2  | PC14 | IR Out            |
+|  3  | PC15 |                   |
+|  4  | Vdd  |                   |
+|  5  | Vss  |                   |
+|  6  | PF2  | Reset             |
+|  7  | PA0  | Current Ref       |
+|  8  | PA1  |                   |
+|  9  | PA2  | USART2 Tx (Rpi)   |
+| 10  | PA3  | USART2 Rx (Rpi)   |
+| 11  | PA4  | Current 1         |
+| 12  | PA5  | Current 2         |
+| 13  | PA6  | IR Rx - TIM3 CH1  |
+| 14  | PA7  | IR Activity LED   |
+| 15  | PB0  |                   |
+| 16  | PA11 |                   |
+| 17  | PA12 |                   |
+| 18  | PA13 | Sys SWDIO         |
+| 19  | PA14 | Sys SWCLK         |
+| 20  | PB6  | USART1 Tx (Debug) |
 
 # STM32CubeMX Project Setup
 

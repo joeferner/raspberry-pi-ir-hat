@@ -1,14 +1,3 @@
-.idea/
 .vscode/
-cmake-build-debug/
-Drivers/
-Core/
-build/
-.cproject
-.mxproject
-.project
-CMakeLists.txt
-*_FLASH.ld
-*.bak
-STM32Make.make
-startup_stm32g031xx.s
+old/
+target/
