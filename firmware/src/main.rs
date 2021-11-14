@@ -1,53 +1,115 @@
 #![no_main]
 #![no_std]
-extern crate cortex_m;
-extern crate cortex_m_rt as runtime;
-extern crate stm32g0;
 
-use core::panic::PanicInfo;
+extern crate cortex_m_rt as rt;
+extern crate panic_halt;
+extern crate stm32g0xx_hal as hal;
+
 use cortex_m::asm;
-use debug::debug_init;
-use stm32g0::stm32g031;
-
-mod debug;
-mod utils;
+use hal::dma::{Channel, Target};
+use hal::gpio::gpioa::PA7;
+use hal::gpio::gpiob::{PB6, PB7};
+use hal::gpio::{Analog, Output, PushPull};
+use hal::rcc::Rcc;
+use hal::serial::*;
+use hal::stm32::{self, USART1};
+use hal::{dma, prelude::*};
 
 #[no_mangle]
 fn main() -> ! {
-    let stm_peripherals = stm32g031::Peripherals::take().unwrap();
-    init(&stm_peripherals);
+    let stm_peripherals = stm32::Peripherals::take().unwrap();
+    let mut rcc = stm_peripherals.RCC.constrain();
+    let gpioa = stm_peripherals.GPIOA.split(&mut rcc);
+    let gpiob = stm_peripherals.GPIOB.split(&mut rcc);
+    let dma = stm_peripherals.DMA.split(&mut rcc, stm_peripherals.DMAMUX);
+
+    let mut ir_activity_led = IrActivityLedPin::new(gpioa.pa7);
+    let mut debug = DebugUsart::new(
+        stm_peripherals.USART1,
+        gpiob.pb6,
+        gpiob.pb7,
+        dma.ch1,
+        &mut rcc,
+    );
+
     loop {
-        do_loop(&stm_peripherals);
+        ir_activity_led.toggle();
+        debug.write("hello world\n");
+        for _i in 0..200000 {
+            asm::nop()
+        }
     }
 }
 
-#[panic_handler]
-fn panic(_panic: &PanicInfo<'_>) -> ! {
-    loop {}
+struct DebugUsart {
+    usart_tx: Tx<USART1, FullConfig>,
+    _usart_rx: Rx<USART1, FullConfig>,
+    dma_ch: hal::dma::C1,
+    buffer: [u8; 100],
 }
 
-fn init(stm_peripherals: &stm32g031::Peripherals) {
-    ir_activity_led_pin_init(&stm_peripherals);
-    debug_init(&stm_peripherals);
-}
+impl DebugUsart {
+    pub fn new(
+        usart: USART1,
+        tx_pin: PB6<Analog>,
+        rx_pin: PB7<Analog>,
+        dma_ch: hal::dma::C1,
+        rcc: &mut Rcc,
+    ) -> DebugUsart {
+        let usart = usart
+            .usart(
+                tx_pin,
+                rx_pin,
+                FullConfig::default().baudrate(57_600.bps()),
+                rcc,
+            )
+            .unwrap();
+        let (usart_tx, usart_rx) = usart.split();
+        return DebugUsart {
+            usart_tx,
+            _usart_rx: usart_rx,
+            dma_ch,
+            buffer: [0; 100],
+        };
+    }
 
-fn do_loop(stm_peripherals: &stm32g031::Peripherals) {
-    stm_peripherals
-        .GPIOA
-        .odr
-        .modify(|r, w| w.odr7().bit(r.odr7().bit_is_clear()));
+    pub fn write(&mut self, string: &str) {
+        let bytes = string.bytes();
+        let len = bytes.len();
+        for (i, b) in bytes.enumerate() {
+            self.buffer[i] = b;
+        }
 
-    stm_peripherals.USART1.tdr.write(|w| unsafe { w.bits('a' as u32) });
+        let usart = unsafe { &(*stm32::USART1::ptr()) };
+        let tx_data_register_addr = &usart.tdr as *const _ as u32;
+        let tx_dma_buf_addr: u32 = self.buffer.as_ptr() as u32;
 
-    for _i in 0..200000 {
-        asm::nop()
+        self.dma_ch.set_direction(dma::Direction::FromMemory);
+        self.dma_ch.set_memory_address(tx_dma_buf_addr, true);
+        self.dma_ch
+            .set_peripheral_address(tx_data_register_addr, false);
+        self.dma_ch.set_transfer_length(len as u16);
+
+        self.dma_ch.select_peripheral(self.usart_tx.dmamux());
+
+        self.dma_ch.listen(dma::Event::TransferComplete);
+
+        self.usart_tx.enable_dma();
+        self.dma_ch.enable();
     }
 }
 
-fn ir_activity_led_pin_init(stm_peripherals: &stm32g031::Peripherals) {
-    // Enable the clock for GPIOA
-    stm_peripherals.RCC.iopenr.write(|w| w.iopaen().bit(true));
+struct IrActivityLedPin {
+    pin: PA7<Output<PushPull>>,
+}
 
-    // Configure pin as output
-    stm_peripherals.GPIOA.odr.modify(|_, w| w.odr7().set_bit());
+impl IrActivityLedPin {
+    pub fn new(pin: PA7<Analog>) -> IrActivityLedPin {
+        let pin = pin.into_push_pull_output();
+        return IrActivityLedPin { pin };
+    }
+
+    pub fn toggle(&mut self) {
+        return self.pin.toggle().unwrap();
+    }
 }
