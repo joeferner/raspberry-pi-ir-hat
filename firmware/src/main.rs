@@ -35,7 +35,7 @@ fn main() -> ! {
     loop {
         ir_activity_led.toggle();
         debug.write("hello world\n");
-        for _i in 0..200000 {
+        for _i in 0..1000000 {
             asm::nop()
         }
     }
@@ -84,6 +84,7 @@ impl DebugUsart {
         let tx_data_register_addr = &usart.tdr as *const _ as u32;
         let tx_dma_buf_addr: u32 = self.buffer.as_ptr() as u32;
 
+        self.dma_ch.disable();
         self.dma_ch.set_direction(dma::Direction::FromMemory);
         self.dma_ch.set_memory_address(tx_dma_buf_addr, true);
         self.dma_ch

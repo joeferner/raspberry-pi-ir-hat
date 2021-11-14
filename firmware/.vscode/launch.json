@@ -1,0 +1,15 @@
+{
+    "configurations": [
+        {
+            "name": "Debug Firmware",
+            "request": "launch",
+            "type": "cortex-debug",
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceFolder}/target/thumbv6m-none-eabi/release/firmware",
+            "svdFile": "${workspaceFolder}/STM32G031.svd",
+            "servertype": "openocd",
+            "configFiles": ["interface/stlink.cfg", "stm32g0x.cfg"],
+            "preLaunchTask": "Build binary"
+        }
+    ]
+}

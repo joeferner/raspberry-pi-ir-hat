@@ -5,6 +5,3 @@ build:
 
 flash: build
 	./flash.sh
-
-print-largest-fn: build
-	nm --print-size --size-sort --radix=d target/thumbv6m-none-eabi/release/firmware | grep -v ' b '

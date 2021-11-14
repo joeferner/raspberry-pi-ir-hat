@@ -34,6 +34,12 @@ rustup target add thumbv6m-none-eabi
 | 19  | PA14 | Sys SWCLK         |
 | 20  | PB6  | USART1 Tx (Debug) |
 
+# Links
+
+- stm32g0xx-hal - https://github.com/stm32-rs/stm32g0xx-hal
+- setting up debugger in VSCode - https://dev.to/rubberduck/debugging-rust-arm-cortexm-programs-with-visual-studio-code-336h
+
+
 # STM32CubeMX Project Setup
 
 1. Select MCU STM32G031F4 (https://github.com/STMicroelectronics/STM32CubeG0)
