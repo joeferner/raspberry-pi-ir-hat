@@ -20,16 +20,9 @@ fn main() -> ! {
     let mut rcc = stm_peripherals.RCC.constrain();
     let gpioa = stm_peripherals.GPIOA.split(&mut rcc);
     let gpiob = stm_peripherals.GPIOB.split(&mut rcc);
-    let dma = stm_peripherals.DMA.split(&mut rcc, stm_peripherals.DMAMUX);
 
     let mut ir_activity_led = IrActivityLedPin::new(gpioa.pa7);
-    let mut debug = DebugUsart::new(
-        stm_peripherals.USART1,
-        gpiob.pb6,
-        gpiob.pb7,
-        dma.ch1,
-        &mut rcc,
-    );
+    let debug = DebugUsart::new(stm_peripherals.USART1, gpiob.pb6, gpiob.pb7, &mut rcc);
 
     loop {
         ir_activity_led.toggle();
