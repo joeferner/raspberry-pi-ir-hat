@@ -5,7 +5,6 @@ extern crate cortex_m_rt as rt;
 extern crate panic_halt;
 extern crate stm32g0xx_hal as hal;
 
-use core::str;
 use cortex_m::asm;
 use debug::DebugUsart;
 use hal::prelude::*;
@@ -28,15 +27,14 @@ fn main() -> ! {
     loop {
         ir_activity_led.toggle();
         debug.write_str("hello world!\n").ok();
-        if let Option::Some(c) = debug.read().ok().unwrap() {
-            let mut buf = [0u8; 3];
-            buf[0] = b'>';
-            buf[1] = c;
-            buf[2] = b'\n';
-            unsafe {
-                debug.write_str(str::from_utf8_unchecked(&buf)).ok();
-            }
+
+        let mut buf = [0u8; 3];
+        let s = debug.read_line(&mut buf).ok().unwrap();
+        if let Option::Some(s) = s {
+            debug.write(b'>').ok();
+            debug.write_str(s).ok();
         }
+
         for _i in 0..1000000 {
             asm::nop()
         }

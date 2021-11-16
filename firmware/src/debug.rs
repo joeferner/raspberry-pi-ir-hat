@@ -2,6 +2,7 @@ extern crate cortex_m_rt as rt;
 extern crate panic_halt;
 extern crate stm32g0xx_hal as hal;
 
+use core::str;
 use core::str::Bytes;
 use core::{cell::RefCell, ops::DerefMut};
 use cortex_m::interrupt::Mutex;
@@ -31,6 +32,7 @@ static SHARED: Mutex<RefCell<Option<Shared>>> = Mutex::new(RefCell::new(None));
 pub enum DebugError {
     BufferOverflow,
     LockFail,
+    MalformedString,
 }
 
 pub struct DebugUsart {}
@@ -85,6 +87,20 @@ impl DebugUsart {
         });
     }
 
+    pub fn write(&self, value: u8) -> Result<(), DebugError> {
+        return cortex_m::interrupt::free(|cs| match SHARED.borrow(cs).borrow_mut().deref_mut() {
+            Option::Some(ref mut shared) => {
+                shared
+                    .tx_fifo
+                    .push_back(value)
+                    .map_err(|_err| DebugError::BufferOverflow)?;
+                shared.serial.listen(serial::Event::Txe);
+                Result::Ok(())
+            }
+            Option::None => Result::Err(DebugError::LockFail),
+        });
+    }
+
     pub fn read(&self) -> Result<Option<u8>, DebugError> {
         return cortex_m::interrupt::free(|cs| match SHARED.borrow(cs).borrow_mut().deref_mut() {
             Option::Some(ref mut shared) => {
@@ -94,13 +110,33 @@ impl DebugUsart {
         });
     }
 
-    pub fn read_line(&self, buffer: &mut [u8]) -> Result<Option<u8>, DebugError> {
+    pub fn read_until(&self, stop: u8, buffer: &mut [u8]) -> Result<usize, DebugError> {
         return cortex_m::interrupt::free(|cs| match SHARED.borrow(cs).borrow_mut().deref_mut() {
             Option::Some(ref mut shared) => {
-                return Result::Ok(shared.rx_fifo.pop_front());
+                let mut read = 0;
+                for (i, b) in shared.rx_fifo.iter().enumerate() {
+                    if i >= buffer.len() {
+                        break;
+                    }
+                    buffer[i] = *b;
+                    read = read + 1;
+                    if *b == stop {
+                        break;
+                    }
+                }
+                return Result::Ok(read);
             }
             Option::None => Result::Err(DebugError::LockFail),
         });
+    }
+
+    pub fn read_line<'a>(&self, buffer: &'a mut [u8]) -> Result<Option<&'a str>, DebugError> {
+        let r = self.read_until(b'\n', buffer)?;
+        if r == 0 || (r != buffer.len() && buffer[r - 1] != b'\n') {
+            return Result::Ok(Option::None);
+        }
+        let s = str::from_utf8(&buffer[0..r]).map_err(|_err| DebugError::MalformedString)?;
+        return Result::Ok(Option::Some(s));
     }
 }
 
