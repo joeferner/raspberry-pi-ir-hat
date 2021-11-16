@@ -79,6 +79,15 @@ impl DebugUsart {
             Option::None => Result::Err(DebugError::LockFail),
         });
     }
+
+    pub fn read(&self) -> Result<Option<u8>, DebugError> {
+        return cortex_m::interrupt::free(|cs| match SHARED.borrow(cs).borrow_mut().deref_mut() {
+            Option::Some(ref mut shared) => {
+                return Result::Ok(shared.rx_fifo.pop_front());
+            }
+            Option::None => Result::Err(DebugError::LockFail),
+        });
+    }
 }
 
 #[interrupt]
@@ -101,7 +110,7 @@ fn USART1() {
                 serial.unpend(serial::Event::Txe);
             }
 
-            // NVIC::unpend(Interrupt::USART1);
+            NVIC::unpend(Interrupt::USART1);
         }
     });
 }
