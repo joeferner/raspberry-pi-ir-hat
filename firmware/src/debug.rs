@@ -50,7 +50,7 @@ impl DebugUsart {
             )
             .unwrap();
         serial.listen(serial::Event::Rxne);
-        serial.listen(serial::Event::Txe);
+        serial.unlisten(serial::Event::Txe);
         cortex_m::interrupt::free(|cs| {
             *SHARED.borrow(cs).borrow_mut() = Some(Shared {
                 serial,
@@ -60,7 +60,6 @@ impl DebugUsart {
             unsafe {
                 NVIC::unmask(Interrupt::USART1);
             }
-            NVIC::unpend(Interrupt::USART1);
         });
         return DebugUsart {};
     }
@@ -74,6 +73,7 @@ impl DebugUsart {
                         .push_back(b)
                         .map_err(|_err| DebugError::BufferOverflow)?;
                 }
+                shared.serial.listen(serial::Event::Txe);
                 Result::Ok(())
             }
             Option::None => Result::Err(DebugError::LockFail),
@@ -95,11 +95,13 @@ fn USART1() {
             if serial.is_pending(serial::Event::Txe) {
                 if let Option::Some(v) = shared.tx_fifo.pop_front() {
                     serial.write(v).ok();
+                } else {
+                    serial.unlisten(serial::Event::Txe);
                 }
                 serial.unpend(serial::Event::Txe);
             }
 
-            NVIC::unpend(Interrupt::USART1);
+            // NVIC::unpend(Interrupt::USART1);
         }
     });
 }

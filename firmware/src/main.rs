@@ -26,7 +26,8 @@ fn main() -> ! {
 
     loop {
         ir_activity_led.toggle();
-        debug.write("hello world\n").ok();
+        debug.write("hello world!\n").ok();
+        // debug.read_line();
         for _i in 0..1000000 {
             asm::nop()
         }
