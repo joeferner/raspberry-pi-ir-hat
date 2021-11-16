@@ -2,6 +2,7 @@ extern crate cortex_m_rt as rt;
 extern crate panic_halt;
 extern crate stm32g0xx_hal as hal;
 
+use core::str::Bytes;
 use core::{cell::RefCell, ops::DerefMut};
 use cortex_m::interrupt::Mutex;
 use cortex_m::peripheral::NVIC;
@@ -64,10 +65,14 @@ impl DebugUsart {
         return DebugUsart {};
     }
 
-    pub fn write(&self, value: &str) -> Result<(), DebugError> {
+    pub fn write_str(&self, value: &str) -> Result<(), DebugError> {
+        return self.write_bytes(&mut value.bytes());
+    }
+
+    pub fn write_bytes(&self, value: &mut Bytes) -> Result<(), DebugError> {
         return cortex_m::interrupt::free(|cs| match SHARED.borrow(cs).borrow_mut().deref_mut() {
             Option::Some(ref mut shared) => {
-                for b in value.bytes() {
+                for b in value {
                     shared
                         .tx_fifo
                         .push_back(b)
@@ -81,6 +86,15 @@ impl DebugUsart {
     }
 
     pub fn read(&self) -> Result<Option<u8>, DebugError> {
+        return cortex_m::interrupt::free(|cs| match SHARED.borrow(cs).borrow_mut().deref_mut() {
+            Option::Some(ref mut shared) => {
+                return Result::Ok(shared.rx_fifo.pop_front());
+            }
+            Option::None => Result::Err(DebugError::LockFail),
+        });
+    }
+
+    pub fn read_line(&self, buffer: &mut [u8]) -> Result<Option<u8>, DebugError> {
         return cortex_m::interrupt::free(|cs| match SHARED.borrow(cs).borrow_mut().deref_mut() {
             Option::Some(ref mut shared) => {
                 return Result::Ok(shared.rx_fifo.pop_front());
