@@ -30,8 +30,7 @@ struct Shared {
 
 static SHARED: Mutex<RefCell<Option<Shared>>> = Mutex::new(RefCell::new(None));
 
-pub enum DebugError {
-}
+pub enum DebugError {}
 
 pub enum PeekUntilResult {
     Found(usize),
@@ -134,10 +133,10 @@ impl DebugUsart {
         self.fill_rx_fifo();
 
         let mut read = 0;
-        for (i, b) in self.rx_fifo.iter().enumerate() {
+        for b in self.rx_fifo.iter() {
             read = read + 1;
             if *b == stop {
-                return PeekUntilResult::Found(i);
+                return PeekUntilResult::Found(read);
             }
         }
         if read == self.rx_fifo.len() {
