@@ -22,7 +22,7 @@ fn main() -> ! {
     let gpiob = stm_peripherals.GPIOB.split(&mut rcc);
 
     let mut ir_activity_led = IrActivityLedPin::new(gpioa.pa7);
-    let debug = DebugUsart::new(stm_peripherals.USART1, gpiob.pb6, gpiob.pb7, &mut rcc);
+    let mut debug = DebugUsart::new(stm_peripherals.USART1, gpiob.pb6, gpiob.pb7, &mut rcc);
 
     loop {
         ir_activity_led.toggle();

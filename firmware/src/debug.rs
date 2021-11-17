@@ -16,26 +16,32 @@ use hal::serial::*;
 use hal::stm32;
 use hal::stm32::interrupt;
 use hal::stm32::Interrupt;
+use heapless::mpmc::Q32;
 use heapless::Deque;
 
-const RX_FIFO_LEN: usize = 100;
-const TX_FIFO_LEN: usize = 100;
+const RX_FIFO_LEN: usize = 128;
+
+static RX_IRQ_FIFO: Q32<u8> = Q32::new();
+static TX_IRQ_FIFO: Q32<u8> = Q32::new();
 
 struct Shared {
     serial: Serial<stm32::USART1, FullConfig>,
-    rx_fifo: Deque<u8, RX_FIFO_LEN>,
-    tx_fifo: Deque<u8, TX_FIFO_LEN>,
 }
 
 static SHARED: Mutex<RefCell<Option<Shared>>> = Mutex::new(RefCell::new(None));
 
 pub enum DebugError {
-    BufferOverflow,
-    LockFail,
-    MalformedString,
 }
 
-pub struct DebugUsart {}
+pub enum PeekUntilResult {
+    Found(usize),
+    EndOfFifo(usize),
+    NotFound,
+}
+
+pub struct DebugUsart {
+    rx_fifo: Deque<u8, RX_FIFO_LEN>,
+}
 
 impl DebugUsart {
     pub fn new(
@@ -55,16 +61,14 @@ impl DebugUsart {
         serial.listen(serial::Event::Rxne);
         serial.unlisten(serial::Event::Txe);
         cortex_m::interrupt::free(|cs| {
-            *SHARED.borrow(cs).borrow_mut() = Some(Shared {
-                serial,
-                rx_fifo: Deque::<_, RX_FIFO_LEN>::new(),
-                tx_fifo: Deque::<_, TX_FIFO_LEN>::new(),
-            });
+            *SHARED.borrow(cs).borrow_mut() = Some(Shared { serial });
             unsafe {
                 NVIC::unmask(Interrupt::USART1);
             }
         });
-        return DebugUsart {};
+        return DebugUsart {
+            rx_fifo: Deque::new(),
+        };
     }
 
     pub fn write_str(&self, value: &str) -> Result<(), DebugError> {
@@ -72,71 +76,90 @@ impl DebugUsart {
     }
 
     pub fn write_bytes(&self, value: &mut Bytes) -> Result<(), DebugError> {
-        return cortex_m::interrupt::free(|cs| match SHARED.borrow(cs).borrow_mut().deref_mut() {
-            Option::Some(ref mut shared) => {
-                for b in value {
-                    shared
-                        .tx_fifo
-                        .push_back(b)
-                        .map_err(|_err| DebugError::BufferOverflow)?;
-                }
-                shared.serial.listen(serial::Event::Txe);
-                Result::Ok(())
+        for b in value {
+            while let Result::Err(_err) = TX_IRQ_FIFO.enqueue(b) {
+                DebugUsart::listen_txe();
             }
-            Option::None => Result::Err(DebugError::LockFail),
+        }
+        DebugUsart::listen_txe();
+        return Result::Ok(());
+    }
+
+    fn listen_txe() {
+        cortex_m::interrupt::free(|cs| {
+            if let Option::Some(shared) = SHARED.borrow(cs).borrow_mut().deref_mut() {
+                shared.serial.listen(serial::Event::Txe);
+            }
         });
     }
 
     pub fn write(&self, value: u8) -> Result<(), DebugError> {
-        return cortex_m::interrupt::free(|cs| match SHARED.borrow(cs).borrow_mut().deref_mut() {
-            Option::Some(ref mut shared) => {
-                shared
-                    .tx_fifo
-                    .push_back(value)
-                    .map_err(|_err| DebugError::BufferOverflow)?;
-                shared.serial.listen(serial::Event::Txe);
-                Result::Ok(())
-            }
-            Option::None => Result::Err(DebugError::LockFail),
-        });
-    }
-
-    pub fn read(&self) -> Result<Option<u8>, DebugError> {
-        return cortex_m::interrupt::free(|cs| match SHARED.borrow(cs).borrow_mut().deref_mut() {
-            Option::Some(ref mut shared) => {
-                return Result::Ok(shared.rx_fifo.pop_front());
-            }
-            Option::None => Result::Err(DebugError::LockFail),
-        });
-    }
-
-    pub fn read_until(&self, stop: u8, buffer: &mut [u8]) -> Result<usize, DebugError> {
-        return cortex_m::interrupt::free(|cs| match SHARED.borrow(cs).borrow_mut().deref_mut() {
-            Option::Some(ref mut shared) => {
-                let mut read = 0;
-                for (i, b) in shared.rx_fifo.iter().enumerate() {
-                    if i >= buffer.len() {
-                        break;
-                    }
-                    buffer[i] = *b;
-                    read = read + 1;
-                    if *b == stop {
-                        break;
-                    }
-                }
-                return Result::Ok(read);
-            }
-            Option::None => Result::Err(DebugError::LockFail),
-        });
-    }
-
-    pub fn read_line<'a>(&self, buffer: &'a mut [u8]) -> Result<Option<&'a str>, DebugError> {
-        let r = self.read_until(b'\n', buffer)?;
-        if r == 0 || (r != buffer.len() && buffer[r - 1] != b'\n') {
-            return Result::Ok(Option::None);
+        while let Result::Err(_err) = TX_IRQ_FIFO.enqueue(value) {
+            DebugUsart::listen_txe();
         }
-        let s = str::from_utf8(&buffer[0..r]).map_err(|_err| DebugError::MalformedString)?;
-        return Result::Ok(Option::Some(s));
+        DebugUsart::listen_txe();
+        return Result::Ok(());
+    }
+
+    fn fill_rx_fifo(&mut self) {
+        while !self.rx_fifo.is_full() {
+            match RX_IRQ_FIFO.dequeue() {
+                Option::None => {
+                    return;
+                }
+                Option::Some(v) => {
+                    self.rx_fifo.push_back(v).unwrap();
+                }
+            }
+        }
+    }
+
+    pub fn read(&mut self) -> Option<u8> {
+        self.fill_rx_fifo();
+        return self.rx_fifo.pop_front();
+    }
+
+    pub fn read_bytes(&mut self, len: usize, buffer: &mut [u8]) -> usize {
+        for i in 0..len {
+            if let Option::Some(v) = self.rx_fifo.pop_front() {
+                buffer[i] = v;
+            } else {
+                return i;
+            }
+        }
+        return len;
+    }
+
+    pub fn find(&mut self, stop: u8) -> PeekUntilResult {
+        self.fill_rx_fifo();
+
+        let mut read = 0;
+        for (i, b) in self.rx_fifo.iter().enumerate() {
+            read = read + 1;
+            if *b == stop {
+                return PeekUntilResult::Found(i);
+            }
+        }
+        if read == self.rx_fifo.len() {
+            return PeekUntilResult::EndOfFifo(read);
+        } else {
+            return PeekUntilResult::NotFound;
+        }
+    }
+
+    pub fn read_line<'a>(&mut self, buf: &'a mut [u8]) -> Result<Option<&'a str>, DebugError> {
+        let len_to_read = match self.find(b'\n') {
+            PeekUntilResult::Found(offset) => offset,
+            PeekUntilResult::NotFound => {
+                return Result::Ok(Option::None);
+            }
+            PeekUntilResult::EndOfFifo(offset) => offset,
+        };
+        let l = self.read_bytes(len_to_read, buf);
+        unsafe {
+            let s = str::from_utf8_unchecked(&buf[0..l]);
+            return Result::Ok(Option::Some(s));
+        }
     }
 }
 
@@ -147,12 +170,12 @@ fn USART1() {
             let serial = &mut shared.serial;
 
             if serial.is_pending(serial::Event::Rxne) {
-                shared.rx_fifo.push_back(serial.read().unwrap()).ok();
+                RX_IRQ_FIFO.enqueue(serial.read().unwrap()).ok();
                 serial.unpend(serial::Event::Rxne);
             }
 
             if serial.is_pending(serial::Event::Txe) {
-                if let Option::Some(v) = shared.tx_fifo.pop_front() {
+                if let Option::Some(v) = TX_IRQ_FIFO.dequeue() {
                     serial.write(v).ok();
                 } else {
                     serial.unlisten(serial::Event::Txe);
