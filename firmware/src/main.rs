@@ -10,9 +10,11 @@ use debug::DebugUsart;
 use hal::prelude::*;
 use hal::stm32::{self};
 use ir_activity_led_pin::IrActivityLedPin;
+use ir_rx::IrRx;
 
 mod debug;
 mod ir_activity_led_pin;
+mod ir_rx;
 
 #[no_mangle]
 fn main() -> ! {
@@ -20,9 +22,16 @@ fn main() -> ! {
     let mut rcc = stm_peripherals.RCC.constrain();
     let gpioa = stm_peripherals.GPIOA.split(&mut rcc);
     let gpiob = stm_peripherals.GPIOB.split(&mut rcc);
+    let dma = stm_peripherals.DMA.split(&mut rcc, stm_peripherals.DMAMUX);
 
     let mut ir_activity_led = IrActivityLedPin::new(gpioa.pa7);
     let mut debug = DebugUsart::new(stm_peripherals.USART1, gpiob.pb6, gpiob.pb7, &mut rcc);
+    let mut ir_rx = IrRx::new(
+        stm_peripherals.TIM3,
+        dma.ch5,
+        &mut stm_peripherals.DMA,
+        &mut rcc,
+    );
 
     loop {
         ir_activity_led.toggle();
