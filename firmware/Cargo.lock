@@ -123,8 +123,7 @@ dependencies = [
  "cortex-m-rt",
  "heapless",
  "panic-halt",
- "stm32g0 0.14.0",
- "stm32g0xx-hal",
+ "stm32g0",
 ]
 
 [[package]]
@@ -299,18 +298,6 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 
 [[package]]
 name = "stm32g0"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97b66919e47e1507c8411e9693ce5f4040b3204601f7c8f349951e565a0640a2"
-dependencies = [
- "bare-metal 0.2.5",
- "cortex-m",
- "cortex-m-rt",
- "vcell",
-]
-
-[[package]]
-name = "stm32g0"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dfc2ac544cea741c92a501bfd027d197354cd22ee92b439aea26d2ee0b55bcd7"
@@ -319,20 +306,6 @@ dependencies = [
  "cortex-m",
  "cortex-m-rt",
  "vcell",
-]
-
-[[package]]
-name = "stm32g0xx-hal"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8bfb57f421c3acb1dafef58cfee1d6beefab85c7bf618080aeef4c4a3c3c250d"
-dependencies = [
- "bare-metal 1.0.0",
- "cortex-m",
- "embedded-hal",
- "nb 1.0.0",
- "stm32g0 0.13.0",
- "void",
 ]
 
 [[package]]

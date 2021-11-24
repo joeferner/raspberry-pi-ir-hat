@@ -1,23 +1,14 @@
 extern crate cortex_m_rt as rt;
 extern crate panic_halt;
-extern crate stm32g0xx_hal as hal;
 
 use core::str;
 use core::str::Bytes;
 use core::{cell::RefCell, ops::DerefMut};
 use cortex_m::interrupt::Mutex;
 use cortex_m::peripheral::NVIC;
-use hal::gpio::gpiob::{PB6, PB7};
-use hal::gpio::Analog;
-use hal::prelude::*;
-use hal::rcc::Rcc;
-use hal::serial;
-use hal::serial::*;
-use hal::stm32;
-use hal::stm32::interrupt;
-use hal::stm32::Interrupt;
 use heapless::mpmc::Q32;
 use heapless::Deque;
+use device::interrupt;
 
 const RX_FIFO_LEN: usize = 128;
 
