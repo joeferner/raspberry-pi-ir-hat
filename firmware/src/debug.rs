@@ -1,6 +1,7 @@
 extern crate cortex_m_rt as rt;
 extern crate panic_halt;
 
+use crate::hal::usart;
 use core::str;
 use core::str::Bytes;
 use core::{cell::RefCell, ops::DerefMut};
@@ -8,7 +9,10 @@ use cortex_m::interrupt::Mutex;
 use cortex_m::peripheral::NVIC;
 use heapless::mpmc::Q32;
 use heapless::Deque;
-use device::interrupt;
+use stm32g0::stm32g031::interrupt;
+use stm32g0::stm32g031::Interrupt;
+
+use crate::hal::usart::USART;
 
 const RX_FIFO_LEN: usize = 128;
 
@@ -16,7 +20,7 @@ static RX_IRQ_FIFO: Q32<u8> = Q32::new();
 static TX_IRQ_FIFO: Q32<u8> = Q32::new();
 
 struct Shared {
-    serial: Serial<stm32::USART1, FullConfig>,
+    usart: USART,
 }
 
 static SHARED: Mutex<RefCell<Option<Shared>>> = Mutex::new(RefCell::new(None));
@@ -34,27 +38,11 @@ pub struct DebugUsart {
 }
 
 impl DebugUsart {
-    pub fn new(
-        usart: stm32::USART1,
-        tx_pin: PB6<Analog>,
-        rx_pin: PB7<Analog>,
-        rcc: &mut Rcc,
-    ) -> Self {
-        let mut serial = usart
-            .usart(
-                tx_pin,
-                rx_pin,
-                FullConfig::default().baudrate(57_600.bps()),
-                rcc,
-            )
-            .unwrap();
-        serial.listen(serial::Event::Rxne);
-        serial.unlisten(serial::Event::Txe);
+    pub fn new(mut usart: USART) -> Self {
+        usart.listen(usart::Event::RxNotEmpty);
+        usart.unlisten(usart::Event::TxEmpty);
         cortex_m::interrupt::free(|cs| {
-            *SHARED.borrow(cs).borrow_mut() = Some(Shared { serial });
-            unsafe {
-                NVIC::unmask(Interrupt::USART1);
-            }
+            *SHARED.borrow(cs).borrow_mut() = Some(Shared { usart });
         });
         return DebugUsart {
             rx_fifo: Deque::new(),
@@ -68,26 +56,26 @@ impl DebugUsart {
     pub fn write_bytes(&self, value: &mut Bytes) -> Result<(), DebugError> {
         for b in value {
             while let Result::Err(_err) = TX_IRQ_FIFO.enqueue(b) {
-                DebugUsart::listen_txe();
+                DebugUsart::listen_tx_complete();
             }
         }
-        DebugUsart::listen_txe();
+        DebugUsart::listen_tx_complete();
         return Result::Ok(());
     }
 
-    fn listen_txe() {
+    fn listen_tx_complete() {
         cortex_m::interrupt::free(|cs| {
             if let Option::Some(shared) = SHARED.borrow(cs).borrow_mut().deref_mut() {
-                shared.serial.listen(serial::Event::Txe);
+                shared.usart.listen(usart::Event::TxEmpty);
             }
         });
     }
 
     pub fn write(&self, value: u8) -> Result<(), DebugError> {
         while let Result::Err(_err) = TX_IRQ_FIFO.enqueue(value) {
-            DebugUsart::listen_txe();
+            DebugUsart::listen_tx_complete();
         }
-        DebugUsart::listen_txe();
+        DebugUsart::listen_tx_complete();
         return Result::Ok(());
     }
 
@@ -157,20 +145,24 @@ impl DebugUsart {
 fn USART1() {
     cortex_m::interrupt::free(|cs| {
         if let Some(ref mut shared) = SHARED.borrow(cs).borrow_mut().deref_mut() {
-            let serial = &mut shared.serial;
+            let serial = &mut shared.usart;
 
-            if serial.is_pending(serial::Event::Rxne) {
-                RX_IRQ_FIFO.enqueue(serial.read().unwrap()).ok();
-                serial.unpend(serial::Event::Rxne);
+            if serial.is_pending(usart::Event::RxNotEmpty) {
+                if let Result::Ok(v) = serial.read() {
+                    RX_IRQ_FIFO.enqueue(v).ok();
+                }
+                serial.unpend(usart::Event::RxNotEmpty);
             }
 
-            if serial.is_pending(serial::Event::Txe) {
-                if let Option::Some(v) = TX_IRQ_FIFO.dequeue() {
-                    serial.write(v).ok();
-                } else {
-                    serial.unlisten(serial::Event::Txe);
+            if serial.is_pending(usart::Event::TxEmpty) {
+                if !serial.is_tx_fifo_full() {
+                    if let Option::Some(v) = TX_IRQ_FIFO.dequeue() {
+                        serial.write(v).ok();
+                    } else {
+                        serial.unlisten(usart::Event::TxEmpty);
+                    }
                 }
-                serial.unpend(serial::Event::Txe);
+                serial.unpend(usart::Event::TxEmpty);
             }
 
             NVIC::unpend(Interrupt::USART1);

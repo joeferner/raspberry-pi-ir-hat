@@ -1,0 +1,150 @@
+use super::{baud_rate::BaudRate, rcc::RCC};
+use cortex_m::peripheral::NVIC;
+use stm32g0::stm32g031::Interrupt;
+
+pub struct USART {
+    register_block: *const stm32g0::stm32g031::usart1::RegisterBlock,
+}
+
+pub enum Error {
+    WouldBlock,
+    Parity,
+    Framing,
+    Noise,
+    Overrun,
+}
+
+unsafe impl Send for USART {}
+
+impl USART {
+    pub fn set_baud_rate(&mut self, baud_rate: BaudRate, rcc: &RCC) {
+        let usart = unsafe { &*self.register_block };
+        let clk = rcc.get_usart1_clock_frequency().to_hertz() as u64;
+        let bdr = baud_rate.to_bps() as u64;
+        let div = (1 * clk) / bdr;
+        usart.brr.write(|w| unsafe { w.bits(div as u32) });
+    }
+
+    pub fn enable(&mut self, rcc: &mut RCC) {
+        if self.register_block == stm32g0::stm32g031::USART1::ptr() {
+            rcc.enable_usart1();
+        } else {
+            panic!();
+        }
+
+        let usart = unsafe { &*self.register_block };
+        usart.cr1.modify(|_, w| w.ue().set_bit());
+    }
+
+    pub fn enable_interrupts(&mut self) {
+        unsafe {
+            if self.register_block == stm32g0::stm32g031::USART1::ptr() {
+                NVIC::unmask(Interrupt::USART1);
+            } else {
+                panic!();
+            }
+        }
+    }
+
+    pub fn listen(&mut self, event: Event) {
+        let usart = unsafe { &*self.register_block };
+        match event {
+            Event::RxNotEmpty => usart.cr1.modify(|_, w| w.rxneie().set_bit()),
+            Event::TransmissionComplete => usart.cr1.modify(|_, w| w.tcie().set_bit()),
+            Event::TxEmpty => usart.cr1.modify(|_, w| w.txeie().set_bit()),
+        }
+    }
+
+    pub fn unlisten(&mut self, event: Event) {
+        let usart = unsafe { &*self.register_block };
+        match event {
+            Event::RxNotEmpty => usart.cr1.modify(|_, w| w.rxneie().clear_bit()),
+            Event::TransmissionComplete => usart.cr1.modify(|_, w| w.tcie().clear_bit()),
+            Event::TxEmpty => usart.cr1.modify(|_, w| w.txeie().clear_bit()),
+        }
+    }
+
+    pub fn is_pending(&mut self, event: Event) -> bool {
+        let usart = unsafe { &*self.register_block };
+        return (usart.isr.read().bits() & event.val()) != 0;
+    }
+
+    pub fn unpend(&mut self, event: Event) {
+        let mask: u32 = 0x123BFF;
+        unsafe {
+            (*self.register_block)
+                .icr
+                .write(|w| w.bits(event.val() & mask));
+        }
+    }
+
+    pub fn read(&mut self) -> Result<u8, Error> {
+        let usart = unsafe { &*self.register_block };
+        let isr = usart.isr.read();
+        if isr.pe().bit_is_set() {
+            usart.icr.write(|w| w.pecf().set_bit());
+            return Result::Err(Error::Parity);
+        } else if isr.fe().bit_is_set() {
+            usart.icr.write(|w| w.fecf().set_bit());
+            return Result::Err(Error::Framing);
+        } else if isr.nf().bit_is_set() {
+            usart.icr.write(|w| w.ncf().set_bit());
+            return Result::Err(Error::Noise);
+        } else if isr.ore().bit_is_set() {
+            usart.icr.write(|w| w.orecf().set_bit());
+            return Result::Err(Error::Overrun);
+        } else if isr.rxne().bit_is_set() {
+            return Result::Ok(usart.rdr.read().bits() as u8);
+        } else {
+            return Result::Err(Error::WouldBlock);
+        }
+    }
+
+    pub fn is_tx_fifo_full(&self) -> bool {
+        unsafe {
+            return (*self.register_block).isr.read().txe().bit_is_clear();
+        }
+    }
+
+    pub fn write(&mut self, b: u8) -> Result<(), Error> {
+        if self.is_tx_fifo_full() {
+            return Result::Err(Error::WouldBlock);
+        }
+        unsafe {
+            (*self.register_block).tdr.write(|w| w.bits(b as u32));
+        }
+        return Result::Ok(());
+    }
+}
+
+pub enum Event {
+    /// RXNE - New data has been received
+    RxNotEmpty = 1 << 5,
+    /// TC - Transmission Complete. The last data written in the USART_TDR has been transmitted out of the shift register.
+    TransmissionComplete = 1 << 6,
+    /// TXE - Transmit data register empty. New data can be sent
+    TxEmpty = 1 << 7,
+}
+
+impl Event {
+    fn val(self) -> u32 {
+        return self as u32;
+    }
+}
+
+macro_rules! usart {
+    ($USARTx:ident, $usartx:ident) => {
+        pub mod $usartx {
+            use super::USART;
+            use crate::hal::gpio::Pin;
+
+            pub fn new(_usart: stm32g0::stm32g031::$USARTx, _tx_pin: Pin, _rx_pin: Pin) -> USART {
+                return USART {
+                    register_block: stm32g0::stm32g031::$USARTx::ptr(),
+                };
+            }
+        }
+    };
+}
+
+usart!(USART1, usart1);
