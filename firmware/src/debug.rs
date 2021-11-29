@@ -39,8 +39,8 @@ pub struct DebugUsart {
 
 impl DebugUsart {
     pub fn new(mut usart: USART) -> Self {
-        usart.listen(usart::Event::RxNotEmpty);
-        usart.unlisten(usart::Event::TxEmpty);
+        usart.listen(usart::Event::RxFifoNotEmpty);
+        usart.unlisten(usart::Event::TxFifoNotFull);
         cortex_m::interrupt::free(|cs| {
             *SHARED.borrow(cs).borrow_mut() = Some(Shared { usart });
         });
@@ -66,7 +66,7 @@ impl DebugUsart {
     fn listen_tx_complete() {
         cortex_m::interrupt::free(|cs| {
             if let Option::Some(shared) = SHARED.borrow(cs).borrow_mut().deref_mut() {
-                shared.usart.listen(usart::Event::TxEmpty);
+                shared.usart.listen(usart::Event::TxFifoNotFull);
             }
         });
     }
@@ -147,24 +147,22 @@ fn USART1() {
         if let Some(ref mut shared) = SHARED.borrow(cs).borrow_mut().deref_mut() {
             let serial = &mut shared.usart;
 
-            if serial.is_pending(usart::Event::RxNotEmpty) {
+            if serial.is_pending(usart::Event::RxFifoNotEmpty) {
                 if let Result::Ok(v) = serial.read() {
                     RX_IRQ_FIFO.enqueue(v).ok();
                 }
             }
 
-            if serial.is_pending(usart::Event::TxEmpty) {
-                if !serial.is_tx_full() {
-                    if let Option::Some(v) = TX_IRQ_FIFO.dequeue() {
-                        serial.write(v).ok();
-                    } else {
-                        serial.unlisten(usart::Event::TxEmpty);
-                    }
-                    serial.unpend(usart::Event::TxEmpty);
+            if serial.is_pending(usart::Event::TxFifoNotFull) {
+                if let Option::Some(v) = TX_IRQ_FIFO.dequeue() {
+                    serial.write(v).ok();
+                } else {
+                    serial.unlisten(usart::Event::TxFifoNotFull);
                 }
+                serial.unpend(usart::Event::TxFifoNotFull);
             }
 
-            NVIC::unpend(Interrupt::USART1);
+            // TODO do we need this? NVIC::unpend(Interrupt::USART1);
         }
     });
 }

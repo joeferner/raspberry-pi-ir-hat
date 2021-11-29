@@ -33,6 +33,7 @@ impl USART {
         }
 
         let usart = unsafe { &*self.register_block };
+        usart.cr1.modify(|_, w| w.fifoen().set_bit());
         usart.cr1.modify(|_, w| w.ue().set_bit());
     }
 
@@ -49,36 +50,32 @@ impl USART {
     pub fn listen(&mut self, event: Event) {
         let usart = unsafe { &*self.register_block };
         match event {
-            Event::RxNotEmpty => usart.cr1.modify(|_, w| w.rxneie().set_bit()),
-            Event::TransmissionComplete => usart.cr1.modify(|_, w| w.tcie().set_bit()),
-            Event::TxEmpty => usart.cr1.modify(|_, w| w.txeie().set_bit()),
+            Event::RxFifoNotEmpty => usart.cr1.modify(|_, w| w.rxneie().set_bit()),
+            Event::TxFifoNotFull => usart.cr1.modify(|_, w| w.txeie().set_bit()),
         }
     }
 
     pub fn unlisten(&mut self, event: Event) {
         let usart = unsafe { &*self.register_block };
         match event {
-            Event::RxNotEmpty => usart.cr1.modify(|_, w| w.rxneie().clear_bit()),
-            Event::TransmissionComplete => usart.cr1.modify(|_, w| w.tcie().clear_bit()),
-            Event::TxEmpty => usart.cr1.modify(|_, w| w.txeie().clear_bit()),
+            Event::RxFifoNotEmpty => usart.cr1.modify(|_, w| w.rxneie().clear_bit()),
+            Event::TxFifoNotFull => usart.cr1.modify(|_, w| w.txeie().clear_bit()),
         }
     }
 
     pub fn is_pending(&mut self, event: Event) -> bool {
         let usart = unsafe { &*self.register_block };
         return match event {
-            Event::RxNotEmpty => usart.isr.read().rxne().bit_is_set(),
-            Event::TransmissionComplete => usart.isr.read().tc().bit_is_set(),
-            Event::TxEmpty => usart.isr.read().txe().bit_is_set(),
+            Event::RxFifoNotEmpty => usart.isr.read().rxne().bit_is_set(),
+            Event::TxFifoNotFull => usart.isr.read().txe().bit_is_set(),
         };
     }
 
     pub fn unpend(&mut self, event: Event) {
         let usart = unsafe { &*self.register_block };
         match event {
-            Event::RxNotEmpty => panic!(), // should call read to clear this interrupt
-            Event::TransmissionComplete => usart.icr.write(|w| w.tccf().set_bit()),
-            Event::TxEmpty => usart.icr.write(|w| w.txfecf().set_bit()),
+            Event::RxFifoNotEmpty => panic!(), // should call read to clear this interrupt
+            Event::TxFifoNotFull => usart.icr.write(|w| w.txfecf().set_bit()),
         };
     }
 
@@ -104,13 +101,13 @@ impl USART {
         }
     }
 
-    pub fn is_tx_full(&self) -> bool {
+    pub fn is_tx_fifo_full(&self) -> bool {
         let usart = unsafe { &*self.register_block };
         return usart.isr.read().txe().bit_is_clear();
     }
 
     pub fn write(&mut self, b: u8) -> Result<(), Error> {
-        if self.is_tx_full() {
+        if self.is_tx_fifo_full() {
             return Result::Err(Error::WouldBlock);
         }
         let usart = unsafe { &*self.register_block };
@@ -120,18 +117,10 @@ impl USART {
 }
 
 pub enum Event {
-    /// RXNE - New data has been received
-    RxNotEmpty = 1 << 5,
-    /// TC - Transmission Complete. The last data written in the USART_TDR has been transmitted out of the shift register.
-    TransmissionComplete = 1 << 6,
-    /// TXE - Transmit data register empty. New data can be sent
-    TxEmpty = 1 << 7,
-}
-
-impl Event {
-    fn val(self) -> u32 {
-        return self as u32;
-    }
+    /// RXFNEIE - RXFIFO in not full, data can be read
+    RxFifoNotEmpty,
+    /// TXFNFIE - TXFIFO in not full and more data can be written
+    TxFifoNotFull,
 }
 
 macro_rules! usart {

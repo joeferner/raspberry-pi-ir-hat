@@ -1,3 +1,5 @@
+use core::panic;
+
 use super::hertz::Hertz;
 
 enum ClockSelection {
@@ -61,16 +63,16 @@ impl RCC {
 
     fn get_system_clock_frequency(&self) -> Hertz {
         // RCC_GetSystemClockFreq
-        todo!();
+        panic!();
     }
 
     fn get_hclk_clock_frequency(&self, f: Hertz) -> Hertz {
-        todo!();
+        panic!();
         // return __LL_RCC_CALC_HCLK_FREQ(f, self.get_ahb_prescaler());
     }
 
     fn get_pclk1_clock_frequency(&self, f: Hertz) -> Hertz {
-        todo!();
+        panic!();
         // return __LL_RCC_CALC_PCLK1_FREQ(f, self.get_apb1_prescaler());
     }
 
