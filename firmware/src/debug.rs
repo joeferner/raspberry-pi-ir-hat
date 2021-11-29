@@ -151,18 +151,17 @@ fn USART1() {
                 if let Result::Ok(v) = serial.read() {
                     RX_IRQ_FIFO.enqueue(v).ok();
                 }
-                serial.unpend(usart::Event::RxNotEmpty);
             }
 
             if serial.is_pending(usart::Event::TxEmpty) {
-                if !serial.is_tx_fifo_full() {
+                if !serial.is_tx_full() {
                     if let Option::Some(v) = TX_IRQ_FIFO.dequeue() {
                         serial.write(v).ok();
                     } else {
                         serial.unlisten(usart::Event::TxEmpty);
                     }
+                    serial.unpend(usart::Event::TxEmpty);
                 }
-                serial.unpend(usart::Event::TxEmpty);
             }
 
             NVIC::unpend(Interrupt::USART1);

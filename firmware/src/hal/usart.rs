@@ -66,16 +66,20 @@ impl USART {
 
     pub fn is_pending(&mut self, event: Event) -> bool {
         let usart = unsafe { &*self.register_block };
-        return (usart.isr.read().bits() & event.val()) != 0;
+        return match event {
+            Event::RxNotEmpty => usart.isr.read().rxne().bit_is_set(),
+            Event::TransmissionComplete => usart.isr.read().tc().bit_is_set(),
+            Event::TxEmpty => usart.isr.read().txe().bit_is_set(),
+        };
     }
 
     pub fn unpend(&mut self, event: Event) {
-        let mask: u32 = 0x123BFF;
-        unsafe {
-            (*self.register_block)
-                .icr
-                .write(|w| w.bits(event.val() & mask));
-        }
+        let usart = unsafe { &*self.register_block };
+        match event {
+            Event::RxNotEmpty => panic!(), // should call read to clear this interrupt
+            Event::TransmissionComplete => usart.icr.write(|w| w.tccf().set_bit()),
+            Event::TxEmpty => usart.icr.write(|w| w.txfecf().set_bit()),
+        };
     }
 
     pub fn read(&mut self) -> Result<u8, Error> {
@@ -100,19 +104,17 @@ impl USART {
         }
     }
 
-    pub fn is_tx_fifo_full(&self) -> bool {
-        unsafe {
-            return (*self.register_block).isr.read().txe().bit_is_clear();
-        }
+    pub fn is_tx_full(&self) -> bool {
+        let usart = unsafe { &*self.register_block };
+        return usart.isr.read().txe().bit_is_clear();
     }
 
     pub fn write(&mut self, b: u8) -> Result<(), Error> {
-        if self.is_tx_fifo_full() {
+        if self.is_tx_full() {
             return Result::Err(Error::WouldBlock);
         }
-        unsafe {
-            (*self.register_block).tdr.write(|w| w.bits(b as u32));
-        }
+        let usart = unsafe { &*self.register_block };
+        usart.tdr.write(|w| unsafe { w.tdr().bits(b as u16) });
         return Result::Ok(());
     }
 }
