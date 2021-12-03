@@ -9,7 +9,8 @@
             "svdFile": "${workspaceFolder}/STM32G031.svd",
             "servertype": "openocd",
             "configFiles": ["interface/stlink.cfg", "stm32g0x.cfg"],
-            "preLaunchTask": "Build binary"
+            "preLaunchTask": "Build binary",
+            "openOCDLaunchCommands": ["init", "reset halt"]
         }
     ]
 }
