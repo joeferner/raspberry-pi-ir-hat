@@ -207,7 +207,7 @@ impl Pin {
         unsafe {
             (*self.register_block).moder.modify(|r, w| {
                 let mut v = r.bits();
-                v = v & (0b11u32 << (self.pin * 2));
+                v = v & !(0b11u32 << (self.pin * 2));
                 v = v | ((mode as u32) << (self.pin * 2));
                 return w.bits(v);
             });

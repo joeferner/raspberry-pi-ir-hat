@@ -10,7 +10,8 @@ use cortex_m::asm;
 use debug::DebugUsart;
 use hal::baud_rate::BaudRate;
 use hal::gpio::AlternateFunctionMode;
-use hal::rcc::RCC;
+use hal::init_1ms_tick;
+use hal::rcc::{ADCClockSource, AHBPrescaler, APB1Prescaler, SysClkSource, USART1ClockSource, RCC};
 use ir_activity_led_pin::IrActivityLedPin;
 
 mod debug;
@@ -19,8 +20,21 @@ mod ir_activity_led_pin;
 
 #[no_mangle]
 fn main() -> ! {
+    let mut cortex_m_peripherals = cortex_m::Peripherals::take().unwrap();
     let stm_peripherals = stm32g0::stm32g031::Peripherals::take().unwrap();
     let mut rcc = RCC::new(stm_peripherals.RCC);
+    rcc.enable_syscfg();
+    rcc.enable_pwd();
+    rcc.enable_hsi();
+    rcc.enable_lsi();
+    rcc.set_ahb_prescaler(AHBPrescaler::Div1);
+    rcc.set_sys_clk_source(SysClkSource::HSI);
+    rcc.set_apb1_prescaler(APB1Prescaler::Div1);
+    init_1ms_tick(&mut cortex_m_peripherals.SYST);
+    rcc.set_usart1_clock_source(USART1ClockSource::PCLK);
+    rcc.set_adc_clock_source(ADCClockSource::SYSCLK);
+    rcc.enable_gpioa();
+    rcc.enable_gpiob();
 
     let gpioa = gpioa::new(stm_peripherals.GPIOA).split(&mut rcc);
     let mut ir_activity_led_pin = gpioa.p7;

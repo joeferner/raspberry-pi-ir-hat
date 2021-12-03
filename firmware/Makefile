@@ -10,4 +10,4 @@ debug:
 	cargo run --release
 
 openocd:
-	openocd -f interface/stlink-v2-1.cfg -f stm32g0x.cfg
+	openocd -f interface/stlink-v2-1.cfg -f stm32g0x.cfg -c "init; reset halt"
