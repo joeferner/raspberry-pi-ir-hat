@@ -25,15 +25,6 @@ pub struct Parts {
 
 impl Port {
     pub fn split(self, rcc: &mut RCC) -> Parts {
-        if self.register_block == stm32g0::stm32g031::GPIOA::ptr() {
-            rcc.enable_gpioa();
-        } else if self.register_block
-            == stm32g0::stm32g031::GPIOB::ptr() as *const stm32g0::stm32g031::gpioa::RegisterBlock
-        {
-            rcc.enable_gpiob();
-        } else {
-            panic!();
-        }
         return Parts {
             p0: Pin {
                 register_block: self.register_block,

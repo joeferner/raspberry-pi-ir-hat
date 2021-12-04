@@ -21,19 +21,17 @@ impl USART {
         let usart = unsafe { &*self.register_block };
         let clk = rcc.get_usart1_clock_frequency().to_hertz() as u64;
         let bdr = baud_rate.to_bps() as u64;
-        let div = (1 * clk) / bdr;
-        usart.brr.write(|w| unsafe { w.brr_4_15().bits(div as u16) });
+        let div = clk / (bdr * 16);
+        usart
+            .brr
+            .write(|w| unsafe { w.brr_4_15().bits(div as u16) });
     }
 
     pub fn enable(&mut self, rcc: &mut RCC) {
-        if self.register_block == stm32g0::stm32g031::USART1::ptr() {
-            rcc.enable_usart1();
-        } else {
-            panic!();
-        }
-
         let usart = unsafe { &*self.register_block };
-        usart.cr1.modify(|_, w| w.fifoen().set_bit());
+        usart
+            .cr1
+            .modify(|_, w| w.fifoen().set_bit().te().set_bit().re().set_bit());
         usart.cr1.modify(|_, w| w.ue().set_bit());
     }
 
