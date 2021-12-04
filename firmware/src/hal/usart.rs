@@ -22,7 +22,7 @@ impl USART {
         let clk = rcc.get_usart1_clock_frequency().to_hertz() as u64;
         let bdr = baud_rate.to_bps() as u64;
         let div = (1 * clk) / bdr;
-        usart.brr.write(|w| unsafe { w.bits(div as u32) });
+        usart.brr.write(|w| unsafe { w.brr_4_15().bits(div as u16) });
     }
 
     pub fn enable(&mut self, rcc: &mut RCC) {

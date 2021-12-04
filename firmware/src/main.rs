@@ -35,6 +35,7 @@ fn main() -> ! {
     rcc.set_adc_clock_source(ADCClockSource::SYSCLK);
     rcc.enable_gpioa();
     rcc.enable_gpiob();
+    rcc.enable_usart1();
 
     let gpioa = gpioa::new(stm_peripherals.GPIOA).split(&mut rcc);
     let mut ir_activity_led_pin = gpioa.p7;
