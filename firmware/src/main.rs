@@ -37,11 +37,11 @@ fn main() -> ! {
     rcc.enable_gpiob();
     rcc.enable_usart1();
 
-    let gpioa = gpioa::new(stm_peripherals.GPIOA).split(&mut rcc);
+    let gpioa = gpioa::new(stm_peripherals.GPIOA).split();
     let mut ir_activity_led_pin = gpioa.p7;
     ir_activity_led_pin.set_as_output();
 
-    let gpiob = gpiob::new(stm_peripherals.GPIOB).split(&mut rcc);
+    let gpiob = gpiob::new(stm_peripherals.GPIOB).split();
     let mut usart1_tx_pin = gpiob.p6;
     let mut usart1_rx_pin = gpiob.p7;
     usart1_tx_pin.set_as_alternate_function(AlternateFunctionMode::AF0);
@@ -57,7 +57,7 @@ fn main() -> ! {
     // debug usart
     let mut usart1 = usart1::new(stm_peripherals.USART1, usart1_tx_pin, usart1_rx_pin);
     usart1.set_baud_rate(BaudRate::bps(57_600), &rcc);
-    usart1.enable(&mut rcc);
+    usart1.enable();
     usart1.enable_interrupts();
 
     // let dma = stm_peripherals.DMA.split(&mut rcc, stm_peripherals.DMAMUX);

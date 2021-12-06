@@ -27,7 +27,7 @@ impl USART {
             .write(|w| unsafe { w.brr_4_15().bits(div as u16) });
     }
 
-    pub fn enable(&mut self, rcc: &mut RCC) {
+    pub fn enable(&mut self) {
         let usart = unsafe { &*self.register_block };
         usart
             .cr1

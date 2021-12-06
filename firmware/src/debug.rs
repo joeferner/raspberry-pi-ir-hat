@@ -6,11 +6,9 @@ use core::str;
 use core::str::Bytes;
 use core::{cell::RefCell, ops::DerefMut};
 use cortex_m::interrupt::Mutex;
-use cortex_m::peripheral::NVIC;
 use heapless::mpmc::Q32;
 use heapless::Deque;
 use stm32g0::stm32g031::interrupt;
-use stm32g0::stm32g031::Interrupt;
 
 use crate::hal::usart::USART;
 

@@ -36,16 +36,6 @@ impl USART1ClockSource {
     }
 }
 
-pub enum USART2ClockSource {
-    PCLK = 0b00,
-}
-
-impl USART2ClockSource {
-    pub fn val(self) -> u8 {
-        return self as u8;
-    }
-}
-
 pub enum ADCClockSource {
     SYSCLK = 0b00,
 }

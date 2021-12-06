@@ -24,7 +24,7 @@ pub struct Parts {
 }
 
 impl Port {
-    pub fn split(self, rcc: &mut RCC) -> Parts {
+    pub fn split(self) -> Parts {
         return Parts {
             p0: Pin {
                 register_block: self.register_block,
