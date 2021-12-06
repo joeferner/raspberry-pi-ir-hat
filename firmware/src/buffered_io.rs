@@ -5,6 +5,14 @@ use core::str::Bytes;
 use heapless::Deque;
 
 pub enum BufferedIoError {}
+
+#[cfg(test)]
+impl std::fmt::Debug for BufferedIoError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 pub enum PeekUntilResult {
     Found(usize),
     EndOfFifo(usize),
@@ -106,7 +114,54 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_add() {
-        
+    fn test_read_line() {
+        let mut buf = [0u8; 100];
+        let mut target = MockReadTarget::new("test\n");
+        let mut io: BufferedIo<100> = BufferedIo::new(&mut target);
+        let read_line_results = io.read_line(&mut buf);
+        let line = read_line_results.unwrap();
+        assert_eq!("test\n", line.unwrap());
+    }
+
+    #[test]
+    fn test_read_line_line_does_not_fit_in_buffer() {
+        let mut buf = [0u8; 3];
+        let mut target = MockReadTarget::new("test\n");
+        let mut io: BufferedIo<100> = BufferedIo::new(&mut target);
+        let read_line_results = io.read_line(&mut buf);
+        let line = read_line_results.unwrap();
+        assert_eq!("test", line.unwrap());
+
+        let read_line_results = io.read_line(&mut buf);
+        let line = read_line_results.unwrap();
+        assert_eq!("t\n", line.unwrap());
+    }
+
+    struct MockReadTarget {
+        data: Vec<u8>,
+    }
+
+    impl MockReadTarget {
+        pub fn new(s: &str) -> Self {
+            let mut data = Vec::new();
+            for b in s.as_bytes() {
+                data.push(*b);
+            }
+            return MockReadTarget { data };
+        }
+    }
+
+    impl BufferedIoTarget for MockReadTarget {
+        fn write_bytes(&mut self, _value: &mut Bytes) -> Result<(), BufferedIoError> {
+            todo!()
+        }
+
+        fn write(&mut self, _value: u8) -> Result<(), BufferedIoError> {
+            todo!()
+        }
+
+        fn read(&mut self) -> Option<u8> {
+            return self.data.pop();
+        }
     }
 }
