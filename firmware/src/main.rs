@@ -6,6 +6,7 @@ extern crate panic_halt;
 
 use crate::hal::gpio::{gpioa, gpiob};
 use crate::hal::usart::usart1;
+use buffered_io::BufferedIo;
 use cortex_m::asm;
 use debug::DebugUsart;
 use hal::baud_rate::BaudRate;
@@ -14,9 +15,12 @@ use hal::init_1ms_tick;
 use hal::rcc::{ADCClockSource, AHBPrescaler, APB1Prescaler, SysClkSource, USART1ClockSource, RCC};
 use ir_activity_led_pin::IrActivityLedPin;
 
+mod buffered_io;
 mod debug;
 mod hal;
 mod ir_activity_led_pin;
+
+const DEBUG_RX_BUFFER_LEN: usize = 100;
 
 #[no_mangle]
 fn main() -> ! {
@@ -64,6 +68,7 @@ fn main() -> ! {
 
     let mut ir_activity_led = IrActivityLedPin::new(ir_activity_led_pin);
     let mut debug = DebugUsart::new(usart1);
+    let mut debugIo: BufferedIo<DEBUG_RX_BUFFER_LEN> = BufferedIo::new(&mut debug);
     // let mut ir_rx = IrRx::new(
     //     stm_peripherals.TIM3,
     //     dma.ch5,
@@ -72,14 +77,15 @@ fn main() -> ! {
     // );
 
     loop {
+        debugIo.tick();
         ir_activity_led.toggle();
-        debug.write_str("hello world!\n").ok();
+        debugIo.write_str("hello world!\n").ok();
 
         let mut buf = [0u8; 3];
-        let s = debug.read_line(&mut buf).ok().unwrap();
+        let s = debugIo.read_line(&mut buf).ok().unwrap();
         if let Option::Some(s) = s {
-            debug.write(b'>').ok();
-            debug.write_str(s).ok();
+            debugIo.write(b'>').ok();
+            debugIo.write_str(s).ok();
         }
 
         for _i in 0..1000000 {

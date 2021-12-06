@@ -1,5 +1,3 @@
-use super::rcc::RCC;
-
 pub struct Port {
     register_block: *const stm32g0::stm32g031::gpioa::RegisterBlock,
 }
