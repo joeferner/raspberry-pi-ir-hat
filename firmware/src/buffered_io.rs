@@ -62,13 +62,16 @@ impl<'a, const LEN: usize> BufferedIo<'a, LEN> {
     }
 
     pub fn read_line<'b>(&mut self, buf: &'b mut [u8]) -> Result<Option<&'b str>, BufferedIoError> {
-        let len_to_read = match self.find(b'\n') {
+        let mut len_to_read = match self.find(b'\n') {
             PeekUntilResult::Found(offset) => offset,
             PeekUntilResult::NotFound => {
                 return Result::Ok(Option::None);
             }
             PeekUntilResult::EndOfFifo(offset) => offset,
         };
+        if len_to_read > buf.len() {
+            len_to_read = buf.len();
+        }
         let l = self.read_bytes(len_to_read, buf);
         unsafe {
             let s = str::from_utf8_unchecked(&buf[0..l]);
@@ -124,13 +127,27 @@ mod tests {
     }
 
     #[test]
-    fn test_read_line_line_does_not_fit_in_buffer() {
+    fn test_read_line_line_does_not_fit_in_read_buffer() {
         let mut buf = [0u8; 3];
         let mut target = MockReadTarget::new("test\n");
         let mut io: BufferedIo<100> = BufferedIo::new(&mut target);
         let read_line_results = io.read_line(&mut buf);
         let line = read_line_results.unwrap();
-        assert_eq!("test", line.unwrap());
+        assert_eq!("tes", line.unwrap());
+
+        let read_line_results = io.read_line(&mut buf);
+        let line = read_line_results.unwrap();
+        assert_eq!("t\n", line.unwrap());
+    }
+
+    #[test]
+    fn test_read_line_line_does_not_fit_in_io_buffer() {
+        let mut buf = [0u8; 100];
+        let mut target = MockReadTarget::new("test\n");
+        let mut io: BufferedIo<3> = BufferedIo::new(&mut target);
+        let read_line_results = io.read_line(&mut buf);
+        let line = read_line_results.unwrap();
+        assert_eq!("tes", line.unwrap());
 
         let read_line_results = io.read_line(&mut buf);
         let line = read_line_results.unwrap();
@@ -161,7 +178,10 @@ mod tests {
         }
 
         fn read(&mut self) -> Option<u8> {
-            return self.data.pop();
+            if self.data.is_empty() {
+                return Option::None;
+            }
+            return Option::Some(self.data.remove(0));
         }
     }
 }
