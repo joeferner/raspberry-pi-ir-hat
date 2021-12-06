@@ -6,6 +6,9 @@ build:
 flash: build
 	./flash.sh
 
+test:
+	cargo test
+
 debug:
 	cargo run --release
 

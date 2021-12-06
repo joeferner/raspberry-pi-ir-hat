@@ -1,5 +1,4 @@
 extern crate cortex_m_rt as rt;
-extern crate panic_halt;
 
 use crate::buffered_io::{BufferedIoError, BufferedIoTarget};
 use crate::hal::usart;
@@ -19,8 +18,6 @@ struct Shared {
 }
 
 static SHARED: Mutex<RefCell<Option<Shared>>> = Mutex::new(RefCell::new(None));
-
-pub enum DebugError {}
 
 pub struct DebugUsart {}
 

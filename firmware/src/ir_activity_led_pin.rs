@@ -1,7 +1,6 @@
 use crate::hal::gpio::{OutputPin, Pin};
 
 extern crate cortex_m_rt as rt;
-extern crate panic_halt;
 
 pub struct IrActivityLedPin {
     pin: Pin,

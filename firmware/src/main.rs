@@ -1,7 +1,9 @@
-#![no_main]
-#![no_std]
+#![cfg_attr(not(test), no_main)]
+#![cfg_attr(not(test), no_std)]
 
 extern crate cortex_m_rt as rt;
+
+#[cfg(not(test))]
 extern crate panic_halt;
 
 use crate::hal::gpio::{gpioa, gpiob};
@@ -22,6 +24,7 @@ mod ir_activity_led_pin;
 
 const DEBUG_RX_BUFFER_LEN: usize = 100;
 
+#[cfg(not(test))]
 #[no_mangle]
 fn main() -> ! {
     let mut cortex_m_peripherals = cortex_m::Peripherals::take().unwrap();

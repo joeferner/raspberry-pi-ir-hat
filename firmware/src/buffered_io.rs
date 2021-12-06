@@ -100,3 +100,13 @@ pub trait BufferedIoTarget {
 
     fn read(&mut self) -> Option<u8>;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_add() {
+        
+    }
+}
