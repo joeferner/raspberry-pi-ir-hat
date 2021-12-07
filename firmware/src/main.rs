@@ -8,23 +8,25 @@ extern crate panic_halt;
 
 use crate::hal::gpio::{gpioa, gpiob};
 use crate::hal::usart::usart1;
+use crate::hal::dma;
 use buffered_io::BufferedIo;
-use cortex_m::asm;
 use debug::DebugUsart;
 use hal::baud_rate::BaudRate;
 use hal::gpio::AlternateFunctionMode;
 use hal::init_1ms_tick;
 use hal::rcc::{ADCClockSource, AHBPrescaler, APB1Prescaler, SysClkSource, USART1ClockSource, RCC};
 use ir_activity_led_pin::IrActivityLedPin;
+use ir_rx::IrRx;
 
 mod buffered_io;
 mod debug;
 mod hal;
 mod ir_activity_led_pin;
+mod ir_rx;
 
 const DEBUG_RX_BUFFER_LEN: usize = 100;
 
-#[cfg(not(test))]
+//#[cfg(not(test))]
 #[no_mangle]
 fn main() -> ! {
     let mut cortex_m_peripherals = cortex_m::Peripherals::take().unwrap();
@@ -67,17 +69,18 @@ fn main() -> ! {
     usart1.enable();
     usart1.enable_interrupts();
 
-    // let dma = stm_peripherals.DMA.split(&mut rcc, stm_peripherals.DMAMUX);
+    let dma = dma::split(stm_peripherals.DMAMUX);
 
     let mut ir_activity_led = IrActivityLedPin::new(ir_activity_led_pin);
     let mut debug = DebugUsart::new(usart1);
     let mut debugIo: BufferedIo<DEBUG_RX_BUFFER_LEN> = BufferedIo::new(&mut debug);
-    // let mut ir_rx = IrRx::new(
-    //     stm_peripherals.TIM3,
-    //     dma.ch5,
-    //     &mut stm_peripherals.DMA,
-    //     &mut rcc,
-    // );
+
+    let mut ir_rx = IrRx::new(
+        stm_peripherals.TIM3,
+        dma.ch5,
+        &mut stm_peripherals.DMA,
+        &mut rcc,
+    );
 
     debugIo.write(b'\n').ok();
     debugIo.write(b'>').ok();

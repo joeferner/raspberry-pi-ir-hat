@@ -3,6 +3,7 @@ pub mod gpio;
 pub mod hertz;
 pub mod rcc;
 pub mod usart;
+pub mod dma;
 
 pub fn init_1ms_tick(syst: &mut cortex_m::peripheral::SYST) {
     init_tick(syst, 16_000_000, 1000);

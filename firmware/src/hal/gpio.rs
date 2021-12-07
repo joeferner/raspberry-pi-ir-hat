@@ -153,7 +153,7 @@ impl Speed {
 
 pub struct Pin {
     register_block: *const stm32g0::stm32g031::gpioa::RegisterBlock,
-    pin: u32,
+    pin: u8,
 }
 
 impl Pin {
