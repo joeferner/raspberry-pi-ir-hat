@@ -79,20 +79,18 @@ fn main() -> ! {
     //     &mut rcc,
     // );
 
+    debugIo.write(b'\n').ok();
+    debugIo.write(b'>').ok();
     loop {
         debugIo.tick();
         ir_activity_led.toggle();
-        debugIo.write_str("hello world!\n").ok();
 
-        let mut buf = [0u8; 3];
+        let mut buf = [0u8; 100];
         let s = debugIo.read_line(&mut buf).ok().unwrap();
         if let Option::Some(s) = s {
-            debugIo.write(b'>').ok();
+            debugIo.write_str("in: ").ok();
             debugIo.write_str(s).ok();
-        }
-
-        for _i in 0..1000000 {
-            asm::nop()
+            debugIo.write(b'>').ok();
         }
     }
 }

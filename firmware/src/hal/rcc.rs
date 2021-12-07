@@ -93,7 +93,7 @@ impl RCC {
     }
 
     pub fn enable_hsi(&mut self) {
-        self.rcc.cr.modify(|_, w| w.hsikeron().set_bit());
+        self.rcc.cr.modify(|_, w| w.hsion().set_bit());
         while self.rcc.cr.read().hsirdy().bit_is_clear() {}
     }
 

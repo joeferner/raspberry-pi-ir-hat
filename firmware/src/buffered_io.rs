@@ -54,7 +54,7 @@ impl<'a, const LEN: usize> BufferedIo<'a, LEN> {
                 return PeekUntilResult::Found(read);
             }
         }
-        if read == self.rx_fifo.len() {
+        if read == LEN {
             return PeekUntilResult::EndOfFifo(read);
         } else {
             return PeekUntilResult::NotFound;
@@ -114,22 +114,32 @@ pub trait BufferedIoTarget {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::mpsc;
+    use std::sync::mpsc::channel;
+    use std::time::Duration;
+
     use super::*;
 
     #[test]
     fn test_read_line() {
         let mut buf = [0u8; 100];
-        let mut target = MockReadTarget::new("test\n");
+        let (tx, rx) = channel();
+        send_str(&tx, "test");
+        let mut target = MockReadTarget::new(rx);
         let mut io: BufferedIo<100> = BufferedIo::new(&mut target);
-        let read_line_results = io.read_line(&mut buf);
-        let line = read_line_results.unwrap();
+        let line = io.read_line(&mut buf).unwrap();
+        assert_eq!(true, line.is_none());
+        tx.send(b'\n').ok();
+        let line = io.read_line(&mut buf).unwrap();
         assert_eq!("test\n", line.unwrap());
     }
 
     #[test]
     fn test_read_line_line_does_not_fit_in_read_buffer() {
         let mut buf = [0u8; 3];
-        let mut target = MockReadTarget::new("test\n");
+        let (tx, rx) = channel();
+        send_str(&tx, "test\n");
+        let mut target = MockReadTarget::new(rx);
         let mut io: BufferedIo<100> = BufferedIo::new(&mut target);
         let read_line_results = io.read_line(&mut buf);
         let line = read_line_results.unwrap();
@@ -143,7 +153,9 @@ mod tests {
     #[test]
     fn test_read_line_line_does_not_fit_in_io_buffer() {
         let mut buf = [0u8; 100];
-        let mut target = MockReadTarget::new("test\n");
+        let (tx, rx) = channel();
+        send_str(&tx, "test\n");
+        let mut target = MockReadTarget::new(rx);
         let mut io: BufferedIo<3> = BufferedIo::new(&mut target);
         let read_line_results = io.read_line(&mut buf);
         let line = read_line_results.unwrap();
@@ -154,17 +166,19 @@ mod tests {
         assert_eq!("t\n", line.unwrap());
     }
 
+    fn send_str(tx: &mpsc::Sender<u8>, s: &str) {
+        for b in s.as_bytes() {
+            tx.send(*b).ok();
+        }
+    }
+
     struct MockReadTarget {
-        data: Vec<u8>,
+        rx: mpsc::Receiver<u8>,
     }
 
     impl MockReadTarget {
-        pub fn new(s: &str) -> Self {
-            let mut data = Vec::new();
-            for b in s.as_bytes() {
-                data.push(*b);
-            }
-            return MockReadTarget { data };
+        pub fn new(rx: mpsc::Receiver<u8>) -> Self {
+            return MockReadTarget { rx };
         }
     }
 
@@ -178,10 +192,10 @@ mod tests {
         }
 
         fn read(&mut self) -> Option<u8> {
-            if self.data.is_empty() {
-                return Option::None;
-            }
-            return Option::Some(self.data.remove(0));
+            return match self.rx.recv_timeout(Duration::from_millis(1)) {
+                Result::Err(err) => Option::None,
+                Result::Ok(v) => Option::Some(v),
+            };
         }
     }
 }
