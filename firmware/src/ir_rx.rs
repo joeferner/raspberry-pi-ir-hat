@@ -1,5 +1,8 @@
-use crate::hal::{dma, rcc::RCC};
-use stm32g0::stm32g031;
+use crate::hal::{
+    dma::{self, Dma},
+    rcc::RCC,
+    timer::Timer,
+};
 
 const IR_RX_BUFFER_SAMPLES: usize = 128;
 static IR_RX_BUFFER: [u16; IR_RX_BUFFER_SAMPLES] = [0; IR_RX_BUFFER_SAMPLES];
@@ -10,7 +13,7 @@ pub struct IrRx {
 }
 
 impl IrRx {
-    pub fn new(tim3: stm32g031::TIM3, dma_ch: dma::DmaChannel, dma: &mut stm32g031::DMA, rcc: &mut RCC) -> IrRx {
+    pub fn new(tim3: Timer, dma_ch: dma::DmaChannel, dma: &mut Dma, rcc: &mut RCC) -> IrRx {
         let sample_rate = Hertz(1000000);
         let clk = rcc.clocks.apb_clk;
         let prescaler = if clk >= sample_rate {

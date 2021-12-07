@@ -1,6 +1,14 @@
 use stm32g0::stm32g031;
 
-pub struct Parts {
+pub struct Dma {}
+
+impl Dma {
+    pub fn new(dma: stm32g031::DMA) -> Self {
+        return Self {};
+    }
+}
+
+pub struct DmaChannelParts {
     pub ch5: DmaChannel,
 }
 
@@ -9,8 +17,8 @@ pub struct DmaChannel {
     channel: u8,
 }
 
-pub fn split(dma: stm32g031::DMAMUX) -> Parts {
-    return Parts {
+pub fn split(dma: stm32g031::DMAMUX) -> DmaChannelParts {
+    return DmaChannelParts {
         ch5: DmaChannel {
             register_block: stm32g031::DMAMUX::ptr(),
             channel: 5,

@@ -12,9 +12,11 @@ use crate::hal::dma;
 use buffered_io::BufferedIo;
 use debug::DebugUsart;
 use hal::baud_rate::BaudRate;
+use hal::dma::Dma;
 use hal::gpio::AlternateFunctionMode;
 use hal::init_1ms_tick;
 use hal::rcc::{ADCClockSource, AHBPrescaler, APB1Prescaler, SysClkSource, USART1ClockSource, RCC};
+use hal::timer::Timer;
 use ir_activity_led_pin::IrActivityLedPin;
 use ir_rx::IrRx;
 
@@ -46,6 +48,9 @@ fn main() -> ! {
     rcc.enable_gpiob();
     rcc.enable_usart1();
 
+    let mut dma = Dma::new(stm_peripherals.DMA);
+    let timer3 = Timer::new(stm_peripherals.TIM3);
+
     let gpioa = gpioa::new(stm_peripherals.GPIOA).split();
     let mut ir_activity_led_pin = gpioa.p7;
     ir_activity_led_pin.set_as_output();
@@ -69,16 +74,16 @@ fn main() -> ! {
     usart1.enable();
     usart1.enable_interrupts();
 
-    let dma = dma::split(stm_peripherals.DMAMUX);
+    let dma_mux = dma::split(stm_peripherals.DMAMUX);
 
     let mut ir_activity_led = IrActivityLedPin::new(ir_activity_led_pin);
     let mut debug = DebugUsart::new(usart1);
     let mut debugIo: BufferedIo<DEBUG_RX_BUFFER_LEN> = BufferedIo::new(&mut debug);
 
     let mut ir_rx = IrRx::new(
-        stm_peripherals.TIM3,
-        dma.ch5,
-        &mut stm_peripherals.DMA,
+        timer3,
+        dma_mux.ch5,
+        &mut dma,
         &mut rcc,
     );
 
