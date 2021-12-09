@@ -84,6 +84,14 @@ impl RCC {
         self.rcc.apbenr2.modify(|_, w| w.usart1en().set_bit());
     }
 
+    pub fn enable_dma1(&mut self) {
+        self.rcc.ahbenr.modify(|_, w| w.dmaen().set_bit());
+    }
+
+    pub fn enable_timer3(&mut self) {
+        self.rcc.apbenr1.modify(|_, w| w.tim3en().set_bit());
+    }
+
     pub fn enable_syscfg(&mut self) {
         self.rcc.apbenr2.modify(|_, w| w.syscfgen().set_bit());
     }

@@ -1,5 +1,8 @@
-pub struct Port {
-    register_block: *const stm32g0::stm32g031::gpioa::RegisterBlock,
+#[derive(Debug, PartialEq, Clone, Copy)]
+#[repr(u8)]
+pub enum PortName {
+    A = 1,
+    B = 2,
 }
 
 pub struct Parts {
@@ -21,72 +24,93 @@ pub struct Parts {
     pub p15: Pin,
 }
 
+pub struct Port {
+    register_block: *const stm32g0::stm32g031::gpioa::RegisterBlock,
+    port_name: PortName,
+}
+
 impl Port {
     pub fn split(self) -> Parts {
         return Parts {
             p0: Pin {
                 register_block: self.register_block,
                 pin: 0,
+                port_name: self.port_name,
             },
             p1: Pin {
                 register_block: self.register_block,
                 pin: 1,
+                port_name: self.port_name,
             },
             p2: Pin {
                 register_block: self.register_block,
                 pin: 2,
+                port_name: self.port_name,
             },
             p3: Pin {
                 register_block: self.register_block,
                 pin: 3,
+                port_name: self.port_name,
             },
             p4: Pin {
                 register_block: self.register_block,
                 pin: 4,
+                port_name: self.port_name,
             },
             p5: Pin {
                 register_block: self.register_block,
                 pin: 5,
+                port_name: self.port_name,
             },
             p6: Pin {
                 register_block: self.register_block,
                 pin: 6,
+                port_name: self.port_name,
             },
             p7: Pin {
                 register_block: self.register_block,
                 pin: 7,
+                port_name: self.port_name,
             },
             p8: Pin {
                 register_block: self.register_block,
                 pin: 8,
+                port_name: self.port_name,
             },
             p9: Pin {
                 register_block: self.register_block,
                 pin: 9,
+                port_name: self.port_name,
             },
             p10: Pin {
                 register_block: self.register_block,
                 pin: 10,
+                port_name: self.port_name,
             },
             p11: Pin {
                 register_block: self.register_block,
                 pin: 11,
+                port_name: self.port_name,
             },
             p12: Pin {
                 register_block: self.register_block,
                 pin: 12,
+                port_name: self.port_name,
             },
             p13: Pin {
                 register_block: self.register_block,
                 pin: 13,
+                port_name: self.port_name,
             },
             p14: Pin {
                 register_block: self.register_block,
                 pin: 14,
+                port_name: self.port_name,
             },
             p15: Pin {
                 register_block: self.register_block,
                 pin: 15,
+                port_name: self.port_name,
             },
         };
     }
@@ -154,9 +178,18 @@ impl Speed {
 pub struct Pin {
     register_block: *const stm32g0::stm32g031::gpioa::RegisterBlock,
     pin: u8,
+    port_name: PortName,
 }
 
 impl Pin {
+    pub fn get_pin(&self) -> u8 {
+        return self.pin;
+    }
+
+    pub fn get_port_name(&self) -> PortName {
+        return self.port_name;
+    }
+
     pub fn set_as_output(&mut self) {
         self.set_mode(Mode::Output);
     }
@@ -317,19 +350,24 @@ impl OutputPin for Pin {
 }
 
 macro_rules! gpio {
-    ($GPIOX:ident, $gpiox:ident) => {
+    ($GPIOX:ident, $gpiox:ident, $port_name:ident) => {
         pub mod $gpiox {
             use super::Port;
+            use super::PortName;
+            use crate::hal::rcc::RCC;
 
-            pub fn new(_gpio: stm32g0::stm32g031::$GPIOX) -> Port {
+            pub fn new(_gpio: stm32g0::stm32g031::$GPIOX, rcc: &mut RCC) -> Port {
+                rcc.enable_gpioa();
+                rcc.enable_gpiob();
                 return Port {
                     register_block: stm32g0::stm32g031::$GPIOX::ptr()
                         as *const stm32g0::stm32g031::gpioa::RegisterBlock,
+                    port_name: PortName::$port_name,
                 };
             }
         }
     };
 }
 
-gpio!(GPIOA, gpioa);
-gpio!(GPIOB, gpiob);
+gpio!(GPIOA, gpioa, A);
+gpio!(GPIOB, gpiob, B);

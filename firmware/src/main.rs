@@ -6,15 +6,15 @@ extern crate cortex_m_rt as rt;
 #[cfg(not(test))]
 extern crate panic_halt;
 
+use crate::hal::dma;
 use crate::hal::gpio::{gpioa, gpiob};
 use crate::hal::usart::usart1;
-use crate::hal::dma;
 use buffered_io::BufferedIo;
 use debug::DebugUsart;
 use hal::baud_rate::BaudRate;
 use hal::dma::Dma;
-use hal::gpio::AlternateFunctionMode;
 use hal::init_1ms_tick;
+use hal::nvic::NVIC;
 use hal::rcc::{ADCClockSource, AHBPrescaler, APB1Prescaler, SysClkSource, USART1ClockSource, RCC};
 use hal::timer::Timer;
 use ir_activity_led_pin::IrActivityLedPin;
@@ -33,6 +33,7 @@ const DEBUG_RX_BUFFER_LEN: usize = 100;
 fn main() -> ! {
     let mut cortex_m_peripherals = cortex_m::Peripherals::take().unwrap();
     let stm_peripherals = stm32g0::stm32g031::Peripherals::take().unwrap();
+    let mut nvic = NVIC::new();
     let mut rcc = RCC::new(stm_peripherals.RCC);
     rcc.enable_syscfg();
     rcc.enable_pwd();
@@ -44,61 +45,51 @@ fn main() -> ! {
     init_1ms_tick(&mut cortex_m_peripherals.SYST);
     rcc.set_usart1_clock_source(USART1ClockSource::PCLK);
     rcc.set_adc_clock_source(ADCClockSource::SYSCLK);
-    rcc.enable_gpioa();
-    rcc.enable_gpiob();
-    rcc.enable_usart1();
 
-    let mut dma = Dma::new(stm_peripherals.DMA);
-    let timer3 = Timer::new(stm_peripherals.TIM3);
+    let mut dma = Dma::new(stm_peripherals.DMA, &mut rcc);
+    let timer3 = Timer::new(stm_peripherals.TIM3, &mut rcc);
 
-    let gpioa = gpioa::new(stm_peripherals.GPIOA).split();
+    let gpioa = gpioa::new(stm_peripherals.GPIOA, &mut rcc).split();
     let mut ir_activity_led_pin = gpioa.p7;
     ir_activity_led_pin.set_as_output();
 
-    let gpiob = gpiob::new(stm_peripherals.GPIOB).split();
+    let mut ir_input_pin = gpioa.p6;
+
+    let gpiob = gpiob::new(stm_peripherals.GPIOB, &mut rcc).split();
     let mut usart1_tx_pin = gpiob.p6;
     let mut usart1_rx_pin = gpiob.p7;
-    usart1_tx_pin.set_as_alternate_function(AlternateFunctionMode::AF0);
-    usart1_tx_pin.set_output_type_push_pull();
-    usart1_tx_pin.set_speed_low();
-    usart1_tx_pin.set_pull_none();
-
-    usart1_rx_pin.set_as_alternate_function(AlternateFunctionMode::AF0);
-    usart1_rx_pin.set_output_type_push_pull();
-    usart1_rx_pin.set_speed_low();
-    usart1_rx_pin.set_pull_none();
 
     // debug usart
-    let mut usart1 = usart1::new(stm_peripherals.USART1, usart1_tx_pin, usart1_rx_pin);
+    let mut usart1 = usart1::new(
+        stm_peripherals.USART1,
+        usart1_tx_pin,
+        usart1_rx_pin,
+        &mut rcc,
+    );
     usart1.set_baud_rate(BaudRate::bps(57_600), &rcc);
     usart1.enable();
-    usart1.enable_interrupts();
+    usart1.enable_interrupts(&mut nvic);
 
     let dma_mux = dma::split(stm_peripherals.DMAMUX);
 
     let mut ir_activity_led = IrActivityLedPin::new(ir_activity_led_pin);
     let mut debug = DebugUsart::new(usart1);
-    let mut debugIo: BufferedIo<DEBUG_RX_BUFFER_LEN> = BufferedIo::new(&mut debug);
+    let mut debug_io: BufferedIo<DEBUG_RX_BUFFER_LEN> = BufferedIo::new(&mut debug);
 
-    let mut ir_rx = IrRx::new(
-        timer3,
-        dma_mux.ch5,
-        &mut dma,
-        &mut rcc,
-    );
+    let mut ir_rx = IrRx::new(ir_input_pin, timer3, dma_mux.ch5, &mut dma, &mut rcc);
 
-    debugIo.write(b'\n').ok();
-    debugIo.write(b'>').ok();
+    debug_io.write(b'\n').ok();
+    debug_io.write(b'>').ok();
     loop {
-        debugIo.tick();
+        debug_io.tick();
         ir_activity_led.toggle();
 
         let mut buf = [0u8; 100];
-        let s = debugIo.read_line(&mut buf).ok().unwrap();
+        let s = debug_io.read_line(&mut buf).ok().unwrap();
         if let Option::Some(s) = s {
-            debugIo.write_str("in: ").ok();
-            debugIo.write_str(s).ok();
-            debugIo.write(b'>').ok();
+            debug_io.write_str("in: ").ok();
+            debug_io.write_str(s).ok();
+            debug_io.write(b'>').ok();
         }
     }
 }

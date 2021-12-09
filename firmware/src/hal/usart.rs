@@ -1,9 +1,12 @@
-use super::{baud_rate::BaudRate, rcc::RCC};
-use cortex_m::peripheral::NVIC;
-use stm32g0::stm32g031::Interrupt;
+use super::{baud_rate::BaudRate, nvic::NVIC, rcc::RCC};
+
+pub enum UsartPortName {
+    Usart1,
+}
 
 pub struct USART {
     register_block: *const stm32g0::stm32g031::usart1::RegisterBlock,
+    name: UsartPortName,
 }
 
 pub enum Error {
@@ -29,19 +32,13 @@ impl USART {
 
     pub fn enable(&mut self) {
         let usart = unsafe { &*self.register_block };
-        usart
-            .cr1
-            .modify(|_, w| w.te().set_bit().re().set_bit());
+        usart.cr1.modify(|_, w| w.te().set_bit().re().set_bit());
         usart.cr1.modify(|_, w| w.ue().set_bit());
     }
 
-    pub fn enable_interrupts(&mut self) {
-        unsafe {
-            if self.register_block == stm32g0::stm32g031::USART1::ptr() {
-                NVIC::unmask(Interrupt::USART1);
-            } else {
-                panic!();
-            }
+    pub fn enable_interrupts(&mut self, nvic: &mut NVIC) {
+        match self.name {
+            UsartPortName::Usart1 => nvic.enable_interrupt_usart1(),
         }
     }
 
@@ -122,18 +119,38 @@ pub enum Event {
 }
 
 macro_rules! usart {
-    ($USARTx:ident, $usartx:ident) => {
+    ($USARTx:ident, $usartx:ident, $port_name:ident) => {
         pub mod $usartx {
-            use super::USART;
+            use super::{UsartPortName, USART};
+            use crate::hal::gpio::AlternateFunctionMode;
             use crate::hal::gpio::Pin;
+            use crate::hal::rcc::RCC;
 
-            pub fn new(_usart: stm32g0::stm32g031::$USARTx, _tx_pin: Pin, _rx_pin: Pin) -> USART {
+            pub fn new(
+                _usart: stm32g0::stm32g031::$USARTx,
+                mut tx_pin: Pin,
+                mut rx_pin: Pin,
+                rcc: &mut RCC,
+            ) -> USART {
+                rcc.enable_usart1();
+
+                tx_pin.set_as_alternate_function(AlternateFunctionMode::AF0);
+                tx_pin.set_output_type_push_pull();
+                tx_pin.set_speed_low();
+                tx_pin.set_pull_none();
+
+                rx_pin.set_as_alternate_function(AlternateFunctionMode::AF0);
+                rx_pin.set_output_type_push_pull();
+                rx_pin.set_speed_low();
+                rx_pin.set_pull_none();
+
                 return USART {
                     register_block: stm32g0::stm32g031::$USARTx::ptr(),
+                    name: UsartPortName::$port_name,
                 };
             }
         }
     };
 }
 
-usart!(USART1, usart1);
+usart!(USART1, usart1, Usart1);
