@@ -76,7 +76,14 @@ fn main() -> ! {
     let mut debug = DebugUsart::new(usart1);
     let mut debug_io: BufferedIo<DEBUG_RX_BUFFER_LEN> = BufferedIo::new(&mut debug);
 
-    let mut ir_rx = IrRx::new(ir_input_pin, timer3, dma_mux.ch5, &mut dma, &mut rcc);
+    let mut ir_rx = IrRx::new(
+        ir_input_pin,
+        timer3,
+        dma_mux.ch5,
+        &mut dma,
+        &mut rcc,
+        &mut nvic,
+    );
 
     debug_io.write(b'\n').ok();
     debug_io.write(b'>').ok();

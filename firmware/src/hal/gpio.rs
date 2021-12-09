@@ -350,15 +350,15 @@ impl OutputPin for Pin {
 }
 
 macro_rules! gpio {
-    ($GPIOX:ident, $gpiox:ident, $port_name:ident) => {
+    ($GPIOX:ident, $gpiox:ident, $port_name:ident, $rcc_enable:ident) => {
         pub mod $gpiox {
             use super::Port;
             use super::PortName;
             use crate::hal::rcc::RCC;
 
             pub fn new(_gpio: stm32g0::stm32g031::$GPIOX, rcc: &mut RCC) -> Port {
-                rcc.enable_gpioa();
-                rcc.enable_gpiob();
+                rcc.$rcc_enable();
+                rcc.$rcc_enable();
                 return Port {
                     register_block: stm32g0::stm32g031::$GPIOX::ptr()
                         as *const stm32g0::stm32g031::gpioa::RegisterBlock,
@@ -369,5 +369,5 @@ macro_rules! gpio {
     };
 }
 
-gpio!(GPIOA, gpioa, A);
-gpio!(GPIOB, gpiob, B);
+gpio!(GPIOA, gpioa, A, enable_gpioa);
+gpio!(GPIOB, gpiob, B, enable_gpiob);
