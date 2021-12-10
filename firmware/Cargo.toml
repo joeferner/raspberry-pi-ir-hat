@@ -13,3 +13,8 @@ numtoa = "0.2.4"
 
 [target.'cfg(not(test))'.dependencies]
 panic-halt = "0.2.0"
+
+[profile.release]
+opt-level = "z" # optimize for size
+lto = true # link time optimization
+panic = "abort" # remove panic unwind code
