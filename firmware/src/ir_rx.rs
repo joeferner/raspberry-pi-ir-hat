@@ -5,10 +5,16 @@ use crate::hal::{
         DmaTransferDirection,
     },
     gpio::{AlternateFunctionMode, Pin, PortName},
+    hertz::Hertz,
     nvic::NVIC,
     rcc::RCC,
-    timer::Timer,
+    timer::{
+        Timer, TimerActiveInput, TimerCenterAlignMode, TimerChannel, TimerClockDivision,
+        TimerCounterDirection, TimerFilter, TimerPolarity, TimerPrescaler, TimerTriggerOutput,
+    },
 };
+use core::{cell::RefCell, ops::DerefMut};
+use cortex_m::interrupt::Mutex;
 
 const IR_RX_BUFFER_SAMPLES: usize = 128;
 static IR_RX_BUFFER: [u16; IR_RX_BUFFER_SAMPLES] = [0; IR_RX_BUFFER_SAMPLES];
@@ -18,10 +24,13 @@ pub struct IrRx {
     read_index: usize,
 }
 
+const DMA_BUFFER_SIZE: usize = 128;
+static dma_buffer: [u16; DMA_BUFFER_SIZE] = [0; DMA_BUFFER_SIZE];
+
 impl IrRx {
     pub fn new(
         mut input_pin: Pin,
-        timer: Timer,
+        mut timer: Timer,
         mut dma_ch: dma::DmaChannel,
         dma: &mut Dma,
         rcc: &mut RCC,
@@ -49,62 +58,47 @@ impl IrRx {
         dma.set_memory_increment_mode(dma_ch.get_channel(), DmaMemoryIncrementMode::Increment);
         dma.set_peripheral_size(dma_ch.get_channel(), DmaPeripheralSize::U16);
         dma.set_memory_size(dma_ch.get_channel(), DmaMemorySize::U16);
-        
-        // LL_TIM_InitTypeDef TIM_InitStruct = {0};
-        // TIM_InitStruct.Prescaler = 0;
-        // TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
-        // TIM_InitStruct.Autoreload = 65535;
-        // TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
-        // LL_TIM_Init(TIM3, &TIM_InitStruct);
-        // LL_TIM_DisableARRPreload(TIM3);
-        // LL_TIM_SetTriggerOutput(TIM3, LL_TIM_TRGO_RESET);
-        // LL_TIM_DisableMasterSlaveMode(TIM3);
-        // LL_TIM_IC_SetActiveInput(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_ACTIVEINPUT_DIRECTTI);
-        // LL_TIM_IC_SetPrescaler(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_ICPSC_DIV1);
-        // LL_TIM_IC_SetFilter(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_IC_FILTER_FDIV1);
-        // LL_TIM_IC_SetPolarity(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_IC_POLARITY_BOTHEDGE);
+        dma.disable_channel(dma_ch.get_channel());
+        dma.clear_global_interrupt_flag(dma_ch.get_channel());
+        dma.set_data_length(dma_ch.get_channel(), dma_buffer.len());
+        dma.set_peripheral_address(
+            dma_ch.get_channel(),
+            timer.get_capture_compare_register_address(),
+        );
+        dma.set_memory_address(dma_ch.get_channel(), dma_buffer.as_ptr() as u32);
+
+        timer.set_counter_direction(TimerCounterDirection::Up);
+        timer.set_center_align_mode(TimerCenterAlignMode::Edge);
+        timer.set_clock_division(TimerClockDivision::Div1);
+        timer.set_auto_reload(65535);
+        timer.set_prescaler(0);
+        timer.generate_event_update();
+
+        timer.disable_auto_reload_preload();
+        timer.set_trigger_output(TimerTriggerOutput::Reset);
+        timer.disable_master_slave_mode();
+        timer.ic_set_active_input(TimerChannel::Channel1, TimerActiveInput::DirectTI);
+        timer.ic_set_prescaler(TimerChannel::Channel1, TimerPrescaler::Div1);
+        timer.ic_set_filter(TimerChannel::Channel1, TimerFilter::Div1);
+        timer.ic_set_polarity(TimerChannel::Channel1, TimerPolarity::BothEdges);
+
+        timer.set_prescaler_hertz(Hertz::megahertz(1), &rcc);
+
+        dma.enable_interrupt_transfer_complete(dma_ch.get_channel());
+        dma.enable_interrupt_transfer_error(dma_ch.get_channel());
+
+        // start dma
+        // LL_DMA_EnableChannel(IR_RX_DMA, IR_RX_DMA_CH);
+
+        // memset(ir_rx_dma_data, 0, sizeof(ir_rx_dma_data));
+        // ir_rx_dma_data_read_index = ir_rx_get_pos();
+
+        // IR_RX_LL_TIM_EnableIT_CC();
+        // IR_RX_LL_TIM_EnableDMAReq_CC();
+        // LL_TIM_CC_EnableChannel(IR_RX_TIMER, IR_RX_TIMER_CH);
+        // LL_TIM_EnableCounter(IR_RX_TIMER);
 
         nvic.enable_interrupt_timer3();
-
-        // TODO
-        // let sample_rate = Hertz(1000000);
-        // let clk = rcc.clocks.apb_clk;
-        // let prescaler = if clk >= sample_rate {
-        //     (clk / sample_rate) - 1
-        // } else {
-        //     0
-        // };
-        // timer.psc.write(|w| unsafe { w.bits(prescaler) });
-
-        // // configure dma
-        // dma_ch.disable();
-        // // TODO do we need to listen here?
-        // // dma_ch.listen(dma::Event::TransferComplete);
-        // // dma_ch.listen(dma::Event::TransferError);
-        // dma_ch.clear_event(dma::Event::Any);
-        // dma_ch.set_transfer_length(IR_RX_BUFFER_SAMPLES as u16);
-        // dma_ch.set_direction(dma::Direction::FromPeripheral);
-        // dma_ch.set_word_size(dma::WordSize::BITS16);
-
-        // let tim3_ptr = unsafe { &(*stm32::TIM3::ptr()) };
-        // let tim3_cr1_addr = &tim3_ptr.cr1 as *const _ as u32;
-        // dma_ch.set_peripheral_address(tim3_cr1_addr, false);
-
-        // let buf_addr: u32 = IR_RX_BUFFER.as_ptr() as u32;
-        // dma_ch.set_memory_address(buf_addr, true);
-
-        // dma_ch.enable();
-
-        // // enable timer capture/compare interrupt and capture/compare dma request
-        // timer
-        //     .dier
-        //     .modify(|_, w| w.cc1ie().set_bit().cc1de().set_bit());
-
-        // // enable timer capture/compare channel
-        // timer.ccer.modify(|_, w| w.cc1e().set_bit());
-
-        // // enable counter
-        // timer.cr1.modify(|_, w| w.cen().set_bit());
 
         return IrRx {
             dma_ch,

@@ -148,7 +148,7 @@ impl RCC {
         let usart1_clk = USART1ClockSource::from(self.rcc.ccipr.read().usart1sel().bits());
         return match usart1_clk {
             USART1ClockSource::SYSCLK => self.get_system_clock_frequency(),
-            USART1ClockSource::HSI16 => Hertz::hertz(16_000_000),
+            USART1ClockSource::HSI16 => Hertz::megahertz(16),
             USART1ClockSource::LSE => Hertz::hertz(32_768),
             USART1ClockSource::PCLK => self.get_pclk1_clock_frequency(
                 self.get_hclk_clock_frequency(self.get_system_clock_frequency()),
@@ -191,5 +191,10 @@ impl RCC {
 
     fn get_apb1_prescaler(&self) -> u8 {
         return self.rcc.cfgr.read().ppre().bits();
+    }
+
+    pub fn get_system_core_clock(&self) -> Hertz {
+        // SystemCoreClock
+        return Hertz::megahertz(16); // TODO where is this from 
     }
 }

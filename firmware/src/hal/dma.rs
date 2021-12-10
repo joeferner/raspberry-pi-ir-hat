@@ -191,6 +191,53 @@ impl Dma {
                 .modify(|_, w| unsafe { w.msize().bits(size.val()) }),
         }
     }
+
+    pub fn enable_interrupt_transfer_complete(&mut self, channel: DmaChannelNumber) {
+        // LL_DMA_EnableIT_TC
+        let reg = unsafe { &*self.register_block };
+        match channel {
+            DmaChannelNumber::Channel5 => reg.ch5.cr.modify(|_, w| w.tcie().set_bit()),
+        }
+    }
+
+    pub fn enable_interrupt_transfer_error(&mut self, channel: DmaChannelNumber) {
+        // LL_DMA_EnableIT_TE
+        let reg = unsafe { &*self.register_block };
+        match channel {
+            DmaChannelNumber::Channel5 => reg.ch5.cr.modify(|_, w| w.teie().set_bit()),
+        }
+    }
+
+    pub fn disable_channel(&mut self, channel: DmaChannelNumber) {
+        // LL_DMA_DisableChannel
+        let reg = unsafe { &*self.register_block };
+        match channel {
+            DmaChannelNumber::Channel5 => reg.ch5.cr.modify(|_, w| w.en().clear_bit()),
+        }
+    }
+
+    pub fn clear_global_interrupt_flag(&mut self, channel: DmaChannelNumber) {
+        // LL_DMA_ClearFlag_GI
+        let reg = unsafe { &*self.register_block };
+        match channel {
+            DmaChannelNumber::Channel5 => reg.ifcr.write(|w| w.cgif5().set_bit()),
+        }
+    }
+
+    pub fn set_data_length(&mut self, channel: DmaChannelNumber, len: usize) {
+        // LL_DMA_SetDataLength
+        todo!()
+    }
+
+    pub fn set_peripheral_address(&mut self, channel: DmaChannelNumber, address: u32) {
+        // LL_DMA_SetPeriphAddress
+        todo!()
+    }
+
+    pub fn set_memory_address(&mut self, channel: DmaChannelNumber, address: u32) {
+        // LL_DMA_SetMemoryAddress
+        todo!()
+    }
 }
 
 pub struct DmaChannelParts {
