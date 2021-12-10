@@ -3,6 +3,7 @@ use core::usize;
 use core::str;
 use core::str::Bytes;
 use heapless::Deque;
+use numtoa::NumToA;
 
 pub enum BufferedIoError {}
 
@@ -42,6 +43,12 @@ impl<'a, const LEN: usize> BufferedIo<'a, LEN> {
 
     pub fn write(&mut self, value: u8) -> Result<(), BufferedIoError> {
         return self.target.write(value);
+    }
+
+    pub fn write_u16(&mut self, ir: u16) -> Result<(), BufferedIoError> {
+        let mut buf = [0u8; 20];
+        let s = ir.numtoa_str(10, &mut buf);
+        return self.write_str(s);
     }
 
     pub fn find(&mut self, stop: u8) -> PeekUntilResult {
@@ -114,6 +121,7 @@ pub trait BufferedIoTarget {
 
 #[cfg(test)]
 mod tests {
+    use core::panic;
     use std::sync::mpsc;
     use std::sync::mpsc::channel;
     use std::time::Duration;
@@ -184,11 +192,11 @@ mod tests {
 
     impl BufferedIoTarget for MockReadTarget {
         fn write_bytes(&mut self, _value: &mut Bytes) -> Result<(), BufferedIoError> {
-            todo!()
+            panic!()
         }
 
         fn write(&mut self, _value: u8) -> Result<(), BufferedIoError> {
-            todo!()
+            panic!()
         }
 
         fn read(&mut self) -> Option<u8> {

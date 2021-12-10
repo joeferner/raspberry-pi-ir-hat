@@ -122,6 +122,7 @@ dependencies = [
  "cortex-m",
  "cortex-m-rt",
  "heapless",
+ "numtoa",
  "panic-halt",
  "stm32g0",
 ]
@@ -182,6 +183,12 @@ name = "nb"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "546c37ac5d9e56f55e73b677106873d9d9f5190605e41a856503623648488cae"
+
+[[package]]
+name = "numtoa"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6aa2c4e539b869820a2b82e1aef6ff40aa85e65decdd5185e83fb4b1249cd00f"
 
 [[package]]
 name = "panic-halt"

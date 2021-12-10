@@ -13,11 +13,6 @@ use crate::hal::{
         TimerCounterDirection, TimerFilter, TimerPolarity, TimerPrescaler, TimerTriggerOutput,
     },
 };
-use core::{cell::RefCell, ops::DerefMut};
-use cortex_m::interrupt::Mutex;
-
-const IR_RX_BUFFER_SAMPLES: usize = 128;
-static IR_RX_BUFFER: [u16; IR_RX_BUFFER_SAMPLES] = [0; IR_RX_BUFFER_SAMPLES];
 
 pub struct IrRx {
     dma_ch: dma::DmaChannel,
@@ -25,7 +20,7 @@ pub struct IrRx {
 }
 
 const DMA_BUFFER_SIZE: usize = 128;
-static dma_buffer: [u16; DMA_BUFFER_SIZE] = [0; DMA_BUFFER_SIZE];
+static DMA_BUFFER: [u16; DMA_BUFFER_SIZE] = [0; DMA_BUFFER_SIZE];
 
 impl IrRx {
     pub fn new(
@@ -60,19 +55,17 @@ impl IrRx {
         dma.set_memory_size(dma_ch.get_channel(), DmaMemorySize::U16);
         dma.disable_channel(dma_ch.get_channel());
         dma.clear_global_interrupt_flag(dma_ch.get_channel());
-        dma.set_data_length(dma_ch.get_channel(), dma_buffer.len());
+        dma.set_data_length(dma_ch.get_channel(), DMA_BUFFER.len() as u16);
         dma.set_peripheral_address(
             dma_ch.get_channel(),
             timer.get_capture_compare_register_address(),
         );
-        dma.set_memory_address(dma_ch.get_channel(), dma_buffer.as_ptr() as u32);
+        dma.set_memory_address(dma_ch.get_channel(), DMA_BUFFER.as_ptr() as u32);
 
         timer.set_counter_direction(TimerCounterDirection::Up);
         timer.set_center_align_mode(TimerCenterAlignMode::Edge);
         timer.set_clock_division(TimerClockDivision::Div1);
         timer.set_auto_reload(65535);
-        timer.set_prescaler(0);
-        timer.generate_event_update();
 
         timer.disable_auto_reload_preload();
         timer.set_trigger_output(TimerTriggerOutput::Reset);
@@ -83,31 +76,44 @@ impl IrRx {
         timer.ic_set_polarity(TimerChannel::Channel1, TimerPolarity::BothEdges);
 
         timer.set_prescaler_hertz(Hertz::megahertz(1), &rcc);
+        timer.generate_event_update();
 
         dma.enable_interrupt_transfer_complete(dma_ch.get_channel());
         dma.enable_interrupt_transfer_error(dma_ch.get_channel());
 
         // start dma
-        // LL_DMA_EnableChannel(IR_RX_DMA, IR_RX_DMA_CH);
+        dma.enable_channel(dma_ch.get_channel());
 
-        // memset(ir_rx_dma_data, 0, sizeof(ir_rx_dma_data));
-        // ir_rx_dma_data_read_index = ir_rx_get_pos();
+        let read_index = get_dma_rx_pos(&dma, &dma_ch);
 
-        // IR_RX_LL_TIM_EnableIT_CC();
-        // IR_RX_LL_TIM_EnableDMAReq_CC();
-        // LL_TIM_CC_EnableChannel(IR_RX_TIMER, IR_RX_TIMER_CH);
-        // LL_TIM_EnableCounter(IR_RX_TIMER);
+        timer.enable_capture_compare_interrupt(TimerChannel::Channel1);
+        timer.enable_capture_compare_dma_request(TimerChannel::Channel1);
+        timer.enable_capture_compare_channel(TimerChannel::Channel1);
+        timer.enable_counter();
 
-        nvic.enable_interrupt_timer3();
+        // TODO do we need this?
+        // nvic.enable_interrupt_timer3();
 
-        return IrRx {
-            dma_ch,
-            read_index: IR_RX_BUFFER_SAMPLES as usize,
-        };
+        return IrRx { dma_ch, read_index };
     }
 
-    fn get_dma_rx_pos(&self) -> usize {
-        return 0;
-        // return IR_RX_BUFFER_SAMPLES as usize - self.dma_ch.get_transfer_length() as usize;
+    pub fn read(&mut self, dma: &Dma) -> Option<u16> {
+        let dma_index = get_dma_rx_pos(&dma, &self.dma_ch);
+        let mut read_index = self.read_index;
+        if dma_index != read_index {
+            let result = DMA_BUFFER[read_index];
+            read_index = read_index + 1;
+            if read_index >= DMA_BUFFER.len() {
+                read_index = 0;
+            }
+            self.read_index = read_index;
+            return Option::Some(result);
+        }
+        return Option::None;
     }
+}
+
+fn get_dma_rx_pos(dma: &Dma, dma_ch: &dma::DmaChannel) -> usize {
+    let v = dma.get_data_length(dma_ch.get_channel()) as usize;
+    return DMA_BUFFER.len() - v;
 }

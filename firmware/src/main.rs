@@ -6,13 +6,12 @@ extern crate cortex_m_rt as rt;
 #[cfg(not(test))]
 extern crate panic_halt;
 
-use crate::hal::dma;
 use crate::hal::gpio::{gpioa, gpiob};
 use crate::hal::usart::usart1;
 use buffered_io::BufferedIo;
 use debug::DebugUsart;
 use hal::baud_rate::BaudRate;
-use hal::dma::Dma;
+use hal::dma::{Dma, DmaMux};
 use hal::init_1ms_tick;
 use hal::nvic::NVIC;
 use hal::rcc::{ADCClockSource, AHBPrescaler, APB1Prescaler, SysClkSource, USART1ClockSource, RCC};
@@ -47,17 +46,18 @@ fn main() -> ! {
     rcc.set_adc_clock_source(ADCClockSource::SYSCLK);
 
     let mut dma = Dma::new(stm_peripherals.DMA, &mut rcc);
+    let mut dma_mux = DmaMux::new(stm_peripherals.DMAMUX).split();
     let timer3 = Timer::new(stm_peripherals.TIM3, &mut rcc);
 
     let gpioa = gpioa::new(stm_peripherals.GPIOA, &mut rcc).split();
     let mut ir_activity_led_pin = gpioa.p7;
     ir_activity_led_pin.set_as_output();
 
-    let mut ir_input_pin = gpioa.p6;
+    let ir_input_pin = gpioa.p6;
 
     let gpiob = gpiob::new(stm_peripherals.GPIOB, &mut rcc).split();
-    let mut usart1_tx_pin = gpiob.p6;
-    let mut usart1_rx_pin = gpiob.p7;
+    let usart1_tx_pin = gpiob.p6;
+    let usart1_rx_pin = gpiob.p7;
 
     // debug usart
     let mut usart1 = usart1::new(
@@ -69,8 +69,6 @@ fn main() -> ! {
     usart1.set_baud_rate(BaudRate::bps(57_600), &rcc);
     usart1.enable();
     usart1.enable_interrupts(&mut nvic);
-
-    let dma_mux = dma::split(stm_peripherals.DMAMUX);
 
     let mut ir_activity_led = IrActivityLedPin::new(ir_activity_led_pin);
     let mut debug = DebugUsart::new(usart1);
@@ -97,6 +95,12 @@ fn main() -> ! {
             debug_io.write_str("in: ").ok();
             debug_io.write_str(s).ok();
             debug_io.write(b'>').ok();
+        }
+
+        let ir = ir_rx.read(&dma);
+        if let Option::Some(ir) = ir {
+            debug_io.write_u16(ir).ok();
+            debug_io.write(b'\n').ok();
         }
     }
 }

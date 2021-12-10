@@ -203,4 +203,34 @@ impl Timer {
         let timer = unsafe { &*self.register_block };
         return &timer.ccr1 as *const _ as u32;
     }
+
+    pub fn enable_capture_compare_interrupt(&mut self, channel: TimerChannel) {
+        // LL_TIM_EnableIT_CC1
+        let timer = unsafe { &*self.register_block };
+        match channel {
+            TimerChannel::Channel1 => timer.dier.modify(|_, w| w.cc1ie().set_bit()),
+        }
+    }
+
+    pub fn enable_capture_compare_dma_request(&mut self, channel: TimerChannel) {
+        // LL_TIM_EnableDMAReq_CC1
+        let timer = unsafe { &*self.register_block };
+        match channel {
+            TimerChannel::Channel1 => timer.dier.modify(|_, w| w.cc1de().set_bit()),
+        }
+    }
+
+    pub fn enable_capture_compare_channel(&mut self, channel: TimerChannel) {
+        // LL_TIM_CC_EnableChannel
+        let timer = unsafe { &*self.register_block };
+        match channel {
+            TimerChannel::Channel1 => timer.ccer.modify(|_, w| w.cc1e().set_bit()),
+        }
+    }
+
+    pub fn enable_counter(&mut self) {
+        // LL_TIM_EnableCounter
+        let timer = unsafe { &*self.register_block };
+        timer.cr1.modify(|_, w| w.cen().set_bit());
+    }
 }

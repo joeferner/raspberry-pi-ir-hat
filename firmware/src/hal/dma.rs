@@ -224,19 +224,44 @@ impl Dma {
         }
     }
 
-    pub fn set_data_length(&mut self, channel: DmaChannelNumber, len: usize) {
+    pub fn set_data_length(&mut self, channel: DmaChannelNumber, len: u16) {
         // LL_DMA_SetDataLength
-        todo!()
+        let reg = unsafe { &*self.register_block };
+        match channel {
+            DmaChannelNumber::Channel5 => reg.ch5.ndtr.write(|w| unsafe { w.ndt().bits(len) }),
+        }
     }
 
     pub fn set_peripheral_address(&mut self, channel: DmaChannelNumber, address: u32) {
         // LL_DMA_SetPeriphAddress
-        todo!()
+        let reg = unsafe { &*self.register_block };
+        match channel {
+            DmaChannelNumber::Channel5 => reg.ch5.par.write(|w| unsafe { w.pa().bits(address) }),
+        }
     }
 
     pub fn set_memory_address(&mut self, channel: DmaChannelNumber, address: u32) {
         // LL_DMA_SetMemoryAddress
-        todo!()
+        let reg = unsafe { &*self.register_block };
+        match channel {
+            DmaChannelNumber::Channel5 => reg.ch5.mar.write(|w| unsafe { w.ma().bits(address) }),
+        }
+    }
+
+    pub fn enable_channel(&mut self, channel: DmaChannelNumber) {
+        // LL_DMA_EnableChannel
+        let reg = unsafe { &*self.register_block };
+        match channel {
+            DmaChannelNumber::Channel5 => reg.ch5.cr.write(|w| w.en().set_bit()),
+        }
+    }
+
+    pub fn get_data_length(&self, channel: DmaChannelNumber) -> u16 {
+        // LL_DMA_GetDataLength
+        let reg = unsafe { &*self.register_block };
+        return match channel {
+            DmaChannelNumber::Channel5 => reg.ch5.ndtr.read().ndt().bits(),
+        };
     }
 }
 
@@ -265,11 +290,19 @@ impl DmaChannel {
     }
 }
 
-pub fn split(dma: stm32g031::DMAMUX) -> DmaChannelParts {
-    return DmaChannelParts {
-        ch5: DmaChannel {
-            register_block: stm32g031::DMAMUX::ptr(),
-            channel: DmaChannelNumber::Channel5,
-        },
-    };
+pub struct DmaMux {}
+
+impl DmaMux {
+    pub fn new(_dma_mux: stm32g031::DMAMUX) -> Self {
+        return DmaMux {};
+    }
+
+    pub fn split(self) -> DmaChannelParts {
+        return DmaChannelParts {
+            ch5: DmaChannel {
+                register_block: stm32g031::DMAMUX::ptr(),
+                channel: DmaChannelNumber::Channel5,
+            },
+        };
+    }
 }
