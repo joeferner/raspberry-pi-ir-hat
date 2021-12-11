@@ -46,7 +46,7 @@ fn main() -> ! {
     rcc.set_adc_clock_source(ADCClockSource::SYSCLK);
 
     let mut dma = Dma::new(stm_peripherals.DMA, &mut rcc);
-    let mut dma_mux = DmaMux::new(stm_peripherals.DMAMUX).split();
+    let dma_mux = DmaMux::new(stm_peripherals.DMAMUX).split();
     let timer3 = Timer::new(stm_peripherals.TIM3, &mut rcc);
 
     let gpioa = gpioa::new(stm_peripherals.GPIOA, &mut rcc).split();

@@ -13,6 +13,7 @@ use crate::hal::{
         TimerCounterDirection, TimerFilter, TimerPolarity, TimerPrescaler, TimerTriggerOutput,
     },
 };
+use stm32g0::stm32g031::interrupt;
 
 pub struct IrRx {
     dma_ch: dma::DmaChannel,
@@ -21,6 +22,9 @@ pub struct IrRx {
 
 const DMA_BUFFER_SIZE: usize = 128;
 static DMA_BUFFER: [u16; DMA_BUFFER_SIZE] = [0; DMA_BUFFER_SIZE];
+static mut DMA_CHANNEL: dma::DmaChannelNumber = dma::DmaChannelNumber::Channel5;
+
+static mut TEMP: u16 = 0;
 
 impl IrRx {
     pub fn new(
@@ -92,7 +96,11 @@ impl IrRx {
         timer.enable_counter();
 
         // TODO do we need this?
-        // nvic.enable_interrupt_timer3();
+        nvic.enable_interrupt_timer3();
+
+        unsafe {
+            DMA_CHANNEL = dma_ch.get_channel();
+        }
 
         return IrRx { dma_ch, read_index };
     }
@@ -116,4 +124,65 @@ impl IrRx {
 fn get_dma_rx_pos(dma: &Dma, dma_ch: &dma::DmaChannel) -> usize {
     let v = dma.get_data_length(dma_ch.get_channel()) as usize;
     return DMA_BUFFER.len() - v;
+}
+
+#[interrupt]
+fn TIM3() {
+    unsafe {
+        TEMP = TEMP + 1;
+    }
+}
+
+#[interrupt]
+fn DMA_CHANNEL1() {
+    unsafe {
+        TEMP = TEMP + 1;
+    }
+    let ch = unsafe { DMA_CHANNEL };
+    if Dma::is_global_interrupt_flag_set(ch) {
+        unsafe {
+            TEMP = TEMP + 1;
+        }
+    }
+    if Dma::is_transfer_complete_interrupt_flag_set(ch) {
+        unsafe {
+            TEMP = TEMP + 1;
+        }
+    }
+}
+
+#[interrupt]
+fn DMA_CHANNEL2_3() {
+    unsafe {
+        TEMP = TEMP + 1;
+    }
+    let ch = unsafe { DMA_CHANNEL };
+    if Dma::is_global_interrupt_flag_set(ch) {
+        unsafe {
+            TEMP = TEMP + 1;
+        }
+    }
+    if Dma::is_transfer_complete_interrupt_flag_set(ch) {
+        unsafe {
+            TEMP = TEMP + 1;
+        }
+    }
+}
+
+#[interrupt]
+fn DMA_CHANNEL4_5_6_7() {
+    unsafe {
+        TEMP = TEMP + 1;
+    }
+    let ch = unsafe { DMA_CHANNEL };
+    if Dma::is_global_interrupt_flag_set(ch) {
+        unsafe {
+            TEMP = TEMP + 1;
+        }
+    }
+    if Dma::is_transfer_complete_interrupt_flag_set(ch) {
+        unsafe {
+            TEMP = TEMP + 1;
+        }
+    }
 }

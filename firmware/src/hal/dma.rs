@@ -104,10 +104,24 @@ pub struct Dma {
 }
 
 impl Dma {
-    pub fn new(dma: stm32g031::DMA, rcc: &mut RCC) -> Self {
+    pub fn new(_dma: stm32g031::DMA, rcc: &mut RCC) -> Self {
         rcc.enable_dma1();
         return Self {
             register_block: stm32g031::DMA::ptr(),
+        };
+    }
+
+    pub fn is_transfer_complete_interrupt_flag_set(channel: DmaChannelNumber) -> bool {
+        let reg = unsafe { &*stm32g031::DMA::ptr() };
+        return match channel {
+            DmaChannelNumber::Channel5 => reg.isr.read().tcif5().bit_is_set(),
+        };
+    }
+
+    pub fn is_global_interrupt_flag_set(channel: DmaChannelNumber) -> bool {
+        let reg = unsafe { &*stm32g031::DMA::ptr() };
+        return match channel {
+            DmaChannelNumber::Channel5 => reg.isr.read().gif5().bit_is_set(),
         };
     }
 
