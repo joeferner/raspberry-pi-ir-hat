@@ -2,6 +2,7 @@ use stm32g0::stm32g031;
 
 use super::rcc::RCC;
 
+// see stm32g0x1 datasheet: Table 42. DMAMUX: assignment of multiplexer inputs to resources
 pub enum DmaMuxRequest {
     Timer3Channel1 = 32,
 }
@@ -266,7 +267,7 @@ impl Dma {
         // LL_DMA_EnableChannel
         let reg = unsafe { &*self.register_block };
         match channel {
-            DmaChannelNumber::Channel5 => reg.ch5.cr.write(|w| w.en().set_bit()),
+            DmaChannelNumber::Channel5 => reg.ch5.cr.modify(|_, w| w.en().set_bit()),
         }
     }
 
@@ -298,7 +299,7 @@ impl DmaChannel {
         let reg = unsafe { &*self.register_block };
         match self.channel {
             DmaChannelNumber::Channel5 => reg
-                .c5cr
+                .c4cr
                 .modify(|_, w| unsafe { w.dmareq_id().bits(request.val()) }),
         }
     }

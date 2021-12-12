@@ -35,7 +35,7 @@ fn main() -> ! {
     let mut nvic = NVIC::new();
     let mut rcc = RCC::new(stm_peripherals.RCC);
     rcc.enable_syscfg();
-    rcc.enable_pwd();
+    rcc.enable_power_interface();
     rcc.enable_hsi();
     rcc.enable_lsi();
     rcc.set_ahb_prescaler(AHBPrescaler::Div1);

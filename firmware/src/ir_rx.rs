@@ -21,7 +21,7 @@ pub struct IrRx {
 }
 
 const DMA_BUFFER_SIZE: usize = 128;
-static DMA_BUFFER: [u16; DMA_BUFFER_SIZE] = [0; DMA_BUFFER_SIZE];
+static mut DMA_BUFFER: [u16; DMA_BUFFER_SIZE] = [0; DMA_BUFFER_SIZE];
 static mut DMA_CHANNEL: dma::DmaChannelNumber = dma::DmaChannelNumber::Channel5;
 
 static mut TEMP: u16 = 0;
@@ -43,6 +43,7 @@ impl IrRx {
         input_pin.set_as_input();
         input_pin.set_as_alternate_function(AlternateFunctionMode::AF1);
 
+        dma.disable_channel(dma_ch.get_channel());
         dma_ch.set_peripheral_request(DmaMuxRequest::Timer3Channel1);
         dma.set_data_transfer_direction(
             dma_ch.get_channel(),
@@ -54,17 +55,18 @@ impl IrRx {
             dma_ch.get_channel(),
             DmaPeripheralIncrementMode::Disabled,
         );
+
         dma.set_memory_increment_mode(dma_ch.get_channel(), DmaMemoryIncrementMode::Increment);
         dma.set_peripheral_size(dma_ch.get_channel(), DmaPeripheralSize::U16);
         dma.set_memory_size(dma_ch.get_channel(), DmaMemorySize::U16);
-        dma.disable_channel(dma_ch.get_channel());
         dma.clear_global_interrupt_flag(dma_ch.get_channel());
-        dma.set_data_length(dma_ch.get_channel(), DMA_BUFFER.len() as u16);
+        dma.set_data_length(dma_ch.get_channel(), DMA_BUFFER_SIZE as u16);
         dma.set_peripheral_address(
             dma_ch.get_channel(),
             timer.get_capture_compare_register_address(),
         );
-        dma.set_memory_address(dma_ch.get_channel(), DMA_BUFFER.as_ptr() as u32);
+        dma.set_memory_address(dma_ch.get_channel(), unsafe { DMA_BUFFER.as_mut_ptr() }
+            as u32);
 
         timer.set_counter_direction(TimerCounterDirection::Up);
         timer.set_center_align_mode(TimerCenterAlignMode::Edge);
@@ -109,9 +111,9 @@ impl IrRx {
         let dma_index = get_dma_rx_pos(&dma, &self.dma_ch);
         let mut read_index = self.read_index;
         if dma_index != read_index {
-            let result = DMA_BUFFER[read_index];
+            let result = unsafe { DMA_BUFFER[read_index] };
             read_index = read_index + 1;
-            if read_index >= DMA_BUFFER.len() {
+            if read_index >= DMA_BUFFER_SIZE {
                 read_index = 0;
             }
             self.read_index = read_index;
@@ -123,7 +125,28 @@ impl IrRx {
 
 fn get_dma_rx_pos(dma: &Dma, dma_ch: &dma::DmaChannel) -> usize {
     let v = dma.get_data_length(dma_ch.get_channel()) as usize;
-    return DMA_BUFFER.len() - v;
+    return DMA_BUFFER_SIZE - v;
+}
+
+#[interrupt]
+fn ADC_COMP() {
+    unsafe {
+        TEMP = TEMP + 1;
+    }
+}
+
+#[interrupt]
+fn TIM1_CC() {
+    unsafe {
+        TEMP = TEMP + 1;
+    }
+}
+
+#[interrupt]
+fn TIM2() {
+    unsafe {
+        TEMP = TEMP + 1;
+    }
 }
 
 #[interrupt]

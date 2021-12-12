@@ -96,7 +96,7 @@ impl RCC {
         self.rcc.apbenr2.modify(|_, w| w.syscfgen().set_bit());
     }
 
-    pub fn enable_pwd(&mut self) {
+    pub fn enable_power_interface(&mut self) {
         self.rcc.apbenr1.modify(|_, w| w.pwren().set_bit());
     }
 
