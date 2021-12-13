@@ -99,8 +99,10 @@ fn main() -> ! {
 
         let ir = ir_rx.read(&dma);
         if let Option::Some(ir) = ir {
-            debug_io.write_u16(ir).ok();
-            debug_io.write(b'\n').ok();
+            if ir != 0 {
+                debug_io.write_u16(ir).ok();
+                debug_io.write(b'\n').ok();
+            }
         }
     }
 }
