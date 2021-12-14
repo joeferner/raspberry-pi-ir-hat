@@ -243,7 +243,7 @@ impl Dma {
         // LL_DMA_SetDataLength
         let reg = unsafe { &*self.register_block };
         match channel {
-            DmaChannelNumber::Channel5 => reg.ch5.ndtr.write(|w| unsafe { w.ndt().bits(len) }),
+            DmaChannelNumber::Channel5 => reg.ch5.ndtr.modify(|_, w| unsafe { w.ndt().bits(len) }),
         }
     }
 
@@ -251,7 +251,9 @@ impl Dma {
         // LL_DMA_SetPeriphAddress
         let reg = unsafe { &*self.register_block };
         match channel {
-            DmaChannelNumber::Channel5 => reg.ch5.par.write(|w| unsafe { w.pa().bits(address) }),
+            DmaChannelNumber::Channel5 => {
+                reg.ch5.par.modify(|_, w| unsafe { w.pa().bits(address) })
+            }
         }
     }
 
@@ -259,7 +261,9 @@ impl Dma {
         // LL_DMA_SetMemoryAddress
         let reg = unsafe { &*self.register_block };
         match channel {
-            DmaChannelNumber::Channel5 => reg.ch5.mar.write(|w| unsafe { w.ma().bits(address) }),
+            DmaChannelNumber::Channel5 => {
+                reg.ch5.mar.modify(|_, w| unsafe { w.ma().bits(address) })
+            }
         }
     }
 

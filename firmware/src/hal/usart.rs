@@ -27,7 +27,7 @@ impl USART {
         let div = clk / bdr / 16;
         usart
             .brr
-            .write(|w| unsafe { w.brr_4_15().bits(div as u16) });
+            .modify(|_, w| unsafe { w.brr_4_15().bits(div as u16) });
     }
 
     pub fn enable(&mut self) {

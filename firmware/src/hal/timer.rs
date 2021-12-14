@@ -118,7 +118,7 @@ impl Timer {
         match channel {
             TimerChannel::Channel1 => timer
                 .ccmr1_input()
-                .write(|w| unsafe { w.cc1s().bits(input.val()) }),
+                .modify(|_, w| unsafe { w.cc1s().bits(input.val()) }),
         }
     }
 
@@ -128,7 +128,7 @@ impl Timer {
         match channel {
             TimerChannel::Channel1 => timer
                 .ccmr1_input()
-                .write(|w| unsafe { w.ic1psc().bits(prescaler.val()) }),
+                .modify(|_, w| unsafe { w.ic1psc().bits(prescaler.val()) }),
         }
     }
 
@@ -138,7 +138,7 @@ impl Timer {
         match channel {
             TimerChannel::Channel1 => timer
                 .ccmr1_input()
-                .write(|w| unsafe { w.ic1f().bits(filter.val()) }),
+                .modify(|_, w| unsafe { w.ic1f().bits(filter.val()) }),
         }
     }
 
