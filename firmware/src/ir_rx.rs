@@ -13,18 +13,16 @@ use crate::hal::{
         TimerCounterDirection, TimerFilter, TimerPolarity, TimerPrescaler, TimerTriggerOutput,
     },
 };
-use stm32g0::stm32g031::interrupt;
 
 pub struct IrRx {
     dma_ch: dma::DmaChannel,
     read_index: usize,
+    last_value: u16,
 }
 
 const DMA_BUFFER_SIZE: usize = 128;
 static mut DMA_BUFFER: [u16; DMA_BUFFER_SIZE] = [0; DMA_BUFFER_SIZE];
 static mut DMA_CHANNEL: dma::DmaChannelNumber = dma::DmaChannelNumber::Channel5;
-
-static mut TEMP: u16 = 0;
 
 impl IrRx {
     pub fn new(
@@ -84,39 +82,39 @@ impl IrRx {
         timer.set_prescaler_hertz(Hertz::megahertz(1), &rcc);
         timer.generate_event_update();
 
-        dma.enable_interrupt_transfer_complete(dma_ch.get_channel());
-        dma.enable_interrupt_transfer_error(dma_ch.get_channel());
-
         // start dma
         dma.enable_channel(dma_ch.get_channel());
 
         let read_index = get_dma_rx_pos(&dma, &dma_ch);
 
-        timer.enable_capture_compare_interrupt(TimerChannel::Channel1);
         timer.enable_capture_compare_dma_request(TimerChannel::Channel1);
         timer.enable_capture_compare_channel(TimerChannel::Channel1);
         timer.enable_counter();
-
-        // TODO do we need this?
-        // nvic.enable_interrupt_timer3();
 
         unsafe {
             DMA_CHANNEL = dma_ch.get_channel();
         }
 
-        return IrRx { dma_ch, read_index };
+        return IrRx {
+            dma_ch,
+            read_index,
+            last_value: 0,
+        };
     }
 
     pub fn read(&mut self, dma: &Dma) -> Option<u16> {
         let dma_index = get_dma_rx_pos(&dma, &self.dma_ch);
         let mut read_index = self.read_index;
         if dma_index != read_index {
-            let result = unsafe { DMA_BUFFER[read_index] };
+            let v = unsafe { DMA_BUFFER[read_index] };
             read_index = read_index + 1;
             if read_index >= DMA_BUFFER_SIZE {
                 read_index = 0;
             }
             self.read_index = read_index;
+
+            let result = v - self.last_value;
+            self.last_value = v;
             return Option::Some(result);
         }
         return Option::None;
@@ -126,86 +124,4 @@ impl IrRx {
 fn get_dma_rx_pos(dma: &Dma, dma_ch: &dma::DmaChannel) -> usize {
     let v = dma.get_data_length(dma_ch.get_channel()) as usize;
     return DMA_BUFFER_SIZE - v;
-}
-
-#[interrupt]
-fn ADC_COMP() {
-    unsafe {
-        TEMP = (TEMP * 2) + 1;
-    }
-}
-
-#[interrupt]
-fn TIM1_CC() {
-    unsafe {
-        TEMP = ((TEMP / 2) + 5) * 5;
-    }
-}
-
-#[interrupt]
-fn TIM2() {
-    unsafe {
-        TEMP = ((TEMP / 8) - 18) / 4;
-    }
-}
-
-#[interrupt]
-fn TIM3() {
-    unsafe {
-        TEMP = ((TEMP * 5) + 12) / 456;
-    }
-}
-
-#[interrupt]
-fn DMA_CHANNEL1() {
-    unsafe {
-        TEMP = ((TEMP % 6) + 165) / 123;
-    }
-    let ch = unsafe { DMA_CHANNEL };
-    if Dma::is_global_interrupt_flag_set(ch) {
-        unsafe {
-            TEMP = 6;
-        }
-    }
-    if Dma::is_transfer_complete_interrupt_flag_set(ch) {
-        unsafe {
-            TEMP = 7;
-        }
-    }
-}
-
-#[interrupt]
-fn DMA_CHANNEL2_3() {
-    unsafe {
-        TEMP = ((TEMP * 12345) + 435) * 124;
-    }
-    let ch = unsafe { DMA_CHANNEL };
-    if Dma::is_global_interrupt_flag_set(ch) {
-        unsafe {
-            TEMP = 9;
-        }
-    }
-    if Dma::is_transfer_complete_interrupt_flag_set(ch) {
-        unsafe {
-            TEMP = 10;
-        }
-    }
-}
-
-#[interrupt]
-fn DMA_CHANNEL4_5_6_7() {
-    unsafe {
-        TEMP = ((TEMP * 4734) - 4356) / 5643;
-    }
-    let ch = unsafe { DMA_CHANNEL };
-    if Dma::is_global_interrupt_flag_set(ch) {
-        unsafe {
-            TEMP = 12;
-        }
-    }
-    if Dma::is_transfer_complete_interrupt_flag_set(ch) {
-        unsafe {
-            TEMP = 13;
-        }
-    }
 }
