@@ -1,18 +1,11 @@
 pub mod baud_rate;
+pub mod dma;
 pub mod gpio;
 pub mod hertz;
-pub mod rcc;
-pub mod usart;
-pub mod dma;
-pub mod timer;
 pub mod nvic;
+pub mod rcc;
+pub mod sys_tick;
+pub mod timer;
+pub mod usart;
 
-pub fn init_1ms_tick(syst: &mut cortex_m::peripheral::SYST) {
-    init_tick(syst, 16_000_000, 1000);
-}
-
-pub fn init_tick(syst: &mut cortex_m::peripheral::SYST, hclk_frequency: u32, ticks: u32) {
-    syst.set_reload((hclk_frequency / ticks) - 1);
-    syst.clear_current();
-    syst.enable_counter();
-}
+const SYS_CLK: u32 = 16_000_000u32;

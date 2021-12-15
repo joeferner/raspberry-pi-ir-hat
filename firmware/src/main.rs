@@ -12,9 +12,9 @@ use buffered_io::BufferedIo;
 use debug::DebugUsart;
 use hal::baud_rate::BaudRate;
 use hal::dma::{Dma, DmaMux};
-use hal::init_1ms_tick;
 use hal::nvic::NVIC;
 use hal::rcc::{ADCClockSource, AHBPrescaler, APB1Prescaler, SysClkSource, USART1ClockSource, RCC};
+use hal::sys_tick::SysTick;
 use hal::timer::Timer;
 use ir_activity_led_pin::IrActivityLedPin;
 use ir_rx::IrRx;
@@ -34,14 +34,15 @@ fn main() -> ! {
     let stm_peripherals = stm32g0::stm32g031::Peripherals::take().unwrap();
     let mut nvic = NVIC::new();
     let mut rcc = RCC::new(stm_peripherals.RCC);
+    let mut sys_tick = SysTick::new(cortex_m_peripherals.SYST);
     rcc.enable_syscfg();
     rcc.enable_power_interface();
     rcc.enable_hsi();
     rcc.enable_lsi();
+    sys_tick.set_1ms_tick();
     rcc.set_ahb_prescaler(AHBPrescaler::Div1);
     rcc.set_sys_clk_source(SysClkSource::HSI);
     rcc.set_apb1_prescaler(APB1Prescaler::Div1);
-    init_1ms_tick(&mut cortex_m_peripherals.SYST);
     rcc.set_usart1_clock_source(USART1ClockSource::PCLK);
     rcc.set_adc_clock_source(ADCClockSource::SYSCLK);
 
@@ -83,6 +84,8 @@ fn main() -> ! {
         &mut nvic,
     );
 
+    let mut last_time = sys_tick.get_current();
+
     debug_io.write(b'\n').ok();
     debug_io.write(b'>').ok();
     loop {
@@ -103,6 +106,12 @@ fn main() -> ! {
                 debug_io.write_u16(ir).ok();
                 debug_io.write(b'\n').ok();
             }
+        }
+
+        let t = sys_tick.get_current();
+        if t - last_time > 1000 {
+            last_time = t;
+            debug_io.write(b'.').ok();
         }
     }
 }

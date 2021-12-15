@@ -1,6 +1,6 @@
 use core::panic;
 
-use super::hertz::Hertz;
+use super::{hertz::Hertz, SYS_CLK};
 
 const AHB_PRESCALER_TABLE: [u32; 16] = [0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9];
 const APB_PRESCALER_TABLE: [u32; 8] = [0, 0, 0, 0, 1, 2, 3, 4];
@@ -161,7 +161,7 @@ impl RCC {
         match self.get_sysclk_source() {
             SysClkSource::HSI => {
                 let hsidiv: u32 = (self.rcc.cr.read().hsidiv().bits() + 1) as u32;
-                return Hertz::hertz(16_000_000u32 / hsidiv);
+                return Hertz::hertz(SYS_CLK / hsidiv);
             }
         }
     }
