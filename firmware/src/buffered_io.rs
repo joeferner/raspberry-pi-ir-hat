@@ -51,6 +51,12 @@ impl<'a, const LEN: usize> BufferedIo<'a, LEN> {
         return self.write_str(s);
     }
 
+    pub fn write_u32(&mut self, ir: u32) -> Result<(), BufferedIoError> {
+        let mut buf = [0u8; 20];
+        let s = ir.numtoa_str(10, &mut buf);
+        return self.write_str(s);
+    }
+
     pub fn find(&mut self, stop: u8) -> PeekUntilResult {
         self.fill_rx_fifo();
 
