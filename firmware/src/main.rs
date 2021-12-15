@@ -84,8 +84,6 @@ fn main() -> ! {
         &mut nvic,
     );
 
-    let mut last_time = sys_tick.get_current();
-
     debug_io.write(b'\n').ok();
     debug_io.write(b'>').ok();
     loop {
@@ -106,12 +104,6 @@ fn main() -> ! {
                 debug_io.write_u16(ir).ok();
                 debug_io.write(b'\n').ok();
             }
-        }
-
-        let t = sys_tick.get_current();
-        if t - last_time > 1000 {
-            last_time = t;
-            debug_io.write(b'.').ok();
         }
     }
 }
