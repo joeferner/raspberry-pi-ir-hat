@@ -16,12 +16,15 @@ use hal::nvic::NVIC;
 use hal::rcc::{ADCClockSource, AHBPrescaler, APB1Prescaler, SysClkSource, USART1ClockSource, RCC};
 use hal::sys_tick::SysTick;
 use hal::timer::Timer;
+use ir::{IrDecoder, MINIMUM_DEAD_DURATION};
 use ir_activity_led_pin::IrActivityLedPin;
 use ir_rx::IrRx;
 
 mod buffered_io;
 mod debug;
+mod duration;
 mod hal;
+mod ir;
 mod ir_activity_led_pin;
 mod ir_rx;
 
@@ -84,9 +87,13 @@ fn main() -> ! {
         &mut nvic,
     );
 
+    let mut ir_last_time: Option<u32> = Option::None;
+    let mut ir_decoder = IrDecoder::new();
+
     debug_io.write(b'\n').ok();
     debug_io.write(b'>').ok();
     loop {
+        let t = sys_tick.get_current();
         debug_io.tick();
         ir_activity_led.toggle();
 
@@ -100,9 +107,18 @@ fn main() -> ! {
 
         let ir = ir_rx.read(&dma);
         if let Option::Some(ir) = ir {
-            if ir != 0 {
-                debug_io.write_u16(ir).ok();
-                debug_io.write(b'\n').ok();
+            ir_decoder.push(ir);
+            ir_last_time = Option::Some(sys_tick.get_current());
+        }
+
+        if let Option::Some(last) = ir_last_time {
+            if last < t - MINIMUM_DEAD_DURATION.to_milliseconds() {
+                if let Option::Some(signal) = ir_decoder.decode() {
+                    debug_io.write_str(signal.to_string()).ok();
+                    debug_io.write(b'\n').ok();
+                }
+                ir_decoder.reset();
+                ir_last_time = Option::None;
             }
         }
     }
