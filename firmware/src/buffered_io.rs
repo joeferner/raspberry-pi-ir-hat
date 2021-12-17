@@ -45,6 +45,12 @@ impl<'a, const LEN: usize> BufferedIo<'a, LEN> {
         return self.target.write(value);
     }
 
+    pub fn write_u8(&mut self, ir: u8) -> Result<(), BufferedIoError> {
+        let mut buf = [0u8; 5];
+        let s = ir.numtoa_str(10, &mut buf);
+        return self.write_str(s);
+    }
+
     pub fn write_u16(&mut self, ir: u16) -> Result<(), BufferedIoError> {
         let mut buf = [0u8; 20];
         let s = ir.numtoa_str(10, &mut buf);

@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use crate::duration::Duration;
 
 mod denon;
@@ -7,27 +5,23 @@ mod utils;
 
 pub const MARK_EXCESS_MICROS: u16 = 20;
 pub const MICROS_PER_TICK: u16 = 50;
-pub const MINIMUM_DEAD_DURATION: Duration = Duration::from_millis(300);
+pub const MINIMUM_DEAD_DURATION: Duration = Duration::from_millis(10);
 
 pub enum Protocol {
-    Sharp,
-    Denon,
+    Sharp = 1,
+    Denon = 2,
+}
+
+impl Protocol {
+    pub fn val(self) -> u8 {
+        return self as u8;
+    }
 }
 
 pub struct IrSignal {
     pub protocol: Protocol,
     pub address: u16,
     pub command: u16,
-}
-
-impl IrSignal {
-    pub fn new(protocol: Protocol, address: u16, command: u16) -> Self {
-        return IrSignal {
-            protocol,
-            address,
-            command,
-        };
-    }
 }
 
 pub struct IrDecoder {
@@ -61,11 +55,5 @@ impl IrDecoder {
             return result;
         }
         return Option::None;
-    }
-}
-
-impl IrSignal {
-    pub fn to_string(&self) -> &str {
-        todo!()
     }
 }

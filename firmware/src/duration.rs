@@ -10,8 +10,15 @@ impl Duration {
 
     pub fn to_milliseconds(&self) -> u32 {
         return match self {
-            &Duration::Microseconds(t) => t * 1000,
+            &Duration::Microseconds(t) => t / 1000,
             &Duration::Milliseconds(t) => t,
+        };
+    }
+
+    pub fn to_microseconds(&self) -> u32 {
+        return match self {
+            &Duration::Microseconds(t) => t,
+            &Duration::Milliseconds(t) => t * 1000,
         };
     }
 }

@@ -38,7 +38,7 @@ pub fn decode(signal: &[u16], last_decoded_command: u16) -> Option<IrSignal> {
 
     // Read the bits in
     let decoded_data_opt = decode_pulse_distance_data(
-        &signal[1..DENON_BITS], // TODO possibly -1 or +1
+        &signal[1..],
         DENON_BIT_MARK,
         DENON_ONE_SPACE,
         DENON_ZERO_SPACE,
@@ -57,7 +57,7 @@ pub fn decode(signal: &[u16], last_decoded_command: u16) -> Option<IrSignal> {
     // Success
     let endian = Endian::MSB;
     let frame_bits: u8 = (decoded_data & 0x03) as u8;
-    let command: u16 = (decoded_data >> DENON_FRAME_BITS) as u16;
+    let mut command: u16 = (decoded_data >> DENON_FRAME_BITS) as u16;
     let address: u16 = (command >> DENON_COMMAND_BITS) as u16;
     command = command & 0xff;
     let mut repeat_count = 0;
@@ -93,5 +93,9 @@ pub fn decode(signal: &[u16], last_decoded_command: u16) -> Option<IrSignal> {
     } else {
         Protocol::Denon
     };
-    return Option::Some(IrSignal::new(protocol, address, command));
+    return Option::Some(IrSignal {
+        protocol,
+        address,
+        command,
+    });
 }

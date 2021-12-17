@@ -33,7 +33,7 @@ const DEBUG_RX_BUFFER_LEN: usize = 100;
 //#[cfg(not(test))]
 #[no_mangle]
 fn main() -> ! {
-    let mut cortex_m_peripherals = cortex_m::Peripherals::take().unwrap();
+    let cortex_m_peripherals = cortex_m::Peripherals::take().unwrap();
     let stm_peripherals = stm32g0::stm32g031::Peripherals::take().unwrap();
     let mut nvic = NVIC::new();
     let mut rcc = RCC::new(stm_peripherals.RCC);
@@ -114,7 +114,12 @@ fn main() -> ! {
         if let Option::Some(last) = ir_last_time {
             if last < t - MINIMUM_DEAD_DURATION.to_milliseconds() {
                 if let Option::Some(signal) = ir_decoder.decode() {
-                    debug_io.write_str(signal.to_string()).ok();
+                    debug_io.write_str("code: ").ok();
+                    debug_io.write_u8(signal.protocol.val()).ok();
+                    debug_io.write(b',').ok();
+                    debug_io.write_u16(signal.command).ok();
+                    debug_io.write(b',').ok();
+                    debug_io.write_u16(signal.address).ok();
                     debug_io.write(b'\n').ok();
                 }
                 ir_decoder.reset();

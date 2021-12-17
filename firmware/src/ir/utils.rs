@@ -6,11 +6,11 @@ pub enum Endian {
 }
 
 pub fn ticks_low(us: u16) -> u16 {
-    return (us) / 67;
+    return us - (us / 2);
 }
 
 pub fn ticks_high(us: u16) -> u16 {
-    return (us) / 40 + 1;
+    return us + (us / 2);
 }
 
 /// Decode pulse distance protocols.
@@ -32,7 +32,7 @@ pub fn decode_pulse_distance_data(
 
     match most_significant_bit {
         Endian::MSB => {
-            for _i in [0..signal.len()] {
+            while index < signal.len() - 1 {
                 // Check for constant length mark
                 if !match_mark(signal[index], bit_mark_micros) {
                     return Option::None;
@@ -52,7 +52,7 @@ pub fn decode_pulse_distance_data(
         }
         Endian::LSB => {
             let mut mask = 1;
-            for _i in [0..signal.len()] {
+            while index < signal.len() {
                 // Check for constant length mark
                 if !match_mark(signal[index], bit_mark_micros) {
                     return Option::None;
