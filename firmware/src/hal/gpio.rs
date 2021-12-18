@@ -3,6 +3,7 @@
 pub enum PortName {
     A = 1,
     B = 2,
+    C = 3,
 }
 
 pub struct Parts {
@@ -25,7 +26,6 @@ pub struct Parts {
 }
 
 pub struct Port {
-    register_block: *const stm32g0::stm32g031::gpioa::RegisterBlock,
     port_name: PortName,
 }
 
@@ -33,82 +33,66 @@ impl Port {
     pub fn split(self) -> Parts {
         return Parts {
             p0: Pin {
-                register_block: self.register_block,
                 pin: 0,
                 port_name: self.port_name,
             },
             p1: Pin {
-                register_block: self.register_block,
                 pin: 1,
                 port_name: self.port_name,
             },
             p2: Pin {
-                register_block: self.register_block,
                 pin: 2,
                 port_name: self.port_name,
             },
             p3: Pin {
-                register_block: self.register_block,
                 pin: 3,
                 port_name: self.port_name,
             },
             p4: Pin {
-                register_block: self.register_block,
                 pin: 4,
                 port_name: self.port_name,
             },
             p5: Pin {
-                register_block: self.register_block,
                 pin: 5,
                 port_name: self.port_name,
             },
             p6: Pin {
-                register_block: self.register_block,
                 pin: 6,
                 port_name: self.port_name,
             },
             p7: Pin {
-                register_block: self.register_block,
                 pin: 7,
                 port_name: self.port_name,
             },
             p8: Pin {
-                register_block: self.register_block,
                 pin: 8,
                 port_name: self.port_name,
             },
             p9: Pin {
-                register_block: self.register_block,
                 pin: 9,
                 port_name: self.port_name,
             },
             p10: Pin {
-                register_block: self.register_block,
                 pin: 10,
                 port_name: self.port_name,
             },
             p11: Pin {
-                register_block: self.register_block,
                 pin: 11,
                 port_name: self.port_name,
             },
             p12: Pin {
-                register_block: self.register_block,
                 pin: 12,
                 port_name: self.port_name,
             },
             p13: Pin {
-                register_block: self.register_block,
                 pin: 13,
                 port_name: self.port_name,
             },
             p14: Pin {
-                register_block: self.register_block,
                 pin: 14,
                 port_name: self.port_name,
             },
             p15: Pin {
-                register_block: self.register_block,
                 pin: 15,
                 port_name: self.port_name,
             },
@@ -119,6 +103,7 @@ impl Port {
 pub trait OutputPin {
     fn is_output_high(&self) -> bool;
     fn toggle(&mut self);
+    fn set_value(&mut self, value: bool);
 }
 
 pub enum Mode {
@@ -175,8 +160,26 @@ impl Speed {
     }
 }
 
+macro_rules! do_with_port {
+    ($self:ident, $gpio:ident, $action:expr) => {
+        match $self.port_name {
+            PortName::A => {
+                let $gpio = unsafe { &*stm32g0::stm32g031::GPIOA::ptr() };
+                $action;
+            }
+            PortName::B => {
+                let $gpio = unsafe { &*stm32g0::stm32g031::GPIOB::ptr() };
+                $action;
+            }
+            PortName::C => {
+                let $gpio = unsafe { &*stm32g0::stm32g031::GPIOC::ptr() };
+                $action;
+            }
+        }
+    };
+}
+
 pub struct Pin {
-    register_block: *const stm32g0::stm32g031::gpioa::RegisterBlock,
     pin: u8,
     port_name: PortName,
 }
@@ -201,8 +204,7 @@ impl Pin {
     pub fn set_as_alternate_function(&mut self, mode: AlternateFunctionMode) {
         self.set_mode(Mode::AlternateFunction);
 
-        let gpio = unsafe { &*self.register_block };
-        unsafe {
+        do_with_port!(self, gpio, unsafe {
             match self.pin {
                 0 => gpio.afrl.modify(|_, w| w.afsel0().bits(mode.val())),
                 1 => gpio.afrl.modify(|_, w| w.afsel1().bits(mode.val())),
@@ -222,18 +224,20 @@ impl Pin {
                 15 => gpio.afrh.modify(|_, w| w.afsel15().bits(mode.val())),
                 _ => panic!(),
             }
-        }
+        });
     }
 
     pub fn set_mode(&mut self, mode: Mode) {
-        unsafe {
-            (*self.register_block).moder.modify(|r, w| {
-                let mut v = r.bits();
-                v = v & !(0b11u32 << (self.pin * 2));
-                v = v | ((mode as u32) << (self.pin * 2));
-                return w.bits(v);
-            });
-        }
+        do_with_port!(self, gpio, unsafe {
+            unsafe {
+                gpio.moder.modify(|r, w| {
+                    let mut v = r.bits();
+                    v = v & !(0b11u32 << (self.pin * 2));
+                    v = v | ((mode as u32) << (self.pin * 2));
+                    return w.bits(v);
+                });
+            }
+        })
     }
 
     pub fn set_output_type_push_pull(&mut self) {
@@ -249,26 +253,27 @@ impl Pin {
             OutputType::OpenDrain => true,
             OutputType::PushPull => false,
         };
-        let gpio = unsafe { &*self.register_block };
-        match self.pin {
-            0 => gpio.otyper.modify(|_, w| w.ot0().bit(v)),
-            1 => gpio.otyper.modify(|_, w| w.ot1().bit(v)),
-            2 => gpio.otyper.modify(|_, w| w.ot2().bit(v)),
-            3 => gpio.otyper.modify(|_, w| w.ot3().bit(v)),
-            4 => gpio.otyper.modify(|_, w| w.ot4().bit(v)),
-            5 => gpio.otyper.modify(|_, w| w.ot5().bit(v)),
-            6 => gpio.otyper.modify(|_, w| w.ot6().bit(v)),
-            7 => gpio.otyper.modify(|_, w| w.ot7().bit(v)),
-            8 => gpio.otyper.modify(|_, w| w.ot8().bit(v)),
-            9 => gpio.otyper.modify(|_, w| w.ot9().bit(v)),
-            10 => gpio.otyper.modify(|_, w| w.ot10().bit(v)),
-            11 => gpio.otyper.modify(|_, w| w.ot11().bit(v)),
-            12 => gpio.otyper.modify(|_, w| w.ot12().bit(v)),
-            13 => gpio.otyper.modify(|_, w| w.ot13().bit(v)),
-            14 => gpio.otyper.modify(|_, w| w.ot14().bit(v)),
-            15 => gpio.otyper.modify(|_, w| w.ot15().bit(v)),
-            _ => panic!(),
-        }
+        do_with_port!(self, gpio, unsafe {
+            match self.pin {
+                0 => gpio.otyper.modify(|_, w| w.ot0().bit(v)),
+                1 => gpio.otyper.modify(|_, w| w.ot1().bit(v)),
+                2 => gpio.otyper.modify(|_, w| w.ot2().bit(v)),
+                3 => gpio.otyper.modify(|_, w| w.ot3().bit(v)),
+                4 => gpio.otyper.modify(|_, w| w.ot4().bit(v)),
+                5 => gpio.otyper.modify(|_, w| w.ot5().bit(v)),
+                6 => gpio.otyper.modify(|_, w| w.ot6().bit(v)),
+                7 => gpio.otyper.modify(|_, w| w.ot7().bit(v)),
+                8 => gpio.otyper.modify(|_, w| w.ot8().bit(v)),
+                9 => gpio.otyper.modify(|_, w| w.ot9().bit(v)),
+                10 => gpio.otyper.modify(|_, w| w.ot10().bit(v)),
+                11 => gpio.otyper.modify(|_, w| w.ot11().bit(v)),
+                12 => gpio.otyper.modify(|_, w| w.ot12().bit(v)),
+                13 => gpio.otyper.modify(|_, w| w.ot13().bit(v)),
+                14 => gpio.otyper.modify(|_, w| w.ot14().bit(v)),
+                15 => gpio.otyper.modify(|_, w| w.ot15().bit(v)),
+                _ => panic!(),
+            }
+        });
     }
 
     pub fn set_pull_none(&mut self) {
@@ -277,8 +282,7 @@ impl Pin {
 
     pub fn set_pull(&mut self, pull: Pull) {
         let v = pull.val();
-        let gpio = unsafe { &*self.register_block };
-        unsafe {
+        do_with_port!(self, gpio, unsafe {
             match self.pin {
                 0 => gpio.pupdr.modify(|_, w| w.pupdr0().bits(v)),
                 1 => gpio.pupdr.modify(|_, w| w.pupdr1().bits(v)),
@@ -298,7 +302,7 @@ impl Pin {
                 15 => gpio.pupdr.modify(|_, w| w.pupdr15().bits(v)),
                 _ => panic!(),
             }
-        }
+        })
     }
 
     pub fn set_speed_low(&mut self) {
@@ -307,8 +311,7 @@ impl Pin {
 
     pub fn set_speed(&self, speed: Speed) {
         let v = speed.val();
-        let gpio = unsafe { &*self.register_block };
-        unsafe {
+        do_with_port!(self, gpio, unsafe {
             match self.pin {
                 0 => gpio.ospeedr.modify(|_, w| w.ospeedr0().bits(v)),
                 1 => gpio.ospeedr.modify(|_, w| w.ospeedr1().bits(v)),
@@ -328,14 +331,16 @@ impl Pin {
                 15 => gpio.ospeedr.modify(|_, w| w.ospeedr15().bits(v)),
                 _ => panic!(),
             }
-        }
+        })
     }
 }
 
 impl OutputPin for Pin {
     fn is_output_high(&self) -> bool {
-        let v = unsafe { (*self.register_block).odr.read() }.bits();
-        return ((v >> self.pin) & 0b1) == 1;
+        do_with_port!(self, gpio, {
+            let v = gpio.odr.read().bits();
+            return ((v >> self.pin) & 0b1) == 1;
+        });
     }
 
     fn toggle(&mut self) {
@@ -343,9 +348,18 @@ impl OutputPin for Pin {
         if self.is_output_high() {
             bits = bits << 16;
         }
-        unsafe {
-            (*self.register_block).bsrr.write(|w| w.bits(bits));
-        }
+        do_with_port!(self, gpio, unsafe {
+            gpio.bsrr.write(|w| w.bits(bits));
+        })
+    }
+
+    fn set_value(&mut self, value: bool) {
+        let bits = if value {
+            1u32 << self.pin
+        } else {
+            (1u32 << 16) << self.pin
+        };
+        do_with_port!(self, gpio, gpio.bsrr.write(|w| unsafe { w.bits(bits) }));
     }
 }
 
@@ -360,8 +374,6 @@ macro_rules! gpio {
                 rcc.$rcc_enable();
                 rcc.$rcc_enable();
                 return Port {
-                    register_block: stm32g0::stm32g031::$GPIOX::ptr()
-                        as *const stm32g0::stm32g031::gpioa::RegisterBlock,
                     port_name: PortName::$port_name,
                 };
             }
@@ -371,3 +383,4 @@ macro_rules! gpio {
 
 gpio!(GPIOA, gpioa, A, enable_gpioa);
 gpio!(GPIOB, gpiob, B, enable_gpiob);
+gpio!(GPIOC, gpioc, C, enable_gpioc);

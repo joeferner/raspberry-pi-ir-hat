@@ -6,7 +6,7 @@ extern crate cortex_m_rt as rt;
 #[cfg(not(test))]
 extern crate panic_halt;
 
-use crate::hal::gpio::{gpioa, gpiob};
+use crate::hal::gpio::{gpioa, gpiob, gpioc};
 use crate::hal::usart::usart1;
 use buffered_io::BufferedIo;
 use debug::DebugUsart;
@@ -15,10 +15,12 @@ use hal::dma::{Dma, DmaMux};
 use hal::nvic::NVIC;
 use hal::rcc::{ADCClockSource, AHBPrescaler, APB1Prescaler, SysClkSource, USART1ClockSource, RCC};
 use hal::sys_tick::SysTick;
-use hal::timer::Timer;
+use hal::syscfg::SYSCFG;
+use hal::timer::{Timer, TimerChannel};
 use ir::{IrDecoder, MINIMUM_DEAD_DURATION};
 use ir_activity_led_pin::IrActivityLedPin;
 use ir_rx::IrRx;
+use ir_tx::IrTx;
 
 mod buffered_io;
 mod debug;
@@ -27,6 +29,7 @@ mod hal;
 mod ir;
 mod ir_activity_led_pin;
 mod ir_rx;
+mod ir_tx;
 
 const DEBUG_RX_BUFFER_LEN: usize = 100;
 
@@ -38,6 +41,7 @@ fn main() -> ! {
     let mut nvic = NVIC::new();
     let mut rcc = RCC::new(stm_peripherals.RCC);
     let mut sys_tick = SysTick::new(cortex_m_peripherals.SYST);
+    let mut syscfg = SYSCFG::new(stm_peripherals.SYSCFG);
     rcc.enable_syscfg();
     rcc.enable_power_interface();
     rcc.enable_hsi();
@@ -51,7 +55,14 @@ fn main() -> ! {
 
     let mut dma = Dma::new(stm_peripherals.DMA, &mut rcc);
     let dma_mux = DmaMux::new(stm_peripherals.DMAMUX).split();
-    let timer3 = Timer::new(stm_peripherals.TIM3, &mut rcc);
+
+    let ir_rx_timer = Timer::new_timer3(stm_peripherals.TIM3, &mut rcc);
+    let ir_rx_timer_channel = TimerChannel::Channel1;
+
+    let ir_tx_carrier_timer = Timer::new_timer17(stm_peripherals.TIM17, &mut rcc);
+    let ir_tx_carrier_timer_channel = TimerChannel::Channel1;
+    let ir_tx_signal_timer = Timer::new_timer16(stm_peripherals.TIM16, &mut rcc);
+    let ir_tx_signal_timer_channel = TimerChannel::Channel1;
 
     let gpioa = gpioa::new(stm_peripherals.GPIOA, &mut rcc).split();
     let mut ir_activity_led_pin = gpioa.p7;
@@ -62,6 +73,9 @@ fn main() -> ! {
     let gpiob = gpiob::new(stm_peripherals.GPIOB, &mut rcc).split();
     let usart1_tx_pin = gpiob.p6;
     let usart1_rx_pin = gpiob.p7;
+
+    let gpioc = gpioc::new(stm_peripherals.GPIOC, &mut rcc).split();
+    let ir_output_pin = gpioc.p14;
 
     // debug usart
     let mut usart1 = usart1::new(
@@ -80,11 +94,22 @@ fn main() -> ! {
 
     let mut ir_rx = IrRx::new(
         ir_input_pin,
-        timer3,
+        ir_rx_timer,
+        ir_rx_timer_channel,
         dma_mux.ch5,
         &mut dma,
         &mut rcc,
         &mut nvic,
+    );
+
+    let _ir_tx = IrTx::new(
+        &mut syscfg,
+        &mut rcc,
+        ir_output_pin,
+        ir_tx_carrier_timer,
+        ir_tx_carrier_timer_channel,
+        ir_tx_signal_timer,
+        ir_tx_signal_timer_channel,
     );
 
     let mut ir_last_time: Option<u32> = Option::None;

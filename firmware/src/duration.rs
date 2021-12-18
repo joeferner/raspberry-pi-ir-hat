@@ -1,24 +1,23 @@
-pub enum Duration {
-    Microseconds(u32),
-    Milliseconds(u32),
+pub struct Duration {
+    microseconds: u32,
 }
 
 impl Duration {
-    pub const fn from_millis(t: u32) -> Duration {
-        return Duration::Milliseconds(t);
+    pub const fn milliseconds(t: u32) -> Duration {
+        return Duration {
+            microseconds: t * 1000,
+        };
+    }
+
+    pub const fn microseconds(t: u32) -> Duration {
+        return Duration { microseconds: t };
     }
 
     pub fn to_milliseconds(&self) -> u32 {
-        return match self {
-            &Duration::Microseconds(t) => t / 1000,
-            &Duration::Milliseconds(t) => t,
-        };
+        return self.microseconds / 1000;
     }
 
     pub fn to_microseconds(&self) -> u32 {
-        return match self {
-            &Duration::Microseconds(t) => t,
-            &Duration::Milliseconds(t) => t * 1000,
-        };
+        return self.microseconds;
     }
 }

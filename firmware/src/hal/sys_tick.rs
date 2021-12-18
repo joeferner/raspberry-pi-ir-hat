@@ -16,7 +16,7 @@ impl SysTick {
 
     pub fn set_1ms_tick(&mut self) {
         self.syst.set_clock_source(SystClkSource::Core);
-        self.syst.set_reload(SYS_CLK / 1000);
+        self.syst.set_reload(SYS_CLK.to_hertz() / 1000);
         self.syst.clear_current();
         self.syst.enable_counter();
         self.syst.enable_interrupt();

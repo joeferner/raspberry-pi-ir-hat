@@ -5,7 +5,7 @@ mod utils;
 
 pub const MARK_EXCESS_MICROS: u16 = 20;
 pub const MICROS_PER_TICK: u16 = 50;
-pub const MINIMUM_DEAD_DURATION: Duration = Duration::from_millis(10);
+pub const MINIMUM_DEAD_DURATION: Duration = Duration::milliseconds(10);
 
 pub enum Protocol {
     Sharp = 1,

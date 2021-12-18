@@ -80,6 +80,10 @@ impl RCC {
         self.rcc.iopenr.modify(|_, w| w.iopben().set_bit());
     }
 
+    pub fn enable_gpioc(&mut self) {
+        self.rcc.iopenr.modify(|_, w| w.iopcen().set_bit());
+    }
+
     pub fn enable_usart1(&mut self) {
         self.rcc.apbenr2.modify(|_, w| w.usart1en().set_bit());
     }
@@ -89,7 +93,16 @@ impl RCC {
     }
 
     pub fn enable_timer3(&mut self) {
+        // LL_APB1_GRP1_EnableClock
         self.rcc.apbenr1.modify(|_, w| w.tim3en().set_bit());
+    }
+
+    pub fn enable_timer16(&mut self) {
+        self.rcc.apbenr2.modify(|_, w| w.tim16en().set_bit());
+    }
+
+    pub fn enable_timer17(&mut self) {
+        self.rcc.apbenr2.modify(|_, w| w.tim17en().set_bit());
     }
 
     pub fn enable_syscfg(&mut self) {
@@ -161,7 +174,7 @@ impl RCC {
         match self.get_sysclk_source() {
             SysClkSource::HSI => {
                 let hsidiv: u32 = (self.rcc.cr.read().hsidiv().bits() + 1) as u32;
-                return Hertz::hertz(SYS_CLK / hsidiv);
+                return Hertz::hertz(SYS_CLK.to_hertz() / hsidiv);
             }
         }
     }
@@ -191,10 +204,5 @@ impl RCC {
 
     fn get_apb1_prescaler(&self) -> u8 {
         return self.rcc.cfgr.read().ppre().bits();
-    }
-
-    pub fn get_system_core_clock(&self) -> Hertz {
-        // SystemCoreClock
-        return Hertz::megahertz(16); // TODO where is this from 
     }
 }

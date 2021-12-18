@@ -3,17 +3,17 @@ pub struct Hertz {
 }
 
 impl Hertz {
-    pub fn hertz(hertz: u32) -> Hertz {
+    pub const fn hertz(hertz: u32) -> Hertz {
         return Hertz { hertz };
     }
 
-    pub fn kilohertz(kilohertz: u32) -> Hertz {
+    pub const fn kilohertz(kilohertz: u32) -> Hertz {
         return Hertz {
             hertz: kilohertz * 1_000,
         };
     }
 
-    pub fn megahertz(megahertz: u32) -> Hertz {
+    pub const fn megahertz(megahertz: u32) -> Hertz {
         return Hertz {
             hertz: megahertz * 1_000_000,
         };

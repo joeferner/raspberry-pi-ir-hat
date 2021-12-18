@@ -10,7 +10,8 @@ use crate::hal::{
     rcc::RCC,
     timer::{
         Timer, TimerActiveInput, TimerCenterAlignMode, TimerChannel, TimerClockDivision,
-        TimerCounterDirection, TimerFilter, TimerPolarity, TimerPrescaler, TimerTriggerOutput,
+        TimerCounterDirection, TimerFilter, TimerNumber, TimerPolarity, TimerPrescaler,
+        TimerTriggerOutput,
     },
 };
 
@@ -28,15 +29,17 @@ impl IrRx {
     pub fn new(
         mut input_pin: Pin,
         mut timer: Timer,
+        timer_channel: TimerChannel,
         mut dma_ch: dma::DmaChannel,
         dma: &mut Dma,
         rcc: &mut RCC,
         nvic: &mut NVIC,
     ) -> IrRx {
-        assert_eq!(6, input_pin.get_pin());
-        assert_eq!(PortName::A, input_pin.get_port_name());
-        assert_eq!(3, timer.get_timer_number());
-        assert_eq!(DmaChannelNumber::Channel5, dma_ch.get_channel());
+        debug_assert_eq!(6, input_pin.get_pin());
+        debug_assert_eq!(PortName::A, input_pin.get_port_name());
+        debug_assert_eq!(TimerNumber::Timer3, timer.get_timer_number());
+        debug_assert_eq!(TimerChannel::Channel1, timer_channel);
+        debug_assert_eq!(DmaChannelNumber::Channel5, dma_ch.get_channel());
 
         input_pin.set_as_input();
         input_pin.set_as_alternate_function(AlternateFunctionMode::AF1);
@@ -74,10 +77,10 @@ impl IrRx {
         timer.disable_auto_reload_preload();
         timer.set_trigger_output(TimerTriggerOutput::Reset);
         timer.disable_master_slave_mode();
-        timer.ic_set_active_input(TimerChannel::Channel1, TimerActiveInput::DirectTI);
-        timer.ic_set_prescaler(TimerChannel::Channel1, TimerPrescaler::Div1);
-        timer.ic_set_filter(TimerChannel::Channel1, TimerFilter::Div1);
-        timer.ic_set_polarity(TimerChannel::Channel1, TimerPolarity::BothEdges);
+        timer.ic_set_active_input(timer_channel, TimerActiveInput::DirectTI);
+        timer.ic_set_prescaler(timer_channel, TimerPrescaler::Div1);
+        timer.ic_set_filter(timer_channel, TimerFilter::Div1);
+        timer.ic_set_polarity(timer_channel, TimerPolarity::BothEdges);
 
         timer.set_prescaler_hertz(Hertz::megahertz(1), &rcc);
         timer.generate_event_update();
@@ -85,10 +88,10 @@ impl IrRx {
         // start dma
         dma.enable_channel(dma_ch.get_channel());
 
-        let read_index = get_dma_rx_pos(&dma, &dma_ch);
+        let read_index = IrRx::get_dma_rx_pos(&dma, &dma_ch);
 
-        timer.enable_capture_compare_dma_request(TimerChannel::Channel1);
-        timer.enable_capture_compare_channel(TimerChannel::Channel1);
+        timer.enable_capture_compare_dma_request(timer_channel);
+        timer.enable_capture_compare_channel(timer_channel);
         timer.enable_counter();
 
         unsafe {
@@ -103,7 +106,7 @@ impl IrRx {
     }
 
     pub fn read(&mut self, dma: &Dma) -> Option<u16> {
-        let dma_index = get_dma_rx_pos(&dma, &self.dma_ch);
+        let dma_index = IrRx::get_dma_rx_pos(&dma, &self.dma_ch);
         let mut read_index = self.read_index;
         if dma_index != read_index {
             let v = unsafe { DMA_BUFFER[read_index] };
@@ -119,9 +122,9 @@ impl IrRx {
         }
         return Option::None;
     }
-}
 
-fn get_dma_rx_pos(dma: &Dma, dma_ch: &dma::DmaChannel) -> usize {
-    let v = dma.get_data_length(dma_ch.get_channel()) as usize;
-    return DMA_BUFFER_SIZE - v;
+    fn get_dma_rx_pos(dma: &Dma, dma_ch: &dma::DmaChannel) -> usize {
+        let v = dma.get_data_length(dma_ch.get_channel()) as usize;
+        return DMA_BUFFER_SIZE - v;
+    }
 }
