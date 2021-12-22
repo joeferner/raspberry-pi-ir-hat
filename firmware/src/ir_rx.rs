@@ -10,9 +10,8 @@ use crate::hal::{
     nvic::NVIC,
     rcc::RCC,
     timer::{
-        Timer, TimerActiveInput, TimerCenterAlignMode, TimerChannel, TimerClockDivision,
-        TimerCounterDirection, TimerFilter, TimerNumber, TimerPolarity, TimerPrescaler,
-        TimerTriggerOutput,
+        tim3::TIM3, TimerActiveInput, TimerCenterAlignMode, TimerChannel, TimerClockDivision,
+        TimerCounterDirection, TimerFilter, TimerPolarity, TimerPrescaler, TimerTriggerOutput,
     },
 };
 
@@ -29,14 +28,13 @@ static mut DMA_CHANNEL: dma::DmaChannelNumber = dma::DmaChannelNumber::Channel5;
 impl IrRx {
     pub fn new(
         mut input_pin: gpioa::PA6,
-        mut timer: Timer,
+        mut timer: TIM3,
         timer_channel: TimerChannel,
         mut dma_ch: dma::DmaChannel,
         dma: &mut Dma,
         rcc: &mut RCC,
         _nvic: &mut NVIC,
     ) -> IrRx {
-        debug_assert_eq!(TimerNumber::Timer3, timer.get_timer_number());
         debug_assert_eq!(TimerChannel::Channel1, timer_channel);
         debug_assert_eq!(DmaChannelNumber::Channel5, dma_ch.get_channel());
 

@@ -9,8 +9,8 @@ use crate::{
         rcc::RCC,
         syscfg::{IrModulationEnvelopeSignal, IrPolarity, SYSCFG},
         timer::{
-            Timer, TimerChannel, TimerClockDivision, TimerEvent, TimerNumber, TimerOcIdleState,
-            TimerOcMode, TimerOcPolarity,
+            tim16::TIM16, tim17::TIM17, TimerChannel, TimerClockDivision, TimerEvent,
+            TimerOcIdleState, TimerOcMode, TimerOcPolarity,
         },
         SYS_CLK,
     },
@@ -24,9 +24,9 @@ const CARRIER_TIMER_PRESCALER: u32 = 0;
 
 pub struct IrTx {
     output_pin: gpioc::PC14,
-    carrier_timer: Timer,
+    carrier_timer: TIM17,
     carrier_timer_channel: TimerChannel,
-    signal_timer: Timer,
+    signal_timer: TIM16,
     signal_timer_channel: TimerChannel,
     sending: bool,
     buffer: MpMcQueue<u16, 128>,
@@ -39,14 +39,12 @@ impl IrTx {
         syscfg: &mut SYSCFG,
         _rcc: &mut RCC,
         output_pin: gpioc::PC14,
-        mut carrier_timer: Timer,
+        mut carrier_timer: TIM17,
         carrier_timer_channel: TimerChannel,
-        mut signal_timer: Timer,
+        mut signal_timer: TIM16,
         signal_timer_channel: TimerChannel,
     ) -> Self {
-        debug_assert_eq!(TimerNumber::Timer17, carrier_timer.get_timer_number());
         debug_assert_eq!(TimerChannel::Channel1, carrier_timer_channel);
-        debug_assert_eq!(TimerNumber::Timer16, signal_timer.get_timer_number());
         debug_assert_eq!(TimerChannel::Channel1, signal_timer_channel);
 
         syscfg.set_ir_modulation_envelope_signal(IrModulationEnvelopeSignal::TIM16);
@@ -141,7 +139,7 @@ impl IrTx {
 
         // init carrier timer
         let auto_reload =
-            Timer::calculate_auto_reload(SYS_CLK, CARRIER_TIMER_PRESCALER, carrier_frequency);
+            TIM17::calculate_auto_reload(SYS_CLK, CARRIER_TIMER_PRESCALER, carrier_frequency);
         self.carrier_timer.set_prescaler(CARRIER_TIMER_PRESCALER);
         self.carrier_timer.set_auto_reload(auto_reload);
         self.carrier_timer
@@ -196,8 +194,8 @@ impl IrTx {
             self.stop();
             return;
         }
-        let t_on = Timer::calculate_delay(SYS_CLK, SIGNAL_TIMER_PRESCALER, t_on.unwrap());
-        let t_off = Timer::calculate_delay(SYS_CLK, SIGNAL_TIMER_PRESCALER, t_off.unwrap());
+        let t_on = TIM16::calculate_delay(SYS_CLK, SIGNAL_TIMER_PRESCALER, t_on.unwrap());
+        let t_off = TIM16::calculate_delay(SYS_CLK, SIGNAL_TIMER_PRESCALER, t_off.unwrap());
         let t_total = t_on + t_off;
         self.signal_timer.set_auto_reload(t_total);
         self.signal_timer
