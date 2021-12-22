@@ -3,7 +3,8 @@ use core::{cell::RefCell, ops::DerefMut};
 use crate::{
     duration::Duration,
     hal::{
-        gpio::{Mode, OutputPin, Pin, PortName},
+        gpio::gpioc,
+        gpio::{Mode, OutputPin},
         hertz::Hertz,
         rcc::RCC,
         syscfg::{IrModulationEnvelopeSignal, IrPolarity, SYSCFG},
@@ -22,7 +23,7 @@ const SIGNAL_TIMER_PRESCALER: u32 = 10;
 const CARRIER_TIMER_PRESCALER: u32 = 0;
 
 pub struct IrTx {
-    output_pin: Pin,
+    output_pin: gpioc::PC14,
     carrier_timer: Timer,
     carrier_timer_channel: TimerChannel,
     signal_timer: Timer,
@@ -36,15 +37,13 @@ static SHARED: Mutex<RefCell<Option<IrTx>>> = Mutex::new(RefCell::new(None));
 impl IrTx {
     pub fn new(
         syscfg: &mut SYSCFG,
-        rcc: &mut RCC,
-        output_pin: Pin,
+        _rcc: &mut RCC,
+        output_pin: gpioc::PC14,
         mut carrier_timer: Timer,
         carrier_timer_channel: TimerChannel,
         mut signal_timer: Timer,
         signal_timer_channel: TimerChannel,
     ) -> Self {
-        debug_assert_eq!(14, output_pin.get_pin());
-        debug_assert_eq!(PortName::C, output_pin.get_port_name());
         debug_assert_eq!(TimerNumber::Timer17, carrier_timer.get_timer_number());
         debug_assert_eq!(TimerChannel::Channel1, carrier_timer_channel);
         debug_assert_eq!(TimerNumber::Timer16, signal_timer.get_timer_number());

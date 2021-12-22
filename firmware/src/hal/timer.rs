@@ -437,7 +437,7 @@ impl Timer {
         do_with_timer!(self, timer, timer.egr.write(|w| w.ug().set_bit()));
     }
 
-    pub fn set_prescaler_hertz(&mut self, hertz: Hertz, rcc: &RCC) {
+    pub fn set_prescaler_hertz(&mut self, hertz: Hertz, _rcc: &RCC) {
         // __LL_TIM_CALC_PSC
         let sys_clk = SYS_CLK.to_hertz();
         let clk = hertz.to_hertz();

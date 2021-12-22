@@ -6,7 +6,9 @@ extern crate cortex_m_rt as rt;
 #[cfg(not(test))]
 extern crate panic_halt;
 
-use crate::hal::gpio::{gpioa, gpiob, gpioc};
+use crate::hal::gpio::gpioa::GPIOA;
+use crate::hal::gpio::gpiob::GPIOB;
+use crate::hal::gpio::gpioc::GPIOC;
 use crate::hal::usart::usart1;
 use buffered_io::BufferedIo;
 use debug::DebugUsart;
@@ -64,18 +66,18 @@ fn main() -> ! {
     let ir_tx_signal_timer = Timer::new_timer16(stm_peripherals.TIM16, &mut rcc);
     let ir_tx_signal_timer_channel = TimerChannel::Channel1;
 
-    let gpioa = gpioa::new(stm_peripherals.GPIOA, &mut rcc).split();
-    let mut ir_activity_led_pin = gpioa.p7;
+    let gpioa = GPIOA::new(stm_peripherals.GPIOA, &mut rcc);
+    let mut ir_activity_led_pin = gpioa.pa7;
     ir_activity_led_pin.set_as_output();
 
-    let ir_input_pin = gpioa.p6;
+    let ir_input_pin = gpioa.pa6;
 
-    let gpiob = gpiob::new(stm_peripherals.GPIOB, &mut rcc).split();
-    let usart1_tx_pin = gpiob.p6;
-    let usart1_rx_pin = gpiob.p7;
+    let gpiob = GPIOB::new(stm_peripherals.GPIOB, &mut rcc);
+    let usart1_tx_pin = gpiob.pb6;
+    let usart1_rx_pin = gpiob.pb7;
 
-    let gpioc = gpioc::new(stm_peripherals.GPIOC, &mut rcc).split();
-    let ir_output_pin = gpioc.p14;
+    let gpioc = GPIOC::new(stm_peripherals.GPIOC, &mut rcc);
+    let ir_output_pin = gpioc.pc14;
 
     // debug usart
     let mut usart1 = usart1::new(

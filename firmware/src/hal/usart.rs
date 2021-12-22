@@ -119,17 +119,25 @@ pub enum Event {
 }
 
 macro_rules! usart {
-    ($USARTx:ident, $usartx:ident, $port_name:ident) => {
+    ($USARTx:ident, 
+        $usartx:ident,
+        $port_name:ident,
+        $tx_gpio_port:ident,
+        $tx_gpio_pin:ident,
+        $rx_gpio_port:ident,
+        $rx_gpio_pin:ident
+    ) => {
         pub mod $usartx {
             use super::{UsartPortName, USART};
             use crate::hal::gpio::AlternateFunctionMode;
-            use crate::hal::gpio::Pin;
+            use crate::hal::gpio::$tx_gpio_port::$tx_gpio_pin;
+            use crate::hal::gpio::$rx_gpio_port::$rx_gpio_pin;
             use crate::hal::rcc::RCC;
 
             pub fn new(
                 _usart: stm32g0::stm32g031::$USARTx,
-                mut tx_pin: Pin,
-                mut rx_pin: Pin,
+                mut tx_pin: $tx_gpio_pin,
+                mut rx_pin: $rx_gpio_pin,
                 rcc: &mut RCC,
             ) -> USART {
                 rcc.enable_usart1();
@@ -153,4 +161,4 @@ macro_rules! usart {
     };
 }
 
-usart!(USART1, usart1, Usart1);
+usart!(USART1, usart1, Usart1, gpiob, PB6, gpiob, PB7);

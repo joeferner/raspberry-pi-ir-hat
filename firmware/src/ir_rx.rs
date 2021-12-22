@@ -4,7 +4,8 @@ use crate::hal::{
         DmaMuxRequest, DmaPeripheralIncrementMode, DmaPeripheralSize, DmaPriorityLevel,
         DmaTransferDirection,
     },
-    gpio::{AlternateFunctionMode, Pin, PortName},
+    gpio::gpioa,
+    gpio::AlternateFunctionMode,
     hertz::Hertz,
     nvic::NVIC,
     rcc::RCC,
@@ -27,16 +28,14 @@ static mut DMA_CHANNEL: dma::DmaChannelNumber = dma::DmaChannelNumber::Channel5;
 
 impl IrRx {
     pub fn new(
-        mut input_pin: Pin,
+        mut input_pin: gpioa::PA6,
         mut timer: Timer,
         timer_channel: TimerChannel,
         mut dma_ch: dma::DmaChannel,
         dma: &mut Dma,
         rcc: &mut RCC,
-        nvic: &mut NVIC,
+        _nvic: &mut NVIC,
     ) -> IrRx {
-        debug_assert_eq!(6, input_pin.get_pin());
-        debug_assert_eq!(PortName::A, input_pin.get_port_name());
         debug_assert_eq!(TimerNumber::Timer3, timer.get_timer_number());
         debug_assert_eq!(TimerChannel::Channel1, timer_channel);
         debug_assert_eq!(DmaChannelNumber::Channel5, dma_ch.get_channel());
