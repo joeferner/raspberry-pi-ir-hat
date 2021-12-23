@@ -21,7 +21,6 @@ use hal::nvic::NVIC;
 use hal::rcc::{ADCClockSource, AHBPrescaler, APB1Prescaler, SysClkSource, USART1ClockSource, RCC};
 use hal::sys_tick::SysTick;
 use hal::syscfg::SYSCFG;
-use hal::timer::TimerChannel;
 use ir::{IrDecoder, MINIMUM_DEAD_DURATION};
 use ir_activity_led_pin::IrActivityLedPin;
 use ir_rx::IrRx;
@@ -61,13 +60,12 @@ fn main() -> ! {
     let mut dma = Dma::new(stm_peripherals.DMA, &mut rcc);
     let dma_mux = DmaMux::new(stm_peripherals.DMAMUX).split();
 
-    let ir_rx_timer = TIM3::new(stm_peripherals.TIM3, &mut rcc);
-    let ir_rx_timer_channel = TimerChannel::Channel1;
+    let (ir_rx_timer, ir_rx_timer_channel, _) = TIM3::new(stm_peripherals.TIM3, &mut rcc);
 
-    let ir_tx_carrier_timer = TIM17::new(stm_peripherals.TIM17, &mut rcc);
-    let ir_tx_carrier_timer_channel = TimerChannel::Channel1;
-    let ir_tx_signal_timer = TIM16::new(stm_peripherals.TIM16, &mut rcc);
-    let ir_tx_signal_timer_channel = TimerChannel::Channel1;
+    let (ir_tx_carrier_timer, ir_tx_carrier_timer_channel, _) =
+        TIM17::new(stm_peripherals.TIM17, &mut rcc);
+    let (ir_tx_signal_timer, ir_tx_signal_timer_channel, _) =
+        TIM16::new(stm_peripherals.TIM16, &mut rcc);
 
     let gpioa = GPIOA::new(stm_peripherals.GPIOA, &mut rcc);
     let mut ir_activity_led_pin = gpioa.pa7;

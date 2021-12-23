@@ -10,7 +10,7 @@ use crate::hal::{
     nvic::NVIC,
     rcc::RCC,
     timer::{
-        tim3::TIM3, TimerActiveInput, TimerCenterAlignMode, TimerChannel, TimerClockDivision,
+        tim3, tim3::TIM3, TimerActiveInput, TimerCenterAlignMode, TimerClockDivision,
         TimerCounterDirection, TimerFilter, TimerPolarity, TimerPrescaler, TimerTriggerOutput,
     },
 };
@@ -29,13 +29,12 @@ impl IrRx {
     pub fn new(
         mut input_pin: gpioa::PA6,
         mut timer: TIM3,
-        timer_channel: TimerChannel,
+        mut timer_channel: tim3::Channel1,
         mut dma_ch: dma::DmaChannel,
         dma: &mut Dma,
         rcc: &mut RCC,
         _nvic: &mut NVIC,
     ) -> IrRx {
-        debug_assert_eq!(TimerChannel::Channel1, timer_channel);
         debug_assert_eq!(DmaChannelNumber::Channel5, dma_ch.get_channel());
 
         input_pin.set_as_input();
@@ -74,10 +73,10 @@ impl IrRx {
         timer.disable_auto_reload_preload();
         timer.set_trigger_output(TimerTriggerOutput::Reset);
         timer.disable_master_slave_mode();
-        timer.ic_set_active_input(timer_channel, TimerActiveInput::DirectTI);
-        timer.ic_set_prescaler(timer_channel, TimerPrescaler::Div1);
-        timer.ic_set_filter(timer_channel, TimerFilter::Div1);
-        timer.ic_set_polarity(timer_channel, TimerPolarity::BothEdges);
+        timer_channel.ic_set_active_input(TimerActiveInput::DirectTI);
+        timer_channel.ic_set_prescaler(TimerPrescaler::Div1);
+        timer_channel.ic_set_filter(TimerFilter::Div1);
+        timer_channel.ic_set_polarity(TimerPolarity::BothEdges);
 
         timer.set_prescaler_hertz(Hertz::megahertz(1), &rcc);
         timer.generate_event_update();
@@ -87,8 +86,8 @@ impl IrRx {
 
         let read_index = IrRx::get_dma_rx_pos(&dma, &dma_ch);
 
-        timer.enable_capture_compare_dma_request(timer_channel);
-        timer.enable_capture_compare_channel(timer_channel);
+        timer_channel.enable_capture_compare_dma_request();
+        timer_channel.enable_capture_compare_channel();
         timer.enable_counter();
 
         unsafe {

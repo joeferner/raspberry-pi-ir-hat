@@ -9,7 +9,7 @@ use crate::{
         rcc::RCC,
         syscfg::{IrModulationEnvelopeSignal, IrPolarity, SYSCFG},
         timer::{
-            tim16::TIM16, tim17::TIM17, TimerChannel, TimerClockDivision, TimerEvent,
+            tim16, tim16::TIM16, tim17, tim17::TIM17, TimerClockDivision, TimerEvent,
             TimerOcIdleState, TimerOcMode, TimerOcPolarity,
         },
         SYS_CLK,
@@ -25,9 +25,9 @@ const CARRIER_TIMER_PRESCALER: u32 = 0;
 pub struct IrTx {
     output_pin: gpioc::PC14,
     carrier_timer: TIM17,
-    carrier_timer_channel: TimerChannel,
+    carrier_timer_channel: tim17::Channel1,
     signal_timer: TIM16,
-    signal_timer_channel: TimerChannel,
+    signal_timer_channel: tim16::Channel1,
     sending: bool,
     buffer: MpMcQueue<u16, 128>,
 }
@@ -40,13 +40,10 @@ impl IrTx {
         _rcc: &mut RCC,
         output_pin: gpioc::PC14,
         mut carrier_timer: TIM17,
-        carrier_timer_channel: TimerChannel,
+        mut carrier_timer_channel: tim17::Channel1,
         mut signal_timer: TIM16,
-        signal_timer_channel: TimerChannel,
+        mut signal_timer_channel: tim16::Channel1,
     ) -> Self {
-        debug_assert_eq!(TimerChannel::Channel1, carrier_timer_channel);
-        debug_assert_eq!(TimerChannel::Channel1, signal_timer_channel);
-
         syscfg.set_ir_modulation_envelope_signal(IrModulationEnvelopeSignal::TIM16);
         syscfg.set_ir_polarity(IrPolarity::Inverted);
 
@@ -55,15 +52,15 @@ impl IrTx {
         signal_timer.set_clock_division(TimerClockDivision::Div1);
         signal_timer.set_repetition_counter(0);
         signal_timer.disable_auto_reload_preload();
-        signal_timer.oc_disable_preload(signal_timer_channel);
-        signal_timer.oc_set_mode(signal_timer_channel, TimerOcMode::PWM1);
-        signal_timer.disable_capture_compare_channel(signal_timer_channel);
-        signal_timer.oc_set_compare(signal_timer_channel, 0);
-        signal_timer.oc_set_polarity(signal_timer_channel, TimerOcPolarity::High);
-        signal_timer.oc_set_npolarity(signal_timer_channel, TimerOcPolarity::High);
-        signal_timer.oc_set_idle_state(signal_timer_channel, TimerOcIdleState::Low);
-        signal_timer.oc_set_nidle_state(signal_timer_channel, TimerOcIdleState::Low);
-        signal_timer.oc_disable_fast_mode(signal_timer_channel);
+        signal_timer_channel.oc_disable_preload();
+        signal_timer_channel.oc_set_mode(TimerOcMode::PWM1);
+        signal_timer_channel.disable_capture_compare_channel();
+        signal_timer_channel.oc_set_compare(0);
+        signal_timer_channel.oc_set_polarity(TimerOcPolarity::High);
+        signal_timer_channel.oc_set_npolarity(TimerOcPolarity::High);
+        signal_timer_channel.oc_set_idle_state(TimerOcIdleState::Low);
+        signal_timer_channel.oc_set_nidle_state(TimerOcIdleState::Low);
+        signal_timer_channel.oc_disable_fast_mode();
 
         // TODO do we need this
         // TIM_BDTRInitStruct.OSSRState = LL_TIM_OSSR_DISABLE;
@@ -81,15 +78,15 @@ impl IrTx {
         carrier_timer.set_clock_division(TimerClockDivision::Div1);
         carrier_timer.set_repetition_counter(0);
         carrier_timer.disable_auto_reload_preload();
-        carrier_timer.oc_enable_preload(carrier_timer_channel);
-        carrier_timer.oc_set_mode(carrier_timer_channel, TimerOcMode::PWM1);
-        carrier_timer.disable_capture_compare_channel(carrier_timer_channel);
-        carrier_timer.oc_set_compare(carrier_timer_channel, 0);
-        carrier_timer.oc_set_polarity(carrier_timer_channel, TimerOcPolarity::High);
-        carrier_timer.oc_set_npolarity(carrier_timer_channel, TimerOcPolarity::High);
-        carrier_timer.oc_set_idle_state(carrier_timer_channel, TimerOcIdleState::Low);
-        carrier_timer.oc_set_nidle_state(carrier_timer_channel, TimerOcIdleState::Low);
-        carrier_timer.oc_disable_fast_mode(carrier_timer_channel);
+        carrier_timer_channel.oc_enable_preload();
+        carrier_timer_channel.oc_set_mode(TimerOcMode::PWM1);
+        carrier_timer_channel.disable_capture_compare_channel();
+        carrier_timer_channel.oc_set_compare(0);
+        carrier_timer_channel.oc_set_polarity(TimerOcPolarity::High);
+        carrier_timer_channel.oc_set_npolarity(TimerOcPolarity::High);
+        carrier_timer_channel.oc_set_idle_state(TimerOcIdleState::Low);
+        carrier_timer_channel.oc_set_nidle_state(TimerOcIdleState::Low);
+        carrier_timer_channel.oc_disable_fast_mode();
 
         // TODO do we need this
         // TIM_BDTRInitStruct.OSSRState = LL_TIM_OSSR_DISABLE;
@@ -142,23 +139,18 @@ impl IrTx {
             TIM17::calculate_auto_reload(SYS_CLK, CARRIER_TIMER_PRESCALER, carrier_frequency);
         self.carrier_timer.set_prescaler(CARRIER_TIMER_PRESCALER);
         self.carrier_timer.set_auto_reload(auto_reload);
-        self.carrier_timer
-            .enable_capture_compare_channel(self.carrier_timer_channel);
+        self.carrier_timer_channel.enable_capture_compare_channel();
         // 25% duty cycle
-        self.carrier_timer
-            .oc_set_compare(self.carrier_timer_channel, auto_reload / 4);
+        self.carrier_timer_channel.oc_set_compare(auto_reload / 4);
         self.carrier_timer.enable_all_outputs();
 
         // init signal timer
         self.signal_timer.set_prescaler(SIGNAL_TIMER_PRESCALER);
         self.signal_timer.set_auto_reload(65000);
-        self.signal_timer
-            .oc_disable_preload(self.signal_timer_channel);
+        self.signal_timer_channel.oc_disable_preload();
         self.signal_timer.listen(TimerEvent::Active);
-        self.signal_timer
-            .enable_capture_compare_channel(self.signal_timer_channel);
-        self.signal_timer
-            .oc_set_compare(self.signal_timer_channel, 30000);
+        self.signal_timer_channel.enable_capture_compare_channel();
+        self.signal_timer_channel.oc_set_compare(30000);
         self.signal_timer.enable_all_outputs();
     }
 
@@ -198,8 +190,7 @@ impl IrTx {
         let t_off = TIM16::calculate_delay(SYS_CLK, SIGNAL_TIMER_PRESCALER, t_off.unwrap());
         let t_total = t_on + t_off;
         self.signal_timer.set_auto_reload(t_total);
-        self.signal_timer
-            .oc_set_compare(self.signal_timer_channel, t_on);
+        self.signal_timer_channel.oc_set_compare(t_on);
     }
 
     fn handle_interrupt(&mut self) {
