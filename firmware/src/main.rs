@@ -128,8 +128,13 @@ fn main() -> ! {
         let mut buf = [0u8; 100];
         let s = debug_io.read_line(&mut buf).ok().unwrap();
         if let Option::Some(s) = s {
-            debug_io.write_str("in: ").ok();
-            debug_io.write_str(s).ok();
+            if s.starts_with("send") {
+                let args = &s[0..4];
+                // let args = (&s["send".len()..]).trim();
+            } else {
+                debug_io.write_str("-ERR: ").ok();
+                debug_io.write_str(s).ok();
+            }
             debug_io.write(b'>').ok();
         }
 

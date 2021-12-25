@@ -84,8 +84,6 @@ fn USART1() {
                 }
                 serial.unpend(usart::Event::TxFifoNotFull);
             }
-
-            // TODO do we need this? NVIC::unpend(Interrupt::USART1);
         }
     });
 }

@@ -22,4 +22,8 @@ impl Hertz {
     pub fn to_hertz(&self) -> u32 {
         return self.hertz;
     }
+
+    pub fn to_megahertz(&self) -> u32 {
+        return self.hertz / 1_000_000;
+    }
 }

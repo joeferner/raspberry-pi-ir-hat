@@ -186,8 +186,8 @@ impl IrTx {
             self.stop();
             return;
         }
-        let t_on = TIM16::calculate_delay(SYS_CLK, SIGNAL_TIMER_PRESCALER, t_on.unwrap());
-        let t_off = TIM16::calculate_delay(SYS_CLK, SIGNAL_TIMER_PRESCALER, t_off.unwrap());
+        let t_on = TIM16::calculate_delay(SYS_CLK, SIGNAL_TIMER_PRESCALER, t_on.unwrap() as u32);
+        let t_off = TIM16::calculate_delay(SYS_CLK, SIGNAL_TIMER_PRESCALER, t_off.unwrap() as u32);
         let t_total = t_on + t_off;
         self.signal_timer.set_auto_reload(t_total);
         self.signal_timer_channel.oc_set_compare(t_on);

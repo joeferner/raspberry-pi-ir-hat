@@ -206,8 +206,10 @@ macro_rules! timer {
         }
 
         #[allow(dead_code)]
-        pub fn calculate_delay(_sys_clk: Hertz, _signal_timer_prescaler: u32, _unwrap: u16) -> u32 {
-            todo!()
+        pub fn calculate_delay(sys_clk: Hertz, signal_timer_prescaler: u32, delay: u32) -> u32 {
+            // __LL_TIM_CALC_DELAY
+            let sys_clk_megahertz = sys_clk.to_megahertz();
+            return (sys_clk_megahertz * delay) / (signal_timer_prescaler + 1);
         }
     };
 }
@@ -497,8 +499,7 @@ pub mod tim16 {
     }
 
     pub struct Channel2 {}
-    impl Channel2 {
-    }
+    impl Channel2 {}
 }
 
 pub mod tim17 {
@@ -536,6 +537,5 @@ pub mod tim17 {
     }
 
     pub struct Channel2 {}
-    impl Channel2 {
-    }
+    impl Channel2 {}
 }
