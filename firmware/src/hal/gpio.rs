@@ -28,10 +28,12 @@ macro_rules! gpio {
                 }
 
                 impl $PXi {
+                    #[allow(dead_code)]
                     pub fn set_as_output(&mut self) {
                         self.set_mode(Mode::Output);
                     }
 
+                    #[allow(dead_code)]
                     pub fn set_as_input(&mut self) {
                         self.set_mode(Mode::Input);
                     }
@@ -46,6 +48,7 @@ macro_rules! gpio {
                         });
                     }
 
+                    #[allow(dead_code)]
                     pub fn set_as_alternate_function(&mut self, mode: AlternateFunctionMode) {
                         self.set_mode(Mode::AlternateFunction);
 
@@ -53,14 +56,17 @@ macro_rules! gpio {
                         gpio.$afr.modify(|_, w| unsafe { w.$afsel().bits(mode.val()) });
                     }
 
+                    #[allow(dead_code)]
                     pub fn set_output_type_push_pull(&mut self) {
                         self.set_output_type(OutputType::PushPull);
                     }
 
+                    #[allow(dead_code)]
                     pub fn set_output_type_open_drain(&mut self) {
                         self.set_output_type(OutputType::OpenDrain);
                     }
 
+                    #[allow(dead_code)]
                     pub fn set_output_type(&mut self, output_type: OutputType) {
                         let v = match output_type {
                             OutputType::OpenDrain => true,
@@ -70,16 +76,19 @@ macro_rules! gpio {
                         gpio.otyper.modify(|_, w| w.$ot().bit(v));
                     }
 
+                    #[allow(dead_code)]
                     pub fn set_speed_low(&mut self) {
                         self.set_speed(Speed::Low);
                     }
 
+                    #[allow(dead_code)]
                     pub fn set_speed(&self, speed: Speed) {
                         let v = speed.val();
                         let gpio = unsafe { &*stm32g0::stm32g031::$GPIO::ptr() };
                         gpio.ospeedr.modify(|_, w| unsafe { w.$ospeedr().bits(v) });
                     }
 
+                    #[allow(dead_code)]
                     pub fn set_pull_none(&mut self) {
                         self.set_pull(Pull::None);
                     }
@@ -140,6 +149,7 @@ pub trait OutputPin {
     fn set_value(&mut self, value: bool);
 }
 
+#[allow(dead_code)]
 pub enum Mode {
     Input = 0b00,
     Output = 0b01,
@@ -147,6 +157,7 @@ pub enum Mode {
     Analog = 0b11,
 }
 
+#[allow(dead_code)]
 pub enum AlternateFunctionMode {
     AF0 = 0b0000,
     AF1 = 0b0001,
@@ -164,11 +175,13 @@ impl AlternateFunctionMode {
     }
 }
 
+#[allow(dead_code)]
 pub enum OutputType {
     PushPull,
     OpenDrain,
 }
 
+#[allow(dead_code)]
 pub enum Pull {
     None = 0b00,
     PullUp = 0b01,
@@ -181,6 +194,7 @@ impl Pull {
     }
 }
 
+#[allow(dead_code)]
 pub enum Speed {
     VeryLow = 0b00,
     Low = 0b01,

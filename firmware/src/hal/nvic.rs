@@ -14,6 +14,7 @@ impl NVIC {
         }
     }
 
+    #[allow(dead_code)]
     pub fn enable_interrupt_timer3(&mut self) {
         unsafe {
             peripheral::NVIC::unmask(Interrupt::TIM3);

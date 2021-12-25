@@ -15,5 +15,4 @@ numtoa = "0.2.4"
 panic-halt = "0.2.0"
 
 [profile.release]
-#opt-level = "z" # optimize for size
-#lto = true # link time optimization
+# lto = true # link time optimization

@@ -23,11 +23,11 @@ const DENON_ONE_SPACE: u16 = 7 * DENON_UNIT; // 1820 // The length of a Bit:Spac
 const DENON_ZERO_SPACE: u16 = 3 * DENON_UNIT; // 780 // The length of a Bit:Space for 0's
 
 const DENON_AUTO_REPEAT_SPACE: u16 = 45000; // Every frame is auto repeated with a space period of 45 ms and the command inverted.
-const DENON_REPEAT_PERIOD: u32 = 110000; // Commands are repeated every 110 ms (measured from start to start) for as long as the key on the remote control is held down.
+const _DENON_REPEAT_PERIOD: u32 = 110000; // Commands are repeated every 110 ms (measured from start to start) for as long as the key on the remote control is held down.
 
 // for old decoder
 const DENON_HEADER_MARK: u16 = DENON_UNIT; // The length of the Header:Mark
-const DENON_HEADER_SPACE: u16 = 3 * DENON_UNIT; // 780 // The length of the Header:Space
+const _DENON_HEADER_SPACE: u16 = 3 * DENON_UNIT; // 780 // The length of the Header:Space
 
 pub fn decode(signal: &[u16], last_decoded_command: u16) -> Option<IrSignal> {
     // we have no start bit, so check for the exact amount of data bits
@@ -55,39 +55,39 @@ pub fn decode(signal: &[u16], last_decoded_command: u16) -> Option<IrSignal> {
     }
 
     // Success
-    let endian = Endian::MSB;
+    let _endian = Endian::MSB;
     let frame_bits: u8 = (decoded_data & 0x03) as u8;
     let mut command: u16 = (decoded_data >> DENON_FRAME_BITS) as u16;
     let address: u16 = (command >> DENON_COMMAND_BITS) as u16;
     command = command & 0xff;
-    let mut repeat_count = 0;
-    let mut auto_repeat = false;
-    let mut parity_failed = false;
-    let mut repeat = false;
+    let mut _repeat_count = 0;
+    let mut _auto_repeat = false;
+    let mut _parity_failed = false;
+    let mut _repeat = false;
 
     // check for auto repeated inverted command
     // TODO verify MICROS_PER_TICK
     if signal[0] < ((DENON_AUTO_REPEAT_SPACE + (DENON_AUTO_REPEAT_SPACE / 4)) / MICROS_PER_TICK) {
-        repeat_count += 1;
+        _repeat_count += 1;
         if frame_bits == 0x3 || frame_bits == 0x1 {
             // We are in the auto repeated frame with the inverted command
-            auto_repeat = true;
+            _auto_repeat = true;
             // Check parity of consecutive received commands. There is no parity in one data set.
             let last_command = last_decoded_command;
             if last_command != !command {
-                parity_failed = true;
+                _parity_failed = true;
             }
             // always take non inverted command
             command = last_command;
         }
-        if repeat_count > 1 {
-            repeat = true;
+        if _repeat_count > 1 {
+            _repeat = true;
         }
     } else {
-        repeat_count = 0;
+        _repeat_count = 0;
     }
 
-    let number_of_bits = DENON_BITS;
+    let _number_of_bits = DENON_BITS;
     let protocol = if frame_bits == 1 || frame_bits == 2 {
         Protocol::Sharp
     } else {

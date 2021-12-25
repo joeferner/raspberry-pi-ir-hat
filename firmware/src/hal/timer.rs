@@ -97,6 +97,7 @@ macro_rules! timer {
             return (Self {}, Channel1 {}, Channel2 {});
         }
 
+        #[allow(dead_code)]
         pub fn get_capture_compare_register_address(&self) -> u32 {
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
             return &timer.ccr1 as *const _ as u32;
@@ -119,6 +120,7 @@ macro_rules! timer {
             timer.cr1.modify(|_, w| w.arpe().clear_bit());
         }
 
+        #[allow(dead_code)]
         pub fn set_prescaler_hertz(&mut self, hertz: Hertz, _rcc: &RCC) {
             // __LL_TIM_CALC_PSC
             let sys_clk = SYS_CLK.to_hertz();
@@ -137,6 +139,7 @@ macro_rules! timer {
             timer.psc.modify(|_, w| unsafe { w.bits(prescaler) });
         }
 
+        #[allow(dead_code)]
         pub fn generate_event_update(&mut self) {
             // LL_TIM_GenerateEvent_UPDATE
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
@@ -149,12 +152,14 @@ macro_rules! timer {
             timer.cr1.modify(|_, w| w.cen().set_bit());
         }
 
+        #[allow(dead_code)]
         pub fn disable_counter(&mut self) {
             // LL_TIM_DisableCounter
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
             timer.cr1.modify(|_, w| w.cen().clear_bit());
         }
 
+        #[allow(dead_code)]
         pub fn listen(&mut self, event: TimerEvent) {
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
             match event {
@@ -165,6 +170,7 @@ macro_rules! timer {
             }
         }
 
+        #[allow(dead_code)]
         pub fn is_pending(&self, event: TimerEvent) -> bool {
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
             match event {
@@ -175,6 +181,7 @@ macro_rules! timer {
             }
         }
 
+        #[allow(dead_code)]
         pub fn unpend(&mut self, event: TimerEvent) {
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
             match event {
@@ -185,6 +192,7 @@ macro_rules! timer {
             }
         }
 
+        #[allow(dead_code)]
         pub fn calculate_auto_reload(
             timer_clock_frequency: Hertz,
             prescaler: u32,
@@ -197,7 +205,8 @@ macro_rules! timer {
             };
         }
 
-        pub fn calculate_delay(sys_clk: Hertz, signal_timer_prescaler: u32, unwrap: u16) -> u32 {
+        #[allow(dead_code)]
+        pub fn calculate_delay(_sys_clk: Hertz, _signal_timer_prescaler: u32, _unwrap: u16) -> u32 {
             todo!()
         }
     };
@@ -235,6 +244,7 @@ macro_rules! timer_channel {
         $dier_ccxie: ident,
         $ccrx: ident
     ) => {
+        #[allow(dead_code)]
         pub fn ic_set_active_input(&mut self, input: TimerActiveInput) {
             // LL_TIM_IC_SetActiveInput
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
@@ -243,6 +253,7 @@ macro_rules! timer_channel {
                 .modify(|_, w| unsafe { w.$ccmr_input_ccxs().bits(input.val()) });
         }
 
+        #[allow(dead_code)]
         pub fn ic_set_prescaler(&mut self, prescaler: TimerPrescaler) {
             // LL_TIM_IC_SetPrescaler
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
@@ -251,6 +262,7 @@ macro_rules! timer_channel {
                 .modify(|_, w| unsafe { w.$ccmr_input_icxpsc().bits(prescaler.val()) });
         }
 
+        #[allow(dead_code)]
         pub fn ic_set_filter(&mut self, filter: TimerFilter) {
             // LL_TIM_IC_SetFilter
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
@@ -259,6 +271,7 @@ macro_rules! timer_channel {
                 .modify(|_, w| unsafe { w.$ccmr_input_icxf().bits(filter.val()) });
         }
 
+        #[allow(dead_code)]
         pub fn ic_set_polarity(&mut self, polarity: TimerPolarity) {
             // LL_TIM_IC_SetPolarity
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
@@ -267,24 +280,28 @@ macro_rules! timer_channel {
             });
         }
 
+        #[allow(dead_code)]
         pub fn enable_capture_compare_dma_request(&mut self) {
             // LL_TIM_EnableDMAReq_CC1
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
             timer.dier.modify(|_, w| w.$dier_ccxde().set_bit());
         }
 
+        #[allow(dead_code)]
         pub fn enable_capture_compare_channel(&mut self) {
             // LL_TIM_CC_EnableChannel
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
             timer.ccer.modify(|_, w| w.$ccer_ccxe().set_bit());
         }
 
+        #[allow(dead_code)]
         pub fn oc_disable_preload(&mut self) {
             // LL_TIM_OC_DisablePreload
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
             timer.$ccmr_output().modify(|_, w| w.oc1pe().clear_bit());
         }
 
+        #[allow(dead_code)]
         pub fn oc_set_mode(&mut self, mode: TimerOcMode) {
             // LL_TIM_OC_SetMode
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
@@ -293,18 +310,21 @@ macro_rules! timer_channel {
                 .modify(|_, w| w.$ccmr_output_ocxm().bits(mode.val()));
         }
 
+        #[allow(dead_code)]
         pub fn disable_capture_compare_channel(&mut self) {
             // LL_TIM_CC_EnableChannel
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
             timer.ccer.modify(|_, w| w.$ccer_ccxe().clear_bit());
         }
 
+        #[allow(dead_code)]
         pub fn oc_set_compare(&mut self, value: u32) {
             // LL_TIM_OC_SetCompareCH1
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
             timer.$ccrx.modify(|_, w| unsafe { w.bits(value) });
         }
 
+        #[allow(dead_code)]
         pub fn oc_set_polarity(&mut self, polarity: TimerOcPolarity) {
             // LL_TIM_OC_SetPolarity
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
@@ -313,6 +333,7 @@ macro_rules! timer_channel {
             });
         }
 
+        #[allow(dead_code)]
         pub fn oc_set_npolarity(&mut self, polarity: TimerOcPolarity) {
             // LL_TIM_OC_SetPolarity
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
@@ -321,6 +342,7 @@ macro_rules! timer_channel {
             });
         }
 
+        #[allow(dead_code)]
         pub fn enable_capture_compare_interrupt(&mut self) {
             // LL_TIM_EnableIT_CC1
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };
@@ -353,6 +375,7 @@ macro_rules! timer_channel_16_17 {
             timer.ccmr1_output().modify(|_, w| w.oc1fe().clear_bit());
         }
 
+        #[allow(dead_code)]
         pub fn oc_enable_preload(&mut self) {
             // LL_TIM_OC_EnablePreload
             let timer = unsafe { &*stm32g0::stm32g031::$TIM::ptr() };

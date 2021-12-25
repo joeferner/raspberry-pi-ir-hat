@@ -57,6 +57,7 @@ impl<'a, const LEN: usize> BufferedIo<'a, LEN> {
         return self.write_str(s);
     }
 
+    #[allow(dead_code)]
     pub fn write_u32(&mut self, ir: u32) -> Result<(), BufferedIoError> {
         let mut buf = [0u8; 20];
         let s = ir.numtoa_str(10, &mut buf);

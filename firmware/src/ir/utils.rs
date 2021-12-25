@@ -1,5 +1,6 @@
 use super::MARK_EXCESS_MICROS;
 
+#[allow(dead_code)]
 pub enum Endian {
     MSB,
     LSB,

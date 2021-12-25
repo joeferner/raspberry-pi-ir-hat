@@ -13,6 +13,7 @@ impl DmaMuxRequest {
     }
 }
 
+#[allow(dead_code)]
 pub enum DmaTransferDirection {
     PeripheralToMemory = 0,
     MemoryToPeripheral = 1,
@@ -24,6 +25,7 @@ impl DmaTransferDirection {
     }
 }
 
+#[allow(dead_code)]
 pub enum DmaPriorityLevel {
     Low = 0b00,
     Medium = 0b01,
@@ -37,6 +39,7 @@ impl DmaPriorityLevel {
     }
 }
 
+#[allow(dead_code)]
 pub enum DmaCircularMode {
     Disabled = 0,
     Circular = 1,
@@ -48,6 +51,7 @@ impl DmaCircularMode {
     }
 }
 
+#[allow(dead_code)]
 pub enum DmaPeripheralIncrementMode {
     Disabled = 0,
     Increment = 1,
@@ -59,6 +63,7 @@ impl DmaPeripheralIncrementMode {
     }
 }
 
+#[allow(dead_code)]
 pub enum DmaMemoryIncrementMode {
     Disabled = 0,
     Increment = 1,
@@ -70,6 +75,7 @@ impl DmaMemoryIncrementMode {
     }
 }
 
+#[allow(dead_code)]
 pub enum DmaPeripheralSize {
     U8 = 0b00,
     U16 = 0b01,
@@ -82,6 +88,7 @@ impl DmaPeripheralSize {
     }
 }
 
+#[allow(dead_code)]
 pub enum DmaMemorySize {
     U8 = 0b00,
     U16 = 0b01,
@@ -112,6 +119,7 @@ impl Dma {
         };
     }
 
+    #[allow(dead_code)]
     pub fn is_transfer_complete_interrupt_flag_set(channel: DmaChannelNumber) -> bool {
         let reg = unsafe { &*stm32g031::DMA::ptr() };
         return match channel {
@@ -119,6 +127,7 @@ impl Dma {
         };
     }
 
+    #[allow(dead_code)]
     pub fn is_global_interrupt_flag_set(channel: DmaChannelNumber) -> bool {
         let reg = unsafe { &*stm32g031::DMA::ptr() };
         return match channel {
@@ -207,6 +216,7 @@ impl Dma {
         }
     }
 
+    #[allow(dead_code)]
     pub fn enable_interrupt_transfer_complete(&mut self, channel: DmaChannelNumber) {
         // LL_DMA_EnableIT_TC
         let reg = unsafe { &*self.register_block };
@@ -215,6 +225,7 @@ impl Dma {
         }
     }
 
+    #[allow(dead_code)]
     pub fn enable_interrupt_transfer_error(&mut self, channel: DmaChannelNumber) {
         // LL_DMA_EnableIT_TE
         let reg = unsafe { &*self.register_block };
