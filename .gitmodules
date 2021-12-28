@@ -1,3 +1,6 @@
 [submodule "firmware/libs/etl"]
 	path = firmware/libs/etl
 	url = git@github.com:ETLCPP/etl.git
+[submodule "firmware/libs/STM32CubeG0"]
+	path = firmware/libs/STM32CubeG0
+	url = git@github.com:STMicroelectronics/STM32CubeG0.git

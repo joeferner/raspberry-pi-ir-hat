@@ -5,17 +5,17 @@ OPT = -Og
 BUILD_DIR = target
 
 C_SOURCES = \
-  old/Core/Src/main.c \
-  old/Core/Src/system_stm32g0xx.c \
-  libs/stm32/Src/stm32g0xx_ll_utils.c \
-  libs/stm32/Src/stm32g0xx_ll_exti.c \
-  libs/stm32/Src/stm32g0xx_ll_gpio.c \
-  libs/stm32/Src/stm32g0xx_ll_adc.c \
-  libs/stm32/Src/stm32g0xx_ll_rcc.c \
-  libs/stm32/Src/stm32g0xx_ll_dma.c \
-  libs/stm32/Src/stm32g0xx_ll_tim.c \
-  libs/stm32/Src/stm32g0xx_ll_usart.c \
-  libs/stm32/Src/stm32g0xx_ll_pwr.c \
+  src/stm32/main.c \
+  src/stm32/system_stm32g0xx.c \
+  libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_utils.c \
+  libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_exti.c \
+  libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_gpio.c \
+  libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_adc.c \
+  libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_rcc.c \
+  libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_dma.c \
+  libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_tim.c \
+  libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_usart.c \
+  libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_pwr.c \
   src/current_sensor.c \
   src/debug.c \
   src/firmware_it.c \
@@ -62,10 +62,11 @@ C_DEFS =  \
 AS_INCLUDES = 
 
 C_INCLUDES =  \
-  -Iold/Core/Inc \
-  -Ilibs/stm32/Inc \
-  -Iold/Drivers/CMSIS/Device/ST/STM32G0xx/Include \
-  -Iold/Drivers/CMSIS/Include
+  -Isrc \
+  -Isrc/stm32 \
+  -Ilibs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Inc \
+  -Ilibs/STM32CubeG0/Drivers/CMSIS/Device/ST/STM32G0xx/Include \
+  -Ilibs/STM32CubeG0/Drivers/CMSIS/Include
 
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
@@ -77,7 +78,7 @@ endif
 
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 
-LDSCRIPT = old/STM32G031F4Px_FLASH.ld
+LDSCRIPT = src/STM32G031F4Px_FLASH.ld
 
 LIBS = -lc -lm -lnosys 
 LIBDIR = 
