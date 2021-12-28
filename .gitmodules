@@ -1,0 +1,6 @@
+[submodule "firmware/libs/etl"]
+	path = firmware/libs/etl
+	url = git@github.com:ETLCPP/etl.git
+[submodule "firmware/libs/stm32"]
+	path = firmware/libs/stm32
+	url = git@github.com:STMicroelectronics/stm32g0xx_hal_driver.git
