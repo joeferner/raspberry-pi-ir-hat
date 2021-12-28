@@ -8,6 +8,11 @@
 #include "ir_tx.h"
 #include "rpi.h"
 #include "time.h"
+#include "Test.hpp"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
 
@@ -22,6 +27,8 @@ void loop();
 void process_rx(char *data, send_string send_string);
 
 void setup() {
+  Test t;
+  t.run();
   time_setup();
   debug_setup();
   rpi_setup();
@@ -109,3 +116,7 @@ void current_sensor_overrun_error() {
   rpi_send_string(str);
   debug_send_string(str);
 }
+
+#ifdef __cplusplus
+}
+#endif

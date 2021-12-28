@@ -19,7 +19,6 @@ C_SOURCES = \
   src/current_sensor.c \
   src/debug.c \
   src/firmware_it.c \
-  src/firmware.c \
   src/ir_rx.c \
   src/ir_tx.c \
   src/rpi.c \
@@ -27,6 +26,10 @@ C_SOURCES = \
   src/uint8_ring_buffer.c \
   src/uint32_ring_buffer.c \
   src/usart_it.c
+
+CPP_SOURCES = \
+  src/firmware.cpp \
+  src/Test.cpp
 
 ASM_SOURCES = \
   src/startup_stm32g031xx.s
@@ -76,7 +79,8 @@ ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
 endif
 
-CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
+CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)" -fno-exceptions
+CPPFLAGS += -fno-rtti
 
 LDSCRIPT = src/STM32G031F4Px_FLASH.ld
 
@@ -89,11 +93,16 @@ all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET
 
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
 vpath %.c $(sort $(dir $(C_SOURCES)))
+OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(CPP_SOURCES:.cpp=.o)))
+vpath %.cpp $(sort $(dir $(CPP_SOURCES)))
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
 $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
 	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+
+$(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR) 
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
 
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@
@@ -113,5 +122,27 @@ $(BUILD_DIR):
 
 clean:
 	-rm -fR $(BUILD_DIR)
-  
+
+print-largest: $(BUILD_DIR)/firmware.elf | $(BUILD_DIR)
+	nm --print-size --size-sort --radix=d $(BUILD_DIR)/firmware.elf | grep -v ' b '
+
+format:
+	clang-format --verbose -i --style=file src/*.c src/*.h src/*.cpp src/*.hpp
+
+serialport-list:
+	scripts/serialport-list.sh
+
+serialport-connect:
+	scripts/serialport-connect.sh $(PORT)
+
+help:
+	@echo ""
+	@echo "targets:"
+	@echo "  clean           - deletes all build artifacts"
+	@echo "  print-largest   - prints the largest functions"
+	@echo "  format          - formats the code"
+	@echo "  serialport-list - lists serial port devices"
+	@echo "  serialport-connect PORT=<port path> - connects to a serialport"
+	@echo ""
+
 -include $(wildcard $(BUILD_DIR)/*.d)

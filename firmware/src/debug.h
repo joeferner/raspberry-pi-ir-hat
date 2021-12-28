@@ -4,6 +4,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void debug_setup();
 
 void debug_loop();
@@ -17,5 +21,9 @@ void debug_tx(const uint8_t *data, size_t data_len);
 extern void debug_rx(char *data);
 
 void debug_usart_irq();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
