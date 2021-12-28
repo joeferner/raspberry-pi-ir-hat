@@ -4,6 +4,8 @@ cmake-build-debug/
 Drivers/
 Core/
 build/
+old/
+target/
 .cproject
 .mxproject
 .project
