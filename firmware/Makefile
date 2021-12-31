@@ -29,7 +29,10 @@ C_SOURCES = \
 
 CPP_SOURCES = \
   src/firmware.cpp \
-  src/Test.cpp
+  src/setup.cpp \
+  src/hal/Bus.cpp \
+  src/hal/NVICHal.cpp \
+  src/hal/RCCHal.cpp
 
 ASM_SOURCES = \
   src/startup_stm32g031xx.s

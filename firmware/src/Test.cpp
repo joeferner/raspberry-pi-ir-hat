@@ -1,6 +1,4 @@
 
 #include "Test.hpp"
 
-void Test::run() {
-    
-}
+void Test::run() {}

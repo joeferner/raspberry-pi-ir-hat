@@ -1,3 +1,4 @@
+#include <stm32g031xx.h>
 #include <stm32_assert.h>
 #include <stm32g0xx_ll_adc.h>
 #include <stm32g0xx_ll_bus.h>

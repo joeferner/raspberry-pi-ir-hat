@@ -4,15 +4,21 @@
 #include "config.h"
 #include "current_sensor.h"
 #include "debug.h"
+#include "hal/Bus.hpp"
+#include "hal/NVICHal.hpp"
+#include "hal/RCCHal.hpp"
 #include "ir_rx.h"
 #include "ir_tx.h"
 #include "rpi.h"
 #include "time.h"
-#include "Test.hpp"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+hal::Bus bus;
+hal::NVICHal nvic;
+hal::RCCHal rcc;
 
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
 
@@ -20,23 +26,17 @@ typedef void (*send_string)(const char *);
 
 void setup();
 
-void setup_system_clock();
+void setupSystemClock();
 
 void loop();
 
 void process_rx(char *data, send_string send_string);
 
-void setup() {
-  Test t;
-  t.run();
-  time_setup();
-  debug_setup();
-  rpi_setup();
-  ir_rx_setup();
-  ir_tx_setup();
-  current_sensor_setup();
-  debug_send_string("?READY\n");
-  LL_IWDG_Enable(IWDG);
+int main() {
+  setup();
+  while (1) {
+    loop();
+  }
 }
 
 void loop() {

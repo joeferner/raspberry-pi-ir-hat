@@ -2,8 +2,8 @@
 #define _TEST_HPP_
 
 class Test {
-public:
-    void run();
+ public:
+  void run();
 };
 
 #endif
