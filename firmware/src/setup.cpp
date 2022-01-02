@@ -32,6 +32,8 @@ extern hal::USART usart2;
 extern hal::GPIO irRxPin;
 extern hal::DMAChannel irRxDmaChannel;
 extern hal::Timer irRxTimer;
+extern hal::Timer irTxCarrierTimer;
+extern hal::Timer irTxSignalTimer;
 
 static const uint32_t HCLK_FREQUENCY = 16000000;
 
@@ -196,7 +198,6 @@ static void setupTIM3() {
   irRxPin.setAlternate(hal::gpio::Alternate::Alt1);
   irRxPin.setMode(hal::gpio::Mode::Alternate);
 
-  // TODO
   irRxDmaChannel.setPeripheralRequest(hal::dma::PeripheralRequest::TIM3_CH1);
   irRxDmaChannel.setDataTransferDirection(hal::dma::TransferDirection::PeripheralToMemory);
   irRxDmaChannel.setChannelPriorityLevel(hal::dma::Priority::Low);
@@ -213,6 +214,7 @@ static void setupTIM3() {
   irRxTimer.setClockDivision(hal::timer::ClockDivision::DIV_1);
   irRxTimer.setAutoReload(65535);
   irRxTimer.setPrescaler(0);
+  irRxTimer.setRepetitionCounter(0);
   irRxTimer.disableAutoReloadPreload();
   irRxTimer.setTriggerOutput(hal::timer::TriggerOutput::Reset);
   irRxTimer.disableMasterSlaveMode();
@@ -223,30 +225,29 @@ static void setupTIM3() {
 }
 
 static void setupTIM16() {
+  clocks.enableTIM16Clock();
+
+  nvic.setPriority(hal::nvic::IRQnType::TIM16_Irq, 0);
+  nvic.enableInterrupt(hal::nvic::IRQnType::TIM16_Irq);
+
+  irTxSignalTimer.setCounterMode(hal::timer::CounterMode::Up);
+  irTxSignalTimer.setClockDivision(hal::timer::ClockDivision::DIV_1);
+  irTxSignalTimer.setAutoReload(65535);
+  irTxSignalTimer.setPrescaler(0);
+  irTxSignalTimer.setRepetitionCounter(0);
+  irTxSignalTimer.disableAutoReloadPreload();
+  irTxSignalTimer.enableOutputComparePreload(hal::timer::Channel::Channel1);
+  irTxSignalTimer.disableCaptureCompareChannel(hal::timer::ChannelN::Channel1);
+  irTxSignalTimer.disableCaptureCompareChannel(hal::timer::ChannelN::Channel1N);
+  irTxSignalTimer.setOutputCompareMode(hal::timer::Channel::Channel1, hal::timer::OutputCompareMode::PWM1);
+  irTxSignalTimer.setOutputComparePolarity(hal::timer::ChannelN::Channel1, hal::timer::OutputComparePolarity::High);
+  irTxSignalTimer.setOutputComparePolarity(hal::timer::ChannelN::Channel1N, hal::timer::OutputComparePolarity::High);
+  // TODO set this to high?
+  irTxSignalTimer.setOutputCompareIdleState(hal::timer::ChannelN::Channel1, hal::timer::OutputCompareIdleState::Low);
+  irTxSignalTimer.setOutputCompareIdleState(hal::timer::ChannelN::Channel1N, hal::timer::OutputCompareIdleState::Low);
+  irTxSignalTimer.setOutputCompareValue(hal::timer::Channel::Channel1, 0);
+  irTxSignalTimer.disableOutputCompareFast(hal::timer::Channel::Channel1);
   // TODO
-  // LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM16);
-
-  // NVIC_SetPriority(TIM16_IRQn, 0);
-  // NVIC_EnableIRQ(TIM16_IRQn);
-
-  // TIM_InitStruct.Prescaler = 0;
-  // TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
-  // TIM_InitStruct.Autoreload = 65535;
-  // TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
-  // TIM_InitStruct.RepetitionCounter = 0;
-  // LL_TIM_Init(TIM16, &TIM_InitStruct);
-  // LL_TIM_DisableARRPreload(TIM16);
-  // LL_TIM_OC_EnablePreload(TIM16, LL_TIM_CHANNEL_CH1);
-  // TIM_OC_InitStruct.OCMode = LL_TIM_OCMODE_PWM1;
-  // TIM_OC_InitStruct.OCState = LL_TIM_OCSTATE_DISABLE;
-  // TIM_OC_InitStruct.OCNState = LL_TIM_OCSTATE_DISABLE;
-  // TIM_OC_InitStruct.CompareValue = 0;
-  // TIM_OC_InitStruct.OCPolarity = LL_TIM_OCPOLARITY_HIGH;
-  // TIM_OC_InitStruct.OCNPolarity = LL_TIM_OCPOLARITY_HIGH;
-  // TIM_OC_InitStruct.OCIdleState = LL_TIM_OCIDLESTATE_LOW;
-  // TIM_OC_InitStruct.OCNIdleState = LL_TIM_OCIDLESTATE_LOW;
-  // LL_TIM_OC_Init(TIM16, LL_TIM_CHANNEL_CH1, &TIM_OC_InitStruct);
-  // LL_TIM_OC_DisableFast(TIM16, LL_TIM_CHANNEL_CH1);
   // TIM_BDTRInitStruct.OSSRState = LL_TIM_OSSR_DISABLE;
   // TIM_BDTRInitStruct.OSSIState = LL_TIM_OSSI_DISABLE;
   // TIM_BDTRInitStruct.LockLevel = LL_TIM_LOCKLEVEL_OFF;
@@ -259,27 +260,26 @@ static void setupTIM16() {
 }
 
 static void setupTIM17() {
-  // TODO
-  // LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM17);
+  clocks.enableTIM17Clock();
 
-  // TIM_InitStruct.Prescaler = 0;
-  // TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
-  // TIM_InitStruct.Autoreload = 65535;
-  // TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
-  // TIM_InitStruct.RepetitionCounter = 0;
-  // LL_TIM_Init(TIM17, &TIM_InitStruct);
-  // LL_TIM_DisableARRPreload(TIM17);
-  // LL_TIM_OC_EnablePreload(TIM17, LL_TIM_CHANNEL_CH1);
-  // TIM_OC_InitStruct.OCMode = LL_TIM_OCMODE_PWM1;
-  // TIM_OC_InitStruct.OCState = LL_TIM_OCSTATE_DISABLE;
-  // TIM_OC_InitStruct.OCNState = LL_TIM_OCSTATE_DISABLE;
-  // TIM_OC_InitStruct.CompareValue = 0;
-  // TIM_OC_InitStruct.OCPolarity = LL_TIM_OCPOLARITY_HIGH;
-  // TIM_OC_InitStruct.OCNPolarity = LL_TIM_OCPOLARITY_HIGH;
-  // TIM_OC_InitStruct.OCIdleState = LL_TIM_OCIDLESTATE_LOW;
-  // TIM_OC_InitStruct.OCNIdleState = LL_TIM_OCIDLESTATE_LOW;
-  // LL_TIM_OC_Init(TIM17, LL_TIM_CHANNEL_CH1, &TIM_OC_InitStruct);
-  // LL_TIM_OC_DisableFast(TIM17, LL_TIM_CHANNEL_CH1);
+  irTxCarrierTimer.setCounterMode(hal::timer::CounterMode::Up);
+  irTxCarrierTimer.setClockDivision(hal::timer::ClockDivision::DIV_1);
+  irTxCarrierTimer.setAutoReload(65535);
+  irTxCarrierTimer.setPrescaler(0);
+  irTxCarrierTimer.setRepetitionCounter(0);
+  irTxCarrierTimer.disableAutoReloadPreload();
+  irTxCarrierTimer.enableOutputComparePreload(hal::timer::Channel::Channel1);
+  irTxCarrierTimer.disableCaptureCompareChannel(hal::timer::ChannelN::Channel1);
+  irTxCarrierTimer.disableCaptureCompareChannel(hal::timer::ChannelN::Channel1N);
+  irTxCarrierTimer.setOutputCompareMode(hal::timer::Channel::Channel1, hal::timer::OutputCompareMode::PWM1);
+  irTxCarrierTimer.setOutputComparePolarity(hal::timer::ChannelN::Channel1, hal::timer::OutputComparePolarity::High);
+  irTxCarrierTimer.setOutputComparePolarity(hal::timer::ChannelN::Channel1N, hal::timer::OutputComparePolarity::High);
+  // TODO set this to high?
+  irTxCarrierTimer.setOutputCompareIdleState(hal::timer::ChannelN::Channel1, hal::timer::OutputCompareIdleState::Low);
+  irTxCarrierTimer.setOutputCompareIdleState(hal::timer::ChannelN::Channel1N, hal::timer::OutputCompareIdleState::Low);
+  irTxCarrierTimer.setOutputCompareValue(hal::timer::Channel::Channel1, 0);
+  irTxCarrierTimer.disableOutputCompareFast(hal::timer::Channel::Channel1);
+  // TODO
   // TIM_BDTRInitStruct.OSSRState = LL_TIM_OSSR_DISABLE;
   // TIM_BDTRInitStruct.OSSIState = LL_TIM_OSSI_DISABLE;
   // TIM_BDTRInitStruct.LockLevel = LL_TIM_LOCKLEVEL_OFF;

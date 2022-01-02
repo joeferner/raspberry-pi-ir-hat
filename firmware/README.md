@@ -27,6 +27,10 @@ https://github.com/STMicroelectronics/STM32CubeG0
 | 19  | PA14 | Sys SWCLK         |
 | 20  | PB6  | USART1 Tx (Debug) |
 
+- TIM3 - IR Rx
+- TIM16 - IR Tx Signal
+- TIM17 - IR Tx Carrier
+
 # STM32CubeMX Project Setup
 
 1. Select MCU STM32G031F4 (https://github.com/STMicroelectronics/STM32CubeG0)

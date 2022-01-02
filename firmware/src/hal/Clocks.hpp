@@ -15,6 +15,8 @@ class Clocks {
   const void enableUSART1Clock() const;
   const void enableUSART2Clock() const;
   const void enableTIM3Clock() const;
+  const void enableTIM16Clock() const;
+  const void enableTIM17Clock() const;
 };
 }  // namespace hal
 

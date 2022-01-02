@@ -42,6 +42,8 @@ hal::GPIO irRxPin(GPIOA, 6);
 hal::DMA dma1(DMA1);
 hal::DMAChannel irRxDmaChannel(&dma1, hal::dma::Channel::Channel5);
 hal::Timer irRxTimer(TIM3);
+hal::Timer irTxCarrierTimer(TIM17);
+hal::Timer irTxSignalTimer(TIM16);
 
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
 
