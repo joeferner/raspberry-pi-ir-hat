@@ -17,7 +17,7 @@ C_SOURCES = \
   libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_pwr.c \
   src/current_sensor.c \
   src/debug.c \
-  src/firmware_it.c \
+  src/main_it.c \
   src/ir_rx.c \
   src/ir_tx.c \
   src/rpi.c \
@@ -27,7 +27,7 @@ C_SOURCES = \
   src/usart_it.c
 
 CPP_SOURCES = \
-  src/firmware.cpp \
+  src/main.cpp \
   src/setup.cpp \
   src/hal/Bus.cpp \
   src/hal/NVICHal.cpp \
