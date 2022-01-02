@@ -2,7 +2,7 @@
 #define _USART_HPP_
 
 #include "RCCHal.hpp"
-#include "config.h"
+#include "main.h"
 
 namespace hal {
 namespace usart {

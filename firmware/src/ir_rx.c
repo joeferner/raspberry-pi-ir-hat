@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "config.h"
+#include "main.h"
 #include "time.h"
 
 typedef uint16_t tim_value;

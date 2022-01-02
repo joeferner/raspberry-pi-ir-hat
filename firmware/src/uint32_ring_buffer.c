@@ -2,7 +2,7 @@
 
 #include <cmsis_gcc.h>
 
-#include "config.h"
+#include "main.h"
 
 void uint32_ring_buffer_init(uint32_ring_buffer* rb, uint32_t* buffer, size_t buffer_count) {
   rb->buffer = buffer;

@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 
-#include "config.h"
+#include "main.h"
 #include "debug.h"
 #include "uint32_ring_buffer.h"
 
@@ -103,10 +103,10 @@ void ir_tx_irq() {
 }
 
 static void ir_tx_enable_gpio(bool enable) {
-  LL_GPIO_SetPinMode(IR_OUT_PORT, IR_OUT_PIN, enable ? LL_GPIO_MODE_ALTERNATE : LL_GPIO_MODE_OUTPUT);
+  LL_GPIO_SetPinMode(GPIOB, LL_GPIO_PIN_9, enable ? LL_GPIO_MODE_ALTERNATE : LL_GPIO_MODE_OUTPUT);
   if (enable) {
-    LL_GPIO_SetOutputPin(IR_OUT_PORT, IR_OUT_PIN);
+    LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_9);
   } else {
-    LL_GPIO_ResetOutputPin(IR_OUT_PORT, IR_OUT_PIN);
+    LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_9);
   }
 }

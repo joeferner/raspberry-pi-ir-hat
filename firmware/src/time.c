@@ -1,6 +1,6 @@
 #include "time.h"
 
-#include "config.h"
+#include "main.h"
 
 static volatile uint32_t time_tick = 0;
 static volatile uint32_t time_tick_freq = 1;

@@ -1,6 +1,6 @@
 #include "usart_it.h"
 
-#include "config.h"
+#include "main.h"
 
 void usart_it_init(usart_it *it, USART_TypeDef *usart, uint8_t *tx_buffer, size_t tx_buffer_length, uint8_t *rx_buffer,
                    size_t rx_buffer_length) {

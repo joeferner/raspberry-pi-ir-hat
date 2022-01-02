@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "config.h"
+#include "main.h"
 #include "usart_it.h"
 
 #define RX_BUFFER_LEN DEBUG_RX_BUFFER_LEN

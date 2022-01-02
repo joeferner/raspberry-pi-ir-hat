@@ -1,7 +1,7 @@
 #ifndef _DMA_HPP_
 #define _DMA_HPP_
 
-#include "config.h"
+#include "main.h"
 
 namespace hal {
 namespace dma {

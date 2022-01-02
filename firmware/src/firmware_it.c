@@ -1,4 +1,4 @@
-#include "config.h"
+#include "main.h"
 #include "current_sensor.h"
 #include "debug.h"
 #include "ir_rx.h"

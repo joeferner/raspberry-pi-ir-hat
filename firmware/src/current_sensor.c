@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#include "config.h"
+#include "main.h"
 
 #define VREF_mV (3300U)
 #define VREF_DECAY 10

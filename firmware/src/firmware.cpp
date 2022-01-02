@@ -1,7 +1,7 @@
 #include <memory.h>
 #include <stdlib.h>
 
-#include "config.h"
+#include "main.h"
 #include "current_sensor.h"
 #include "debug.h"
 #include "hal/Bus.hpp"
@@ -44,13 +44,13 @@ hal::Timer irRxTimer(TIM3);
 
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
 
-typedef void (*send_string)(const char *);
+typedef void (*send_string)(const char*);
 
 void setupSystemClock();
 
 void loop();
 
-void process_rx(char *data, send_string send_string);
+void process_rx(char* data, send_string send_string);
 
 int main() {
   setup();
@@ -67,15 +67,15 @@ void loop() {
   current_sensor_loop();
 }
 
-void debug_rx(char *data) {
+void debug_rx(char* data) {
   process_rx(data, debug_send_string);
 }
 
-void rpi_rx(char *data) {
+void rpi_rx(char* data) {
   process_rx(data, rpi_send_string);
 }
 
-void process_rx(char *data, send_string send_string) {
+void process_rx(char* data, send_string send_string) {
   if (strcmp(data, "+iwdg") == 0) {
     send_string("+OK\n");
     while (1)
@@ -88,8 +88,8 @@ void process_rx(char *data, send_string send_string) {
     ir_tx_reset(carrier_freq);
     send_string("+OK\n");
   } else if (strncmp(data, "+s", 2) == 0) {
-    char *pon = data + 2;
-    char *p = strchr(pon, ',');
+    char* pon = data + 2;
+    char* p = strchr(pon, ',');
     if (p == NULL) {
       send_string("-ERR missing comma\n");
       return;
@@ -136,9 +136,15 @@ void ir_rx_received(uint32_t value) {
 }
 
 void current_sensor_overrun_error() {
-  const char *str = "-ERR current sensor overrun\n";
+  const char* str = "-ERR current sensor overrun\n";
   rpi_send_string(str);
   debug_send_string(str);
+}
+
+void Error_Handler(void) {
+  __disable_irq();
+  while (1) {
+  }
 }
 
 #ifdef __cplusplus

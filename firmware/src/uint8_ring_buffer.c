@@ -1,6 +1,6 @@
 #include "uint8_ring_buffer.h"
 
-#include "config.h"
+#include "main.h"
 
 #define GUARD_CHAR '?'
 

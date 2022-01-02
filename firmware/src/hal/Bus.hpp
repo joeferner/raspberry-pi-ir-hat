@@ -1,7 +1,7 @@
 #ifndef _BUS_HPP_
 #define _BUS_HPP_
 
-#include "config.h"
+#include "main.h"
 
 namespace hal {
 

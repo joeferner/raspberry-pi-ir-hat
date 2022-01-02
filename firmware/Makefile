@@ -5,7 +5,6 @@ OPT = -Og
 BUILD_DIR = target
 
 C_SOURCES = \
-  src/stm32/main.c \
   src/stm32/system_stm32g0xx.c \
   libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_utils.c \
   libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_exti.c \
@@ -75,7 +74,6 @@ AS_INCLUDES =
 
 C_INCLUDES =  \
   -Isrc \
-  -Isrc/stm32 \
   -Ilibs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Inc \
   -Ilibs/STM32CubeG0/Drivers/CMSIS/Device/ST/STM32G0xx/Include \
   -Ilibs/STM32CubeG0/Drivers/CMSIS/Include

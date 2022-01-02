@@ -1,7 +1,7 @@
 #ifndef _CLOCKS_HPP_
 #define _CLOCKS_HPP_
 
-#include "config.h"
+#include "main.h"
 
 namespace hal {
 class Clocks {

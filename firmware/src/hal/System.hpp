@@ -1,7 +1,7 @@
 #ifndef _SYSTEM_HPP_
 #define _SYSTEM_HPP_
 
-#include "config.h"
+#include "main.h"
 
 namespace hal {
 

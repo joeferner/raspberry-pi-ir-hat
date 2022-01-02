@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "config.h"
+#include "main.h"
 #include "uint8_ring_buffer.h"
 
 typedef struct {

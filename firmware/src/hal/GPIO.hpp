@@ -1,7 +1,7 @@
 #ifndef _GPIO_HPP_
 #define _GPIO_HPP_
 
-#include "config.h"
+#include "main.h"
 
 namespace hal {
 

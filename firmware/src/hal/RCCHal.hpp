@@ -1,7 +1,7 @@
 #ifndef _RCC_HPP_
 #define _RCC_HPP_
 
-#include "config.h"
+#include "main.h"
 
 namespace hal {
 

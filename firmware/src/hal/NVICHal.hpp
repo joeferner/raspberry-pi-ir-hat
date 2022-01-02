@@ -1,7 +1,7 @@
 #ifndef _NVIC_HPP_
 #define _NVIC_HPP_
 
-#include "config.h"
+#include "main.h"
 
 namespace hal {
 

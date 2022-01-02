@@ -1,7 +1,7 @@
 #ifndef _TIMER_HPP_
 #define _TIMER_HPP_
 
-#include "config.h"
+#include "main.h"
 
 namespace hal {
 namespace timer {
