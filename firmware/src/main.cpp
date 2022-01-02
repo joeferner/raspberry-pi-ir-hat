@@ -1,7 +1,8 @@
+#include "main.h"
+
 #include <memory.h>
 #include <stdlib.h>
 
-#include "main.h"
 #include "current_sensor.h"
 #include "debug.h"
 #include "hal/Bus.hpp"

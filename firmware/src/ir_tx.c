@@ -2,8 +2,8 @@
 
 #include <stdbool.h>
 
-#include "main.h"
 #include "debug.h"
+#include "main.h"
 #include "uint32_ring_buffer.h"
 
 static uint32_t ir_tx_buffer[50];

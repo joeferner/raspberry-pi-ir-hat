@@ -44,7 +44,7 @@ const void USART::setBaudRate(const RCCHal *rcc, uint32_t baudRate) const {
     clock = rcc->getUSART1ClockFrequency();
   } else if (this->usart == USART2) {
 #if defined(RCC_CCIPR_USART2SEL)
-    todo clock = LL_RCC_GetUSARTClockFreq(LL_RCC_USART2_CLKSOURCE);
+    clock = rcc->getUSART2ClockFrequency();
 #else
     clock = rcc->getPCLK1Frequency();
 #endif
@@ -52,37 +52,29 @@ const void USART::setBaudRate(const RCCHal *rcc, uint32_t baudRate) const {
 #if defined(USART3)
   else if (this->usart == USART3) {
 #if defined(RCC_CCIPR_USART3SEL)
-    todo clock = LL_RCC_GetUSARTClockFreq(LL_RCC_USART3_CLKSOURCE);
+    clock = rcc->getUSART3ClockFrequency();
 #else
-    /* USART3 clock is PCLK */
-    LL_RCC_GetSystemClocksFreq(&RCC_Clocks);
-    clock = RCC_Clocks.PCLK1_Frequency;
+    clock = rcc->getPCLK1Frequency();
 #endif
   }
 #endif /* USART3 */
 #if defined(USART4)
   else if (this->usart == USART4) {
 #if defined(RCC_CCIPR_USART4SEL)
-    todo clock = LL_RCC_GetUSARTClockFreq(LL_RCC_USART4_CLKSOURCE);
+    clock = rcc->getUSART4ClockFrequency();
 #else
-    /* USART4 clock is PCLK1 */
-    todo LL_RCC_GetSystemClocksFreq(&RCC_Clocks);
-    clock = RCC_Clocks.PCLK1_Frequency;
+    clock = rcc->getPCLK1Frequency();
 #endif /* RCC_CCIPR_USART4SEL */
   }
 #endif /* USART4 */
 #if defined(USART5)
   else if (this->usart == USART5) {
-    /* USART5 clock is PCLK1 */
-    todo LL_RCC_GetSystemClocksFreq(&RCC_Clocks);
-    clock = RCC_Clocks.PCLK1_Frequency;
+    clock = rcc->getPCLK1Frequency();
   }
 #endif /* USART5 */
 #if defined(USART6)
   else if (this->usart == USART6) {
-    /* USART6 clock is PCLK1 */
-    todo LL_RCC_GetSystemClocksFreq(&RCC_Clocks);
-    clock = RCC_Clocks.PCLK1_Frequency;
+    clock = rcc->getPCLK1Frequency();
   }
 #endif /* USART6 */
   else {

@@ -1,4 +1,3 @@
-#include "main.h"
 #include "current_sensor.h"
 #include "debug.h"
 #include "hal/Bus.hpp"
@@ -12,6 +11,7 @@
 #include "hal/USART.hpp"
 #include "ir_rx.h"
 #include "ir_tx.h"
+#include "main.h"
 #include "rpi.h"
 #include "time.h"
 
