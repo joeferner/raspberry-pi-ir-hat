@@ -14,21 +14,20 @@ C_SOURCES = \
   libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_dma.c \
   libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_tim.c \
   libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_usart.c \
-  libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_pwr.c \
-  src/current_sensor.c \
-  src/debug.c \
-  src/main_it.c \
-  src/ir_rx.c \
-  src/ir_tx.c \
-  src/rpi.c \
-  src/time.c \
-  src/uint8_ring_buffer.c \
-  src/uint32_ring_buffer.c \
-  src/usart_it.c
+  libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_pwr.c
 
 CPP_SOURCES = \
   src/main.cpp \
   src/setup.cpp \
+  src/ir_rx.cpp \
+  src/debug.cpp \
+  src/main_it.cpp \
+  src/ir_tx.cpp \
+  src/rpi.cpp \
+  src/uint8_ring_buffer.cpp \
+  src/uint32_ring_buffer.cpp \
+  src/usart_it.cpp \
+  src/current_sensor.cpp \
   src/hal/Bus.cpp \
   src/hal/NVIC.cpp \
   src/hal/RCC.cpp \

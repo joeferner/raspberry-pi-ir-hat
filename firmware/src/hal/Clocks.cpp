@@ -3,6 +3,15 @@
 namespace hal {
 const void Clocks::init1msTick(uint32_t hclkFrequency) const {
   LL_Init1msTick(hclkFrequency);
+  SystemCoreClockUpdate();
+}
+
+const uint32_t Clocks::getTickCount() const {
+  return this->tickCount;
+}
+
+const void Clocks::incrementTick() {
+  this->tickCount++;
 }
 
 const void Clocks::setSystemCoreClock(uint32_t hclkFrequency) const {

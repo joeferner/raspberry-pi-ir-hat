@@ -1,4 +1,4 @@
-#include "current_sensor.h"
+#include "current_sensor.hpp"
 
 #include <stdbool.h>
 #include <stddef.h>

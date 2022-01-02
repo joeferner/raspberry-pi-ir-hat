@@ -1,10 +1,10 @@
-#include "ir_rx.h"
+#include "ir_rx.hpp"
 
 #include <stdlib.h>
 #include <string.h>
 
 #include "main.h"
-#include "time.h"
+#include "globals.hpp"
 
 typedef uint16_t tim_value;
 
@@ -50,7 +50,7 @@ void ir_rx_loop() {
     }
 
     tim_value t = value - last_value;
-    uint32_t current_tick = time_get();
+    uint32_t current_tick = clocks.getTickCount();
     if ((current_tick - last_tick) < 1000) {  // prevent timer overflows
       ir_rx_received(t);
     }

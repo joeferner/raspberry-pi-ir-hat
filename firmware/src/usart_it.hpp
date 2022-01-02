@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "main.h"
-#include "uint8_ring_buffer.h"
+#include "uint8_ring_buffer.hpp"
 
 typedef struct {
   USART_TypeDef *usart;

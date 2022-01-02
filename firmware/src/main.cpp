@@ -3,8 +3,8 @@
 #include <memory.h>
 #include <stdlib.h>
 
-#include "current_sensor.h"
-#include "debug.h"
+#include "current_sensor.hpp"
+#include "debug.hpp"
 #include "hal/Bus.hpp"
 #include "hal/Clocks.hpp"
 #include "hal/DMA.hpp"
@@ -15,9 +15,9 @@
 #include "hal/System.hpp"
 #include "hal/Timer.hpp"
 #include "hal/USART.hpp"
-#include "ir_rx.h"
-#include "ir_tx.h"
-#include "rpi.h"
+#include "ir_rx.hpp"
+#include "ir_tx.hpp"
+#include "rpi.hpp"
 #include "setup.hpp"
 #include "time.h"
 

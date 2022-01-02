@@ -19,6 +19,7 @@ extern "C" {
 #include "stm32g0xx_ll_tim.h"
 #include "stm32g0xx_ll_usart.h"
 #include "stm32g0xx_ll_utils.h"
+#include "hal/Clocks.hpp"
 
 #if defined(USE_FULL_ASSERT)
 #include "stm32_assert.h"

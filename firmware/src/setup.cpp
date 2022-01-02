@@ -1,5 +1,5 @@
-#include "current_sensor.h"
-#include "debug.h"
+#include "current_sensor.hpp"
+#include "debug.hpp"
 #include "hal/Bus.hpp"
 #include "hal/Clocks.hpp"
 #include "hal/DMA.hpp"
@@ -10,11 +10,10 @@
 #include "hal/System.hpp"
 #include "hal/Timer.hpp"
 #include "hal/USART.hpp"
-#include "ir_rx.h"
-#include "ir_tx.h"
+#include "ir_rx.hpp"
+#include "ir_tx.hpp"
 #include "main.h"
-#include "rpi.h"
-#include "time.h"
+#include "rpi.hpp"
 
 extern hal::System halSystem;
 extern hal::Clocks clocks;
@@ -67,7 +66,6 @@ void setup() {
   setupIWDG();
   setupADC1();
 
-  time_setup();
   debug_setup();
   rpi_setup();
   ir_rx_setup();

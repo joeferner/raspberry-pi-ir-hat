@@ -1,10 +1,10 @@
-#include "ir_tx.h"
+#include "ir_tx.hpp"
 
 #include <stdbool.h>
 
-#include "debug.h"
+#include "debug.hpp"
 #include "main.h"
-#include "uint32_ring_buffer.h"
+#include "uint32_ring_buffer.hpp"
 
 static uint32_t ir_tx_buffer[50];
 static uint32_ring_buffer ir_tx_ring_buffer;

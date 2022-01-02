@@ -1,10 +1,10 @@
-#include "current_sensor.h"
-#include "debug.h"
-#include "ir_rx.h"
-#include "ir_tx.h"
+#include "current_sensor.hpp"
+#include "debug.hpp"
+#include "ir_rx.hpp"
+#include "ir_tx.hpp"
 #include "main.h"
-#include "rpi.h"
-#include "time.h"
+#include "rpi.hpp"
+#include "globals.hpp"
 
 void NMI_Handler() {
 }
@@ -21,7 +21,7 @@ void PendSV_Handler() {
 }
 
 void SysTick_Handler() {
-  time_increment_tick();
+  clocks.incrementTick();
 }
 
 void DMA1_Channel1_IRQHandler() {
