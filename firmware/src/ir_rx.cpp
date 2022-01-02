@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "main.h"
 #include "globals.hpp"
+#include "main.h"
 
 typedef uint16_t tim_value;
 

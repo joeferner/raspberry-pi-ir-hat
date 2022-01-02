@@ -8,10 +8,6 @@
 extern "C" {
 #endif
 
-void debug_setup();
-
-void debug_loop();
-
 void debug_send_string(const char *str);
 
 void debug_send_uint32(uint32_t value);

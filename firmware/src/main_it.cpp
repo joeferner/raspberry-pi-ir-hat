@@ -1,10 +1,10 @@
 #include "current_sensor.hpp"
 #include "debug.hpp"
+#include "globals.hpp"
 #include "ir_rx.hpp"
 #include "ir_tx.hpp"
 #include "main.h"
 #include "rpi.hpp"
-#include "globals.hpp"
 
 void NMI_Handler() {
 }

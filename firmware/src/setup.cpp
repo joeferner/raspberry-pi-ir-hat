@@ -1,5 +1,6 @@
 #include "current_sensor.hpp"
 #include "debug.hpp"
+#include "globals.hpp"
 #include "hal/Bus.hpp"
 #include "hal/Clocks.hpp"
 #include "hal/DMA.hpp"
@@ -66,7 +67,7 @@ void setup() {
   setupIWDG();
   setupADC1();
 
-  debug_setup();
+  debugUsart.setup();
   rpi_setup();
   ir_rx_setup();
   ir_tx_setup();

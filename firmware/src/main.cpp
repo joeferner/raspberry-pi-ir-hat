@@ -17,6 +17,7 @@
 #include "hal/USART.hpp"
 #include "ir_rx.hpp"
 #include "ir_tx.hpp"
+#include "peripheral/USART.hpp"
 #include "rpi.hpp"
 #include "setup.hpp"
 #include "time.h"
@@ -47,6 +48,8 @@ hal::Timer irTxCarrierTimer(TIM17);
 hal::Timer irTxSignalTimer(TIM16);
 hal::IWDGHal iwdg;
 
+peripheral::USART debugUsart(&usart1);
+
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
 
 typedef void (*send_string)(const char*);
@@ -66,7 +69,7 @@ int main() {
 
 void loop() {
   LL_IWDG_ReloadCounter(IWDG);
-  debug_loop();
+  debugUsart.loop();
   rpi_loop();
   ir_rx_loop();
   current_sensor_loop();

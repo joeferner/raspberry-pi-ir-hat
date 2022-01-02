@@ -2,7 +2,8 @@
 
 #include "main.h"
 
-void usart_it_init(usart_it *it, USART_TypeDef *usart, uint8_t *tx_buffer, size_t tx_buffer_length, uint8_t *rx_buffer,
+// TODO remove
+void usart_it_init(usart_it* it, USART_TypeDef* usart, uint8_t* tx_buffer, size_t tx_buffer_length, uint8_t* rx_buffer,
                    size_t rx_buffer_length) {
   it->usart = usart;
   uint8_ring_buffer_init(&it->tx_buffer, tx_buffer, tx_buffer_length);
@@ -12,7 +13,7 @@ void usart_it_init(usart_it *it, USART_TypeDef *usart, uint8_t *tx_buffer, size_
   LL_USART_EnableIT_ERROR(it->usart);
 }
 
-void usart_it_tx(usart_it *it, const uint8_t *data, size_t data_len) {
+void usart_it_tx(usart_it* it, const uint8_t* data, size_t data_len) {
   for (size_t i = 0; i < data_len; i++) {
     if (uint8_ring_buffer_is_full(&it->tx_buffer)) {
       LL_USART_EnableIT_TXE_TXFNF(it->usart);
@@ -23,15 +24,15 @@ void usart_it_tx(usart_it *it, const uint8_t *data, size_t data_len) {
   LL_USART_EnableIT_TXE_TXFNF(it->usart);
 }
 
-size_t usart_it_rx_peek(usart_it *it, uint32_t offset, uint8_t *buffer, size_t read_len) {
+size_t usart_it_rx_peek(usart_it* it, uint32_t offset, uint8_t* buffer, size_t read_len) {
   return uint8_ring_buffer_peek(&it->rx_buffer, offset, buffer, read_len);
 }
 
-void usart_it_rx_skip(usart_it *it, size_t skip) {
+void usart_it_rx_skip(usart_it* it, size_t skip) {
   uint8_ring_buffer_skip(&it->rx_buffer, skip);
 }
 
-void usart_irq(usart_it *it) {
+void usart_irq(usart_it* it) {
   if (LL_USART_IsActiveFlag_TXE_TXFNF(it->usart)) {
     if (uint8_ring_buffer_length(&it->tx_buffer) == 0) {
       LL_USART_DisableIT_TXE_TXFNF(it->usart);

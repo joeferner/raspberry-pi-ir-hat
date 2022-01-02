@@ -5,11 +5,12 @@
 
 namespace hal {
 class Clocks {
-private:
+ private:
   volatile uint32_t tickCount;
 
-public:
-  Clocks() : tickCount(0) {}
+ public:
+  Clocks() : tickCount(0) {
+  }
 
   const void init1msTick(uint32_t hclkFrequency) const;
   const uint32_t getTickCount() const;

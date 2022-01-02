@@ -1,5 +1,5 @@
-#ifndef _USART_HPP_
-#define _USART_HPP_
+#ifndef _HAL_USART_HPP_
+#define _HAL_USART_HPP_
 
 #include "RCC.hpp"
 #include "main.h"

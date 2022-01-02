@@ -37,7 +37,8 @@ CPP_SOURCES = \
   src/hal/GPIO.cpp \
   src/hal/Timer.cpp \
   src/hal/DMA.cpp \
-  src/hal/IWDG.cpp
+  src/hal/IWDG.cpp \
+  src/peripheral/USART.cpp
 
 ASM_SOURCES = \
   src/startup_stm32g031xx.s
@@ -97,21 +98,25 @@ LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BU
 
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
 
+MKDIR_P ?= mkdir -p
 
-OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
+OBJECTS = $(addprefix $(BUILD_DIR)/,$(C_SOURCES:.c=.o))
 vpath %.c $(sort $(dir $(C_SOURCES)))
-OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(CPP_SOURCES:.cpp=.o)))
+OBJECTS += $(addprefix $(BUILD_DIR)/,$(CPP_SOURCES:.cpp=.o))
 vpath %.cpp $(sort $(dir $(CPP_SOURCES)))
-OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
+OBJECTS += $(addprefix $(BUILD_DIR)/,$(ASM_SOURCES:.s=.o))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
 $(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
-	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+	$(MKDIR_P) $(dir $@)
+	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(<:.c=.lst) $< -o $@
 
 $(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR) 
-	$(CC) -c $(CFLAGS) $(CPPFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
+	$(MKDIR_P) $(dir $@)
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(<:.cpp=.lst) $< -o $@
 
 $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
+	$(MKDIR_P) $(dir $@)
 	$(AS) -c $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
@@ -135,9 +140,10 @@ print-largest: $(BUILD_DIR)/firmware.elf | $(BUILD_DIR)
 
 format:
 	clang-format --verbose -i --style=file \
-    src/*.c src/*.h \
+    src/*.h \
     src/*.cpp src/*.hpp \
-    src/hal/*.cpp src/hal/*.hpp
+    src/hal/*.cpp src/hal/*.hpp \
+    src/peripheral/*.cpp src/peripheral/*.hpp
 
 serialport-list:
 	scripts/serialport-list.sh
