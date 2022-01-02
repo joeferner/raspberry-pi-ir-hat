@@ -46,6 +46,7 @@ enum class IRQnType : int {
 class NVICHal {
  public:
   void setPriority(nvic::IRQnType type, uint32_t priority);
+  void enableInterrupt(nvic::IRQnType type);
 };
 
 }  // namespace hal

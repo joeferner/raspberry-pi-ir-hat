@@ -5,26 +5,35 @@
 #include "current_sensor.h"
 #include "debug.h"
 #include "hal/Bus.hpp"
+#include "hal/Clocks.hpp"
+#include "hal/GPIO.hpp"
 #include "hal/NVICHal.hpp"
 #include "hal/RCCHal.hpp"
+#include "hal/USART.hpp"
 #include "ir_rx.h"
 #include "ir_tx.h"
 #include "rpi.h"
+#include "setup.hpp"
 #include "time.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+hal::Clocks clocks;
 hal::Bus bus;
 hal::NVICHal nvic;
 hal::RCCHal rcc;
+hal::GPIO resetPin(GPIOF, 2);
+hal::GPIO irInLedPin(GPIOA, 7);
+hal::GPIO irOut(GPIOB, 9);
+hal::GPIO usart1Rx(GPIOB, 7);
+hal::GPIO usart1Tx(GPIOB, 6);
+hal::USART usart1(USART1);
 
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
 
 typedef void (*send_string)(const char *);
-
-void setup();
 
 void setupSystemClock();
 

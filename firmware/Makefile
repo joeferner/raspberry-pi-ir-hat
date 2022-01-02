@@ -32,7 +32,10 @@ CPP_SOURCES = \
   src/setup.cpp \
   src/hal/Bus.cpp \
   src/hal/NVICHal.cpp \
-  src/hal/RCCHal.cpp
+  src/hal/RCCHal.cpp \
+  src/hal/Clocks.cpp \
+  src/hal/USART.cpp \
+  src/hal/GPIO.cpp
 
 ASM_SOURCES = \
   src/startup_stm32g031xx.s
