@@ -9,8 +9,9 @@
 #include "hal/Clocks.hpp"
 #include "hal/DMA.hpp"
 #include "hal/GPIO.hpp"
-#include "hal/NVICHal.hpp"
-#include "hal/RCCHal.hpp"
+#include "hal/IWDG.hpp"
+#include "hal/NVIC.hpp"
+#include "hal/RCC.hpp"
 #include "hal/System.hpp"
 #include "hal/Timer.hpp"
 #include "hal/USART.hpp"
@@ -44,6 +45,7 @@ hal::DMAChannel irRxDmaChannel(&dma1, hal::dma::Channel::Channel5);
 hal::Timer irRxTimer(TIM3);
 hal::Timer irTxCarrierTimer(TIM17);
 hal::Timer irTxSignalTimer(TIM16);
+hal::IWDGHal iwdg;
 
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
 

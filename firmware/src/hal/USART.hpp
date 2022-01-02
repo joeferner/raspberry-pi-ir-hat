@@ -1,7 +1,7 @@
 #ifndef _USART_HPP_
 #define _USART_HPP_
 
-#include "RCCHal.hpp"
+#include "RCC.hpp"
 #include "main.h"
 
 namespace hal {

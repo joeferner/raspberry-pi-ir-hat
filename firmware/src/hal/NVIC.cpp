@@ -1,4 +1,4 @@
-#include "NVICHal.hpp"
+#include "NVIC.hpp"
 
 namespace hal {
 

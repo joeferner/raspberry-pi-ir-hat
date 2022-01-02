@@ -1,4 +1,4 @@
-#include "RCCHal.hpp"
+#include "RCC.hpp"
 
 namespace hal {
 

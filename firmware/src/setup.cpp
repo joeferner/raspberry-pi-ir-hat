@@ -4,8 +4,9 @@
 #include "hal/Clocks.hpp"
 #include "hal/DMA.hpp"
 #include "hal/GPIO.hpp"
-#include "hal/NVICHal.hpp"
-#include "hal/RCCHal.hpp"
+#include "hal/IWDG.hpp"
+#include "hal/NVIC.hpp"
+#include "hal/RCC.hpp"
 #include "hal/System.hpp"
 #include "hal/Timer.hpp"
 #include "hal/USART.hpp"
@@ -34,6 +35,7 @@ extern hal::DMAChannel irRxDmaChannel;
 extern hal::Timer irRxTimer;
 extern hal::Timer irTxCarrierTimer;
 extern hal::Timer irTxSignalTimer;
+extern hal::IWDGHal iwdg;
 
 static const uint32_t HCLK_FREQUENCY = 16000000;
 
@@ -292,14 +294,11 @@ static void setupTIM17() {
 }
 
 static void setupIWDG() {
-  // TODO
-  // LL_IWDG_SetPrescaler(IWDG, LL_IWDG_PRESCALER_4);
-  //   LL_IWDG_SetReloadCounter(IWDG, 4095);
-  //   while (LL_IWDG_IsReady(IWDG) != 1)
-  //   {
-  //   }
-
-  //   LL_IWDG_ReloadCounter(IWDG);
+  iwdg.setPrescaler(hal::iwdg::Prescaler::Prescaler4);
+  iwdg.setReloadCounter(4096);
+  while (!iwdg.isReady()) {
+  }
+  iwdg.reloadCounter();
 }
 
 static void setupADC1() {
