@@ -33,7 +33,9 @@ void debug_loop() {
   }
 }
 
-void debug_send_string(const char *str) { debug_tx((const uint8_t *)str, strlen(str)); }
+void debug_send_string(const char *str) {
+  debug_tx((const uint8_t *)str, strlen(str));
+}
 
 void debug_send_uint32(uint32_t value) {
   char buffer[15];
@@ -41,6 +43,10 @@ void debug_send_uint32(uint32_t value) {
   debug_send_string(buffer);
 }
 
-void debug_tx(const uint8_t *data, size_t data_len) { usart_it_tx(&usart, data, data_len); }
+void debug_tx(const uint8_t *data, size_t data_len) {
+  usart_it_tx(&usart, data, data_len);
+}
 
-void debug_usart_irq() { usart_irq(&usart); }
+void debug_usart_irq() {
+  usart_irq(&usart);
+}

@@ -6,7 +6,8 @@
 namespace hal {
 
 namespace nvic {
-enum class IRQnType : int {
+enum class IRQnType : int
+{
   NonMaskableInt_Irq = NonMaskableInt_IRQn,
   HardFault_Irq = HardFault_IRQn,
   SVC_Irq = SVC_IRQn,
@@ -41,7 +42,7 @@ enum class IRQnType : int {
   USART2_Irq = USART2_IRQn,
   LPUART1_Irq = LPUART1_IRQn
 };
-}
+}  // namespace nvic
 
 class NVICHal {
  public:

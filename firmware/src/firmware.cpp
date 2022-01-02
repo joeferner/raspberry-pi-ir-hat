@@ -11,6 +11,7 @@
 #include "hal/NVICHal.hpp"
 #include "hal/RCCHal.hpp"
 #include "hal/System.hpp"
+#include "hal/Timer.hpp"
 #include "hal/USART.hpp"
 #include "ir_rx.h"
 #include "ir_tx.h"
@@ -39,6 +40,7 @@ hal::USART usart2(USART2);
 hal::GPIO irRxPin(GPIOA, 6);
 hal::DMA dma1(DMA1);
 hal::DMAChannel irRxDmaChannel(&dma1, hal::dma::Channel::Channel5);
+hal::Timer irRxTimer(TIM3);
 
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
 
@@ -65,9 +67,13 @@ void loop() {
   current_sensor_loop();
 }
 
-void debug_rx(char *data) { process_rx(data, debug_send_string); }
+void debug_rx(char *data) {
+  process_rx(data, debug_send_string);
+}
 
-void rpi_rx(char *data) { process_rx(data, rpi_send_string); }
+void rpi_rx(char *data) {
+  process_rx(data, rpi_send_string);
+}
 
 void process_rx(char *data, send_string send_string) {
   if (strcmp(data, "+iwdg") == 0) {

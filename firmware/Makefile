@@ -37,6 +37,7 @@ CPP_SOURCES = \
   src/hal/USART.cpp \
   src/hal/System.cpp \
   src/hal/GPIO.cpp \
+  src/hal/Timer.cpp \
   src/hal/DMA.cpp
 
 ASM_SOURCES = \
@@ -135,7 +136,10 @@ print-largest: $(BUILD_DIR)/firmware.elf | $(BUILD_DIR)
 	nm --print-size --size-sort --radix=d $(BUILD_DIR)/firmware.elf | grep -v ' b '
 
 format:
-	clang-format --verbose -i --style=file src/*.c src/*.h src/*.cpp src/*.hpp
+	clang-format --verbose -i --style=file \
+    src/*.c src/*.h \
+    src/*.cpp src/*.hpp \
+    src/hal/*.cpp src/hal/*.hpp
 
 serialport-list:
 	scripts/serialport-list.sh

@@ -14,7 +14,9 @@ const void RCCHal::enableLSI() const {
   }
 }
 
-const void RCCHal::setAHBPrescaler(rcc::AHBPrescaler prescaler) const { LL_RCC_SetAHBPrescaler((uint32_t)prescaler); }
+const void RCCHal::setAHBPrescaler(rcc::AHBPrescaler prescaler) const {
+  LL_RCC_SetAHBPrescaler((uint32_t)prescaler);
+}
 
 const void RCCHal::setSysClkSource(rcc::SysClkSource source) const {
   LL_RCC_SetSysClkSource((uint32_t)source);
@@ -34,7 +36,9 @@ const void RCCHal::setADCClockSource(rcc::ADCClockSource clockSource) const {
   LL_RCC_SetADCClockSource((uint32_t)clockSource);
 }
 
-const uint32_t RCCHal::getUSART1ClockFrequency() const { return LL_RCC_GetUSARTClockFreq(LL_RCC_USART1_CLKSOURCE); }
+const uint32_t RCCHal::getUSART1ClockFrequency() const {
+  return LL_RCC_GetUSARTClockFreq(LL_RCC_USART1_CLKSOURCE);
+}
 
 const uint32_t RCCHal::getPCLK1Frequency() const {
   LL_RCC_ClocksTypeDef clocks;

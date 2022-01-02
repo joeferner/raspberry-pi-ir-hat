@@ -12,7 +12,9 @@ void uint32_ring_buffer_init(uint32_ring_buffer* rb, uint32_t* buffer, size_t bu
   rb->length = 0;
 }
 
-size_t uint32_ring_buffer_length(uint32_ring_buffer* rb) { return rb->length; }
+size_t uint32_ring_buffer_length(uint32_ring_buffer* rb) {
+  return rb->length;
+}
 
 void uint32_ring_buffer_write(uint32_ring_buffer* rb, uint32_t item) {
   DISABLE_IRQS();

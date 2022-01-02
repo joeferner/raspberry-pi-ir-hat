@@ -15,11 +15,17 @@ void uint8_ring_buffer_init(uint8_ring_buffer* rb, uint8_t* buffer, size_t buffe
   }
 }
 
-size_t uint8_ring_buffer_length(uint8_ring_buffer* rb) { return rb->length; }
+size_t uint8_ring_buffer_length(uint8_ring_buffer* rb) {
+  return rb->length;
+}
 
-bool uint8_ring_buffer_is_empty(uint8_ring_buffer* rb) { return rb->length == 0; }
+bool uint8_ring_buffer_is_empty(uint8_ring_buffer* rb) {
+  return rb->length == 0;
+}
 
-bool uint8_ring_buffer_is_full(uint8_ring_buffer* rb) { return rb->length == rb->buffer_count; }
+bool uint8_ring_buffer_is_full(uint8_ring_buffer* rb) {
+  return rb->length == rb->buffer_count;
+}
 
 void uint8_ring_buffer_write(uint8_ring_buffer* rb, uint8_t item) {
   DISABLE_IRQS();

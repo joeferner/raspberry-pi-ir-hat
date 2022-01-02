@@ -5,6 +5,8 @@ const void System::setIRModulationEnvelopeSignalSource(system::IRModulationEnvel
   LL_SYSCFG_SetIRModEnvelopeSignal((uint32_t)source);
 }
 
-const void System::setIRPolarity(system::IRPolarity polarity) { LL_SYSCFG_SetIRPolarity((uint32_t)polarity); }
+const void System::setIRPolarity(system::IRPolarity polarity) {
+  LL_SYSCFG_SetIRPolarity((uint32_t)polarity);
+}
 
 }  // namespace hal

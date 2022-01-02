@@ -5,7 +5,8 @@
 
 namespace hal {
 namespace dma {
-enum class Channel : uint32_t {
+enum class Channel : uint32_t
+{
   Channel1 = LL_DMA_CHANNEL_1,
   Channel2 = LL_DMA_CHANNEL_2,
   Channel3 = LL_DMA_CHANNEL_3,
@@ -19,7 +20,8 @@ enum class Channel : uint32_t {
 #endif
 };
 
-enum class PeripheralRequest : uint32_t {
+enum class PeripheralRequest : uint32_t
+{
   MEM2MEM = LL_DMAMUX_REQ_MEM2MEM,
   GENERATOR0 = LL_DMAMUX_REQ_GENERATOR0,
   GENERATOR1 = LL_DMAMUX_REQ_GENERATOR1,
@@ -120,38 +122,48 @@ enum class PeripheralRequest : uint32_t {
 #endif
 };
 
-enum class TransferDirection : uint32_t {
+enum class TransferDirection : uint32_t
+{
   PeripheralToMemory = LL_DMA_DIRECTION_PERIPH_TO_MEMORY,
   MemoryToPeripheral = LL_DMA_DIRECTION_MEMORY_TO_PERIPH,
   MemoryToMemory = LL_DMA_DIRECTION_MEMORY_TO_MEMORY
 };
 
-enum class Priority : uint32_t {
+enum class Priority : uint32_t
+{
   Low = LL_DMA_PRIORITY_LOW,
   Medium = LL_DMA_PRIORITY_MEDIUM,
   High = LL_DMA_PRIORITY_HIGH,
   VeryHigh = LL_DMA_PRIORITY_VERYHIGH
 };
 
-enum class Mode : uint32_t { Normal = LL_DMA_MODE_NORMAL, Circular = LL_DMA_MODE_CIRCULAR };
+enum class Mode : uint32_t
+{
+  Normal = LL_DMA_MODE_NORMAL,
+  Circular = LL_DMA_MODE_CIRCULAR
+};
 
-enum class PeripheralIncrementMode : uint32_t {
+enum class PeripheralIncrementMode : uint32_t
+{
   Increment = LL_DMA_PERIPH_INCREMENT,
   NoIncrement = LL_DMA_PERIPH_NOINCREMENT
 };
 
-enum class MemoryIncrementMode : uint32_t {
+enum class MemoryIncrementMode : uint32_t
+{
   Increment = LL_DMA_MEMORY_INCREMENT,
   NoIncrement = LL_DMA_MEMORY_NOINCREMENT
 };
 
-enum class PeripheralSize : uint32_t {
+enum class PeripheralSize : uint32_t
+{
   Byte = LL_DMA_PDATAALIGN_BYTE,
   HalfWord = LL_DMA_PDATAALIGN_HALFWORD,
   Word = LL_DMA_PDATAALIGN_WORD
 };
 
-enum class MemorySize : uint32_t {
+enum class MemorySize : uint32_t
+{
   Byte = LL_DMA_MDATAALIGN_BYTE,
   HalfWord = LL_DMA_MDATAALIGN_HALFWORD,
   Word = LL_DMA_MDATAALIGN_WORD
@@ -166,7 +178,8 @@ class DMA {
   friend class DMAChannel;
 
  public:
-  DMA(DMA_TypeDef *dma) : dma(dma) {}
+  DMA(DMA_TypeDef *dma) : dma(dma) {
+  }
 };
 
 class DMAChannel {
@@ -175,7 +188,8 @@ class DMAChannel {
   dma::Channel channel;
 
  public:
-  DMAChannel(DMA *dma, dma::Channel channel) : dma(dma), channel(channel) {}
+  DMAChannel(DMA *dma, dma::Channel channel) : dma(dma), channel(channel) {
+  }
 
   const void setPeripheralRequest(dma::PeripheralRequest request) const;
   const void setDataTransferDirection(dma::TransferDirection direction) const;

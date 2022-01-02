@@ -27,7 +27,9 @@ size_t usart_it_rx_peek(usart_it *it, uint32_t offset, uint8_t *buffer, size_t r
   return uint8_ring_buffer_peek(&it->rx_buffer, offset, buffer, read_len);
 }
 
-void usart_it_rx_skip(usart_it *it, size_t skip) { uint8_ring_buffer_skip(&it->rx_buffer, skip); }
+void usart_it_rx_skip(usart_it *it, size_t skip) {
+  uint8_ring_buffer_skip(&it->rx_buffer, skip);
+}
 
 void usart_irq(usart_it *it) {
   if (LL_USART_IsActiveFlag_TXE_TXFNF(it->usart)) {

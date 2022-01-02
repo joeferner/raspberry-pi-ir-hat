@@ -6,16 +6,23 @@
 namespace hal {
 
 namespace gpio {
-enum class Mode : uint32_t {
+enum class Mode : uint32_t
+{
   Input = LL_GPIO_MODE_INPUT,
   Output = LL_GPIO_MODE_OUTPUT,
   Alternate = LL_GPIO_MODE_ALTERNATE,
   Analog = LL_GPIO_MODE_ANALOG
 };
 
-enum class Pull : uint32_t { None = LL_GPIO_PULL_NO, Up = LL_GPIO_PULL_UP, Down = LL_GPIO_PULL_DOWN };
+enum class Pull : uint32_t
+{
+  None = LL_GPIO_PULL_NO,
+  Up = LL_GPIO_PULL_UP,
+  Down = LL_GPIO_PULL_DOWN
+};
 
-enum class Alternate : uint32_t {
+enum class Alternate : uint32_t
+{
   Alt0 = LL_GPIO_AF_0,
   Alt1 = LL_GPIO_AF_1,
   Alt2 = LL_GPIO_AF_2,
@@ -26,14 +33,19 @@ enum class Alternate : uint32_t {
   Alt7 = LL_GPIO_AF_7,
 };
 
-enum class Speed : uint32_t {
+enum class Speed : uint32_t
+{
   Low = LL_GPIO_SPEED_FREQ_LOW,
   Medium = LL_GPIO_SPEED_FREQ_MEDIUM,
   High = LL_GPIO_SPEED_FREQ_HIGH,
   VeryHigh = LL_GPIO_SPEED_FREQ_VERY_HIGH
 };
 
-enum class OutputType : uint32_t { PushPull = LL_GPIO_OUTPUT_PUSHPULL, OpenDrain = LL_GPIO_OUTPUT_OPENDRAIN };
+enum class OutputType : uint32_t
+{
+  PushPull = LL_GPIO_OUTPUT_PUSHPULL,
+  OpenDrain = LL_GPIO_OUTPUT_OPENDRAIN
+};
 }  // namespace gpio
 
 class GPIO {
@@ -42,7 +54,8 @@ class GPIO {
   unsigned int pin;
 
  public:
-  GPIO(GPIO_TypeDef* port, int pin) : port(port), pin(pin) {}
+  GPIO(GPIO_TypeDef* port, int pin) : port(port), pin(pin) {
+  }
 
   /**
    * @brief Set the pin mode (input, output, etc)

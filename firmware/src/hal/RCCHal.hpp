@@ -6,7 +6,8 @@
 namespace hal {
 
 namespace rcc {
-enum class AHBPrescaler : uint32_t {
+enum class AHBPrescaler : uint32_t
+{
   DIV_1 = LL_RCC_SYSCLK_DIV_1,
   DIV_2 = LL_RCC_SYSCLK_DIV_2,
   DIV_4 = LL_RCC_SYSCLK_DIV_4,
@@ -18,7 +19,8 @@ enum class AHBPrescaler : uint32_t {
   DIV_512 = LL_RCC_SYSCLK_DIV_512
 };
 
-enum class SysClkSource : uint32_t {
+enum class SysClkSource : uint32_t
+{
   HSI = LL_RCC_SYS_CLKSOURCE_HSI,
   HSE = LL_RCC_SYS_CLKSOURCE_HSE,
   PLL = LL_RCC_SYS_CLKSOURCE_PLL,
@@ -26,7 +28,8 @@ enum class SysClkSource : uint32_t {
   LSE = LL_RCC_SYS_CLKSOURCE_LSE
 };
 
-enum class APB1Prescaler : uint32_t {
+enum class APB1Prescaler : uint32_t
+{
   DIV_1 = LL_RCC_APB1_DIV_1,
   DIV_2 = LL_RCC_APB1_DIV_2,
   DIV_4 = LL_RCC_APB1_DIV_4,
@@ -34,14 +37,16 @@ enum class APB1Prescaler : uint32_t {
   DIV_16 = LL_RCC_APB1_DIV_16
 };
 
-enum class USART1ClockSource : uint32_t {
+enum class USART1ClockSource : uint32_t
+{
   PCLK1 = LL_RCC_USART1_CLKSOURCE_PCLK1,
   SYSCLK = LL_RCC_USART1_CLKSOURCE_SYSCLK,
   HSI = LL_RCC_USART1_CLKSOURCE_HSI,
   LSE = LL_RCC_USART1_CLKSOURCE_LSE,
 };
 
-enum class ADCClockSource : uint32_t {
+enum class ADCClockSource : uint32_t
+{
   PLL = LL_RCC_ADC_CLKSOURCE_PLL,
   SYSCLK = LL_RCC_ADC_CLKSOURCE_SYSCLK,
   HSI = LL_RCC_ADC_CLKSOURCE_HSI

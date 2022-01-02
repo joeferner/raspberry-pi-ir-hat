@@ -8,6 +8,7 @@
 #include "hal/NVICHal.hpp"
 #include "hal/RCCHal.hpp"
 #include "hal/System.hpp"
+#include "hal/Timer.hpp"
 #include "hal/USART.hpp"
 #include "ir_rx.h"
 #include "ir_tx.h"
@@ -30,6 +31,7 @@ extern hal::GPIO usart2TxPin;
 extern hal::USART usart2;
 extern hal::GPIO irRxPin;
 extern hal::DMAChannel irRxDmaChannel;
+extern hal::Timer irRxTimer;
 
 static const uint32_t HCLK_FREQUENCY = 16000000;
 
@@ -205,17 +207,15 @@ void setupTIM3() {
   nvic.setPriority(hal::nvic::IRQnType::TIM3_Irq, 0);
   nvic.enableInterrupt(hal::nvic::IRQnType::TIM3_Irq);
 
-  // TODO
-  // TIM_InitStruct.Prescaler = 0;
-  // TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
-  // TIM_InitStruct.Autoreload = 65535;
-  // TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
-  // LL_TIM_Init(TIM3, &TIM_InitStruct);
-  // LL_TIM_DisableARRPreload(TIM3);
-  // LL_TIM_SetTriggerOutput(TIM3, LL_TIM_TRGO_RESET);
-  // LL_TIM_DisableMasterSlaveMode(TIM3);
-  // LL_TIM_IC_SetActiveInput(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_ACTIVEINPUT_DIRECTTI);
-  // LL_TIM_IC_SetPrescaler(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_ICPSC_DIV1);
-  // LL_TIM_IC_SetFilter(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_IC_FILTER_FDIV1);
-  // LL_TIM_IC_SetPolarity(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_IC_POLARITY_BOTHEDGE);
+  irRxTimer.setCounterMode(hal::timer::CounterMode::Up);
+  irRxTimer.setClockDivision(hal::timer::ClockDivision::DIV_1);
+  irRxTimer.setAutoReload(65535);
+  irRxTimer.setPrescaler(0);
+  irRxTimer.disableAutoReloadPreload();
+  irRxTimer.setTriggerOutput(hal::timer::TriggerOutput::Reset);
+  irRxTimer.disableMasterSlaveMode();
+  irRxTimer.setInputCaptureActiveInput(hal::timer::Channel::Channel1, hal::timer::InputCaptureActiveInput::DirectTI);
+  irRxTimer.setInputCapturePrescaler(hal::timer::Channel::Channel1, hal::timer::InputCapturePrescaler::DIV_1);
+  irRxTimer.setInputCaptureFilter(hal::timer::Channel::Channel1, hal::timer::InputCaptureFilter::FDIV1);
+  irRxTimer.setInputCapturePolarity(hal::timer::Channel::Channel1, hal::timer::InputCapturePolarity::BothEdges);
 }

@@ -10,6 +10,10 @@ void time_setup() {
   SystemCoreClockUpdate();
 }
 
-uint32_t time_get() { return time_tick; }
+uint32_t time_get() {
+  return time_tick;
+}
 
-void time_increment_tick() { time_tick += time_tick_freq; }
+void time_increment_tick() {
+  time_tick += time_tick_freq;
+}

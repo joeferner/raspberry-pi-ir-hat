@@ -66,7 +66,9 @@ void ir_tx_send() {
   }
 }
 
-size_t ir_tx_buffer_length() { return uint32_ring_buffer_length(&ir_tx_ring_buffer); }
+size_t ir_tx_buffer_length() {
+  return uint32_ring_buffer_length(&ir_tx_ring_buffer);
+}
 
 void ir_tx_stop() {
   ir_tx_sending = false;

@@ -16,7 +16,8 @@
 #define LOCAL_SEQUENCE_COUNT 50
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
-typedef enum {
+typedef enum
+{
   CurrentReadRank_Reference,
   CurrentReadRank_Current1,
   CurrentReadRank_Current0,
@@ -95,15 +96,25 @@ void current_sensor_loop() {
   }
 }
 
-void current_sensor_end_of_conversion() { end_of_conversion = true; }
+void current_sensor_end_of_conversion() {
+  end_of_conversion = true;
+}
 
-void current_sensor_end_of_sequence() { end_of_sequence = true; }
+void current_sensor_end_of_sequence() {
+  end_of_sequence = true;
+}
 
-uint16_t current_sensor_get_ref() { return current_reference_mV; }
+uint16_t current_sensor_get_ref() {
+  return current_reference_mV;
+}
 
-uint16_t current_sensor_get0() { return to_mA(current_0_mV); }
+uint16_t current_sensor_get0() {
+  return to_mA(current_0_mV);
+}
 
-uint16_t current_sensor_get1() { return to_mA(current_1_mV); }
+uint16_t current_sensor_get1() {
+  return to_mA(current_1_mV);
+}
 
 static uint16_t to_mA(uint16_t mV) {
   uint32_t data = MAX(0, mV - 15);

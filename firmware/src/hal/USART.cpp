@@ -10,7 +10,9 @@ const void USART::setStopBits(usart::StopBits stopBits) const {
   LL_USART_SetStopBitsLength(this->usart, (uint32_t)stopBits);
 }
 
-const void USART::setParity(usart::Parity parity) const { LL_USART_SetParity(this->usart, (uint32_t)parity); }
+const void USART::setParity(usart::Parity parity) const {
+  LL_USART_SetParity(this->usart, (uint32_t)parity);
+}
 
 const void USART::setOverSampling(usart::OverSampling oversampling) const {
   LL_USART_SetOverSampling(this->usart, (uint32_t)oversampling);
@@ -32,7 +34,9 @@ const void USART::setPrescaler(usart::Prescaler prescaler) const {
   LL_USART_SetPrescaler(this->usart, (uint32_t)prescaler);
 }
 
-const usart::Prescaler USART::getPrescalerValue() const { return (usart::Prescaler)LL_USART_GetPrescaler(this->usart); }
+const usart::Prescaler USART::getPrescalerValue() const {
+  return (usart::Prescaler)LL_USART_GetPrescaler(this->usart);
+}
 
 const void USART::setBaudRate(const RCCHal *rcc, uint32_t baudRate) const {
   uint32_t clock;
@@ -90,9 +94,13 @@ const void USART::setBaudRate(const RCCHal *rcc, uint32_t baudRate) const {
                        baudRate);
 }
 
-const void USART::disableFIFO() const { LL_USART_DisableFIFO(this->usart); }
+const void USART::disableFIFO() const {
+  LL_USART_DisableFIFO(this->usart);
+}
 
-const void USART::configAsyncMode() const { LL_USART_ConfigAsyncMode(this->usart); }
+const void USART::configAsyncMode() const {
+  LL_USART_ConfigAsyncMode(this->usart);
+}
 
 const void USART::setTXFIFOThreshold(usart::FIFOThreshold threshold) const {
   LL_USART_SetTXFIFOThreshold(this->usart, (uint32_t)threshold);
@@ -108,8 +116,12 @@ const void USART::enable() const {
   }
 }
 
-const bool USART::isTransmitEnableAcknowledgeFlagSet() const { return LL_USART_IsActiveFlag_TEACK(this->usart); }
+const bool USART::isTransmitEnableAcknowledgeFlagSet() const {
+  return LL_USART_IsActiveFlag_TEACK(this->usart);
+}
 
-const bool USART::isReceiveEnableAcknowledgeFlagSet() const { return LL_USART_IsActiveFlag_REACK(this->usart); }
+const bool USART::isReceiveEnableAcknowledgeFlagSet() const {
+  return LL_USART_IsActiveFlag_REACK(this->usart);
+}
 
 }  // namespace hal

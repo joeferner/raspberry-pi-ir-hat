@@ -6,7 +6,8 @@
 namespace hal {
 
 namespace system {
-enum class IRModulationEnvelopeSignalSource : uint32_t {
+enum class IRModulationEnvelopeSignalSource : uint32_t
+{
   IR_TIM16 = LL_SYSCFG_IR_MOD_TIM16,
   IR_USART1 = LL_SYSCFG_IR_MOD_USART1,
 #if defined(LL_SYSCFG_IR_MOD_USART4)
@@ -16,7 +17,11 @@ enum class IRModulationEnvelopeSignalSource : uint32_t {
 #endif
 };
 
-enum class IRPolarity : uint32_t { Inverted = LL_SYSCFG_IR_POL_INVERTED, NotInverted = LL_SYSCFG_IR_POL_NOT_INVERTED };
+enum class IRPolarity : uint32_t
+{
+  Inverted = LL_SYSCFG_IR_POL_INVERTED,
+  NotInverted = LL_SYSCFG_IR_POL_NOT_INVERTED
+};
 }  // namespace system
 
 class System {
