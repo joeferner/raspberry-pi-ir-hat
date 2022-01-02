@@ -73,7 +73,7 @@ class USART {
   USART(USART_TypeDef *usart) : usart(usart){};
   const void setDataWidth(usart::DataWidth dataWidth) const;
   const void setStopBits(usart::StopBits stopBits) const;
-  const void setPartity(usart::Parity parity) const;
+  const void setParity(usart::Parity parity) const;
   const void setOverSampling(usart::OverSampling oversampling) const;
   const usart::OverSampling getOverSampling() const;
   const void setTXFIFOThreshold(usart::FIFOThreshold threshold) const;
@@ -82,7 +82,7 @@ class USART {
   const void setHardwareFlowControl(usart::HardwardFlowControl flowControl) const;
   const void setPrescaler(usart::Prescaler prescaler) const;
   const usart::Prescaler getPrescalerValue() const;
-  const void setBaudRate(const RCCHal &rcc, uint32_t baudRate) const;
+  const void setBaudRate(const RCCHal *rcc, uint32_t baudRate) const;
   const void configAsyncMode() const;
   const void disableFIFO() const;
   const void enable() const;

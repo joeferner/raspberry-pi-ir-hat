@@ -35,7 +35,9 @@ CPP_SOURCES = \
   src/hal/RCCHal.cpp \
   src/hal/Clocks.cpp \
   src/hal/USART.cpp \
-  src/hal/GPIO.cpp
+  src/hal/System.cpp \
+  src/hal/GPIO.cpp \
+  src/hal/DMA.cpp
 
 ASM_SOURCES = \
   src/startup_stm32g031xx.s

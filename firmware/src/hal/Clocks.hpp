@@ -13,6 +13,8 @@ class Clocks {
   const void enableGPIOFClock() const;
   const void enableDMA1Clock() const;
   const void enableUSART1Clock() const;
+  const void enableUSART2Clock() const;
+  const void enableTIM3Clock() const;
 };
 }  // namespace hal
 

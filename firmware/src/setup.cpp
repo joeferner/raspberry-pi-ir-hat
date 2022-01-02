@@ -3,25 +3,33 @@
 #include "debug.h"
 #include "hal/Bus.hpp"
 #include "hal/Clocks.hpp"
+#include "hal/DMA.hpp"
 #include "hal/GPIO.hpp"
 #include "hal/NVICHal.hpp"
 #include "hal/RCCHal.hpp"
+#include "hal/System.hpp"
 #include "hal/USART.hpp"
 #include "ir_rx.h"
 #include "ir_tx.h"
 #include "rpi.h"
 #include "time.h"
 
+extern hal::System halSystem;
 extern hal::Clocks clocks;
 extern hal::Bus bus;
 extern hal::NVICHal nvic;
 extern hal::RCCHal rcc;
 extern hal::GPIO resetPin;
 extern hal::GPIO irInLedPin;
-extern hal::GPIO irOut;
-extern hal::GPIO usart1Rx;
-extern hal::GPIO usart1Tx;
+extern hal::GPIO irOutPin;
+extern hal::GPIO usart1RxPin;
+extern hal::GPIO usart1TxPin;
 extern hal::USART usart1;
+extern hal::GPIO usart2RxPin;
+extern hal::GPIO usart2TxPin;
+extern hal::USART usart2;
+extern hal::GPIO irRxPin;
+extern hal::DMAChannel irRxDmaChannel;
 
 static const uint32_t HCLK_FREQUENCY = 16000000;
 
@@ -29,6 +37,9 @@ static void setupSystemClock();
 static void setupGPIO();
 static void setupDMA();
 static void setupUSART1();
+static void setupUSART2();
+static void setupIRTIM();
+static void setupTIM3();
 
 void setup() {
   bus.enableSyscfgClock();
@@ -38,11 +49,11 @@ void setup() {
   setupGPIO();
   setupDMA();
   setupUSART1();
+  setupUSART2();
+  setupIRTIM();
+  setupTIM3();
 
   // TODO
-  // MX_USART2_UART_Init();
-  // MX_IRTIM_Init();
-  // MX_TIM3_Init();
   // MX_TIM16_Init();
   // MX_TIM17_Init();
   // MX_IWDG_Init();
@@ -75,11 +86,11 @@ void setupGPIO() {
   clocks.enableGPIOBClock();
   clocks.enableGPIOFClock();
 
-  irOut.setSpeed(hal::gpio::Speed::Low);
-  irOut.setOutputType(hal::gpio::OutputType::PushPull);
-  irOut.setPull(hal::gpio::Pull::None);
-  irOut.setAlternate(hal::gpio::Alternate::Alt0);
-  irOut.setMode(hal::gpio::Mode::Alternate);
+  irOutPin.setSpeed(hal::gpio::Speed::Low);
+  irOutPin.setOutputType(hal::gpio::OutputType::PushPull);
+  irOutPin.setPull(hal::gpio::Pull::None);
+  irOutPin.setAlternate(hal::gpio::Alternate::Alt0);
+  irOutPin.setMode(hal::gpio::Mode::Alternate);
 
   resetPin.setPull(hal::gpio::Pull::None);
   resetPin.setMode(hal::gpio::Mode::Input);
@@ -101,29 +112,29 @@ void setupUSART1() {
   clocks.enableUSART1Clock();
   clocks.enableGPIOBClock();
 
-  usart1Rx.setSpeed(hal::gpio::Speed::Low);
-  usart1Rx.setOutputType(hal::gpio::OutputType::PushPull);
-  usart1Rx.setPull(hal::gpio::Pull::None);
-  usart1Rx.setAlternate(hal::gpio::Alternate::Alt0);
-  usart1Rx.setMode(hal::gpio::Mode::Alternate);
+  usart1RxPin.setSpeed(hal::gpio::Speed::Low);
+  usart1RxPin.setOutputType(hal::gpio::OutputType::PushPull);
+  usart1RxPin.setPull(hal::gpio::Pull::None);
+  usart1RxPin.setAlternate(hal::gpio::Alternate::Alt0);
+  usart1RxPin.setMode(hal::gpio::Mode::Alternate);
 
-  usart1Tx.setSpeed(hal::gpio::Speed::Low);
-  usart1Tx.setOutputType(hal::gpio::OutputType::PushPull);
-  usart1Tx.setPull(hal::gpio::Pull::None);
-  usart1Tx.setAlternate(hal::gpio::Alternate::Alt0);
-  usart1Tx.setMode(hal::gpio::Mode::Alternate);
+  usart1TxPin.setSpeed(hal::gpio::Speed::Low);
+  usart1TxPin.setOutputType(hal::gpio::OutputType::PushPull);
+  usart1TxPin.setPull(hal::gpio::Pull::None);
+  usart1TxPin.setAlternate(hal::gpio::Alternate::Alt0);
+  usart1TxPin.setMode(hal::gpio::Mode::Alternate);
 
   nvic.setPriority(hal::nvic::IRQnType::USART1_Irq, 0);
   nvic.enableInterrupt(hal::nvic::IRQnType::USART1_Irq);
 
   usart1.setDataWidth(hal::usart::DataWidth::DataWidth8);
-  usart1.setPartity(hal::usart::Parity::None);
+  usart1.setParity(hal::usart::Parity::None);
   usart1.setStopBits(hal::usart::StopBits::StopBits1);
   usart1.setOverSampling(hal::usart::OverSampling::OverSampling16);
   usart1.setTransferDirection(hal::usart::TransferDirection::TxRx);
   usart1.setHardwareFlowControl(hal::usart::HardwardFlowControl::None);
   usart1.setPrescaler(hal::usart::Prescaler::DIV_1);
-  usart1.setBaudRate(rcc, 57600);
+  usart1.setBaudRate(&rcc, 57600);
 
   usart1.setTXFIFOThreshold(hal::usart::FIFOThreshold::Threshold1_8);
   usart1.setRXFIFOThreshold(hal::usart::FIFOThreshold::Threshold1_8);
@@ -131,4 +142,80 @@ void setupUSART1() {
   usart1.configAsyncMode();
 
   usart1.enable();
+}
+
+void setupUSART2() {
+  clocks.enableUSART2Clock();
+  clocks.enableGPIOAClock();
+
+  usart2RxPin.setSpeed(hal::gpio::Speed::Low);
+  usart2RxPin.setOutputType(hal::gpio::OutputType::PushPull);
+  usart2RxPin.setPull(hal::gpio::Pull::None);
+  usart2RxPin.setAlternate(hal::gpio::Alternate::Alt1);
+  usart2RxPin.setMode(hal::gpio::Mode::Alternate);
+
+  usart2TxPin.setSpeed(hal::gpio::Speed::Low);
+  usart2TxPin.setOutputType(hal::gpio::OutputType::PushPull);
+  usart2TxPin.setPull(hal::gpio::Pull::None);
+  usart2TxPin.setAlternate(hal::gpio::Alternate::Alt1);
+  usart2TxPin.setMode(hal::gpio::Mode::Alternate);
+
+  nvic.setPriority(hal::nvic::IRQnType::USART2_Irq, 0);
+  nvic.enableInterrupt(hal::nvic::IRQnType::USART2_Irq);
+
+  usart2.setDataWidth(hal::usart::DataWidth::DataWidth8);
+  usart2.setParity(hal::usart::Parity::None);
+  usart2.setStopBits(hal::usart::StopBits::StopBits1);
+  usart2.setOverSampling(hal::usart::OverSampling::OverSampling16);
+  usart2.setTransferDirection(hal::usart::TransferDirection::TxRx);
+  usart2.setHardwareFlowControl(hal::usart::HardwardFlowControl::None);
+  usart2.setPrescaler(hal::usart::Prescaler::DIV_1);
+  usart2.setBaudRate(&rcc, 57600);
+
+  usart2.configAsyncMode();
+
+  usart2.enable();
+}
+
+void setupIRTIM() {
+  halSystem.setIRModulationEnvelopeSignalSource(hal::system::IRModulationEnvelopeSignalSource::IR_TIM16);
+  halSystem.setIRPolarity(hal::system::IRPolarity::NotInverted);
+}
+
+void setupTIM3() {
+  clocks.enableTIM3Clock();
+  clocks.enableGPIOAClock();
+
+  irRxPin.setSpeed(hal::gpio::Speed::Low);
+  irRxPin.setOutputType(hal::gpio::OutputType::PushPull);
+  irRxPin.setPull(hal::gpio::Pull::None);
+  irRxPin.setAlternate(hal::gpio::Alternate::Alt1);
+  irRxPin.setMode(hal::gpio::Mode::Alternate);
+
+  // TODO
+  irRxDmaChannel.setPeripheralRequest(hal::dma::PeripheralRequest::TIM3_CH1);
+  irRxDmaChannel.setDataTransferDirection(hal::dma::TransferDirection::PeripheralToMemory);
+  irRxDmaChannel.setChannelPriorityLevel(hal::dma::Priority::Low);
+  irRxDmaChannel.setMode(hal::dma::Mode::Circular);
+  irRxDmaChannel.setPeripheralIncrementMode(hal::dma::PeripheralIncrementMode::NoIncrement);
+  irRxDmaChannel.setMemoryIncrementMode(hal::dma::MemoryIncrementMode::Increment);
+  irRxDmaChannel.setPeripheralSize(hal::dma::PeripheralSize::HalfWord);
+  irRxDmaChannel.setMemorySize(hal::dma::MemorySize::HalfWord);
+
+  nvic.setPriority(hal::nvic::IRQnType::TIM3_Irq, 0);
+  nvic.enableInterrupt(hal::nvic::IRQnType::TIM3_Irq);
+
+  // TODO
+  // TIM_InitStruct.Prescaler = 0;
+  // TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
+  // TIM_InitStruct.Autoreload = 65535;
+  // TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
+  // LL_TIM_Init(TIM3, &TIM_InitStruct);
+  // LL_TIM_DisableARRPreload(TIM3);
+  // LL_TIM_SetTriggerOutput(TIM3, LL_TIM_TRGO_RESET);
+  // LL_TIM_DisableMasterSlaveMode(TIM3);
+  // LL_TIM_IC_SetActiveInput(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_ACTIVEINPUT_DIRECTTI);
+  // LL_TIM_IC_SetPrescaler(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_ICPSC_DIV1);
+  // LL_TIM_IC_SetFilter(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_IC_FILTER_FDIV1);
+  // LL_TIM_IC_SetPolarity(TIM3, LL_TIM_CHANNEL_CH1, LL_TIM_IC_POLARITY_BOTHEDGE);
 }

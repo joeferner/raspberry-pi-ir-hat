@@ -6,9 +6,11 @@
 #include "debug.h"
 #include "hal/Bus.hpp"
 #include "hal/Clocks.hpp"
+#include "hal/DMA.hpp"
 #include "hal/GPIO.hpp"
 #include "hal/NVICHal.hpp"
 #include "hal/RCCHal.hpp"
+#include "hal/System.hpp"
 #include "hal/USART.hpp"
 #include "ir_rx.h"
 #include "ir_tx.h"
@@ -20,16 +22,23 @@
 extern "C" {
 #endif
 
+hal::System halSystem;
 hal::Clocks clocks;
 hal::Bus bus;
 hal::NVICHal nvic;
 hal::RCCHal rcc;
 hal::GPIO resetPin(GPIOF, 2);
 hal::GPIO irInLedPin(GPIOA, 7);
-hal::GPIO irOut(GPIOB, 9);
-hal::GPIO usart1Rx(GPIOB, 7);
-hal::GPIO usart1Tx(GPIOB, 6);
+hal::GPIO irOutPin(GPIOB, 9);
+hal::GPIO usart1RxPin(GPIOB, 7);
+hal::GPIO usart1TxPin(GPIOB, 6);
 hal::USART usart1(USART1);
+hal::GPIO usart2RxPin(GPIOA, 3);
+hal::GPIO usart2TxPin(GPIOA, 2);
+hal::USART usart2(USART2);
+hal::GPIO irRxPin(GPIOA, 6);
+hal::DMA dma1(DMA1);
+hal::DMAChannel irRxDmaChannel(&dma1, hal::dma::Channel::Channel5);
 
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
 

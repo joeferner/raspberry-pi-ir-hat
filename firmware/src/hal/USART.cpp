@@ -10,7 +10,7 @@ const void USART::setStopBits(usart::StopBits stopBits) const {
   LL_USART_SetStopBitsLength(this->usart, (uint32_t)stopBits);
 }
 
-const void USART::setPartity(usart::Parity parity) const { LL_USART_SetParity(this->usart, (uint32_t)parity); }
+const void USART::setParity(usart::Parity parity) const { LL_USART_SetParity(this->usart, (uint32_t)parity); }
 
 const void USART::setOverSampling(usart::OverSampling oversampling) const {
   LL_USART_SetOverSampling(this->usart, (uint32_t)oversampling);
@@ -34,15 +34,15 @@ const void USART::setPrescaler(usart::Prescaler prescaler) const {
 
 const usart::Prescaler USART::getPrescalerValue() const { return (usart::Prescaler)LL_USART_GetPrescaler(this->usart); }
 
-const void USART::setBaudRate(const RCCHal &rcc, uint32_t baudRate) const {
+const void USART::setBaudRate(const RCCHal *rcc, uint32_t baudRate) const {
   uint32_t clock;
   if (this->usart == USART1) {
-    clock = rcc.getUSART1ClockFrequency();
+    clock = rcc->getUSART1ClockFrequency();
   } else if (this->usart == USART2) {
 #if defined(RCC_CCIPR_USART2SEL)
     todo clock = LL_RCC_GetUSARTClockFreq(LL_RCC_USART2_CLKSOURCE);
 #else
-    clock = rcc.getPCLK1Frequency();
+    clock = rcc->getPCLK1Frequency();
 #endif
   }
 #if defined(USART3)
