@@ -6,6 +6,33 @@
 namespace hal {
 
 namespace gpio {
+enum class GPIOAddress : uint32_t
+{
+  GPIOAAddress = GPIOA_BASE,
+  GPIOBAddress = GPIOB_BASE,
+  GPIOFAddress = GPIOF_BASE
+};
+
+enum class GPIOPin : uint32_t
+{
+  Pin0 = LL_GPIO_PIN_0,
+  Pin1 = LL_GPIO_PIN_1,
+  Pin2 = LL_GPIO_PIN_2,
+  Pin3 = LL_GPIO_PIN_3,
+  Pin4 = LL_GPIO_PIN_4,
+  Pin5 = LL_GPIO_PIN_5,
+  Pin6 = LL_GPIO_PIN_6,
+  Pin7 = LL_GPIO_PIN_7,
+  Pin8 = LL_GPIO_PIN_8,
+  Pin9 = LL_GPIO_PIN_9,
+  Pin10 = LL_GPIO_PIN_10,
+  Pin11 = LL_GPIO_PIN_11,
+  Pin12 = LL_GPIO_PIN_12,
+  Pin13 = LL_GPIO_PIN_13,
+  Pin14 = LL_GPIO_PIN_14,
+  Pin15 = LL_GPIO_PIN_15
+};
+
 enum class Mode : uint32_t
 {
   Input = LL_GPIO_MODE_INPUT,
@@ -48,44 +75,63 @@ enum class OutputType : uint32_t
 };
 }  // namespace gpio
 
+template <gpio::GPIOAddress TAddress, gpio::GPIOPin TPin>
 class GPIO {
  private:
-  GPIO_TypeDef* port;
-  unsigned int pin;
-
- public:
-  GPIO(GPIO_TypeDef* port, int pin) : port(port), pin(pin) {
+  GPIO_TypeDef* GPIOPort() const {
+    return reinterpret_cast<GPIO_TypeDef*>(TAddress);
   }
 
+  uint32_t GPIOPin() const {
+    return (uint32_t)TPin;
+  }
+
+ public:
   /**
    * @brief Set the pin mode (input, output, etc)
    */
-  const void setMode(gpio::Mode mode) const;
+  const void setMode(gpio::Mode mode) const {
+    LL_GPIO_SetPinMode(GPIOPort(), GPIOPin(), (uint32_t)mode);
+  }
 
   /**
    * @brief Set the pin to have no pull up or pull down resistor
    */
-  const void setPull(gpio::Pull pull) const;
+  const void setPull(gpio::Pull pull) const {
+    LL_GPIO_SetPinPull(GPIOPort(), GPIOPin(), (uint32_t)pull);
+  }
 
   /**
    * @brief Set the pin alternate mode
    */
-  const void setAlternate(gpio::Alternate alternate) const;
+  const void setAlternate(gpio::Alternate alternate) const {
+    if (GPIOPin() < LL_GPIO_PIN_8) {
+      LL_GPIO_SetAFPin_0_7(GPIOPort(), GPIOPin(), (uint32_t)alternate);
+    } else {
+      LL_GPIO_SetAFPin_8_15(GPIOPort(), GPIOPin(), (uint32_t)alternate);
+    }
+  }
 
   /**
    * @brief set pin to low
    */
-  const void resetOutputPin() const;
+  const void resetOutputPin() const {
+    LL_GPIO_ResetOutputPin(GPIOPort(), GPIOPin());
+  }
 
   /**
    * @brief Set pin speed
    */
-  const void setSpeed(gpio::Speed speed) const;
+  const void setSpeed(gpio::Speed speed) const {
+    LL_GPIO_SetPinSpeed(GPIOPort(), GPIOPin(), (uint32_t)speed);
+  }
 
   /**
    * @brief Set pin output type
    */
-  const void setOutputType(gpio::OutputType outputType) const;
+  const void setOutputType(gpio::OutputType outputType) const {
+    LL_GPIO_SetPinOutputType(GPIOPort(), GPIOPin(), (uint32_t)outputType);
+  }
 };
 
 }  // namespace hal

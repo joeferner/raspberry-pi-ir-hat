@@ -19,16 +19,16 @@ extern hal::Clocks clocks;
 extern hal::Bus bus;
 extern hal::NVICHal nvic;
 extern hal::RCCHal rcc;
-extern hal::GPIO resetPin;
-extern hal::GPIO irInLedPin;
-extern hal::GPIO irOutPin;
-extern hal::GPIO usart1RxPin;
-extern hal::GPIO usart1TxPin;
+extern hal::GPIO<hal::gpio::GPIOAddress::GPIOFAddress, hal::gpio::GPIOPin::Pin2> resetPin;
+extern hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin7> irInLedPin;
+extern hal::GPIO<hal::gpio::GPIOAddress::GPIOBAddress, hal::gpio::GPIOPin::Pin9> irOutPin;
+extern hal::GPIO<hal::gpio::GPIOAddress::GPIOBAddress, hal::gpio::GPIOPin::Pin7> usart1RxPin;
+extern hal::GPIO<hal::gpio::GPIOAddress::GPIOBAddress, hal::gpio::GPIOPin::Pin6> usart1TxPin;
 extern hal::USART<hal::usart::USARTAddress::USART1Address> usart1;
-extern hal::GPIO usart2RxPin;
-extern hal::GPIO usart2TxPin;
+extern hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin3> usart2RxPin;
+extern hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin2> usart2TxPin;
 extern hal::USART<hal::usart::USARTAddress::USART2Address> usart2;
-extern hal::GPIO irRxPin;
+extern hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin6> irRxPin;
 extern hal::DMAChannel irRxDmaChannel;
 extern hal::Timer irRxTimer;
 extern hal::Timer irTxCarrierTimer;
@@ -67,11 +67,11 @@ void setup() {
 
   debugUsart.initialize();
   rpiUsart.initialize();
-  ir_rx_setup();
-  ir_tx_setup();
-  current_sensor_setup();
+  // TODO ir_rx_setup();
+  // TODO ir_tx_setup();
+  // TODO current_sensor_setup();
   debugUsart.write("?READY\n");
-  LL_IWDG_Enable(IWDG);
+  // TODO LL_IWDG_Enable(IWDG);
 }
 
 static void setupSystemClock() {
