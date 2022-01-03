@@ -1,10 +1,8 @@
 #include "current_sensor.hpp"
-#include "debug.hpp"
 #include "globals.hpp"
 #include "ir_rx.hpp"
 #include "ir_tx.hpp"
 #include "main.h"
-#include "rpi.hpp"
 
 void NMI_Handler() {
 }
@@ -54,11 +52,11 @@ void WWDG_IRQHandler() {
 }
 
 void USART1_IRQHandler() {
-  debug_usart_irq();
+  debugUsart.handleInterrupt();
 }
 
 void USART2_IRQHandler() {
-  rpi_usart_irq();
+  rpiUsart.handleInterrupt();
 }
 
 void TIM2_IRQHandler() {

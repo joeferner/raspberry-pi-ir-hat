@@ -79,10 +79,10 @@ enum class Prescaler : uint32_t
 
 class USART {
  private:
-  USART_TypeDef *usart;
+  USART_TypeDef* usart;
 
  public:
-  USART(USART_TypeDef *usart) : usart(usart){};
+  USART(USART_TypeDef* usart) : usart(usart){};
   const void setDataWidth(usart::DataWidth dataWidth) const;
   const void setStopBits(usart::StopBits stopBits) const;
   const void setParity(usart::Parity parity) const;
@@ -94,12 +94,56 @@ class USART {
   const void setHardwareFlowControl(usart::HardwardFlowControl flowControl) const;
   const void setPrescaler(usart::Prescaler prescaler) const;
   const usart::Prescaler getPrescalerValue() const;
-  const void setBaudRate(const RCCHal *rcc, uint32_t baudRate) const;
+  const void setBaudRate(const RCCHal* rcc, uint32_t baudRate) const;
   const void configAsyncMode() const;
   const void disableFIFO() const;
   const void enable() const;
   const bool isTransmitEnableAcknowledgeFlagSet() const;
   const bool isReceiveEnableAcknowledgeFlagSet() const;
+
+  const void enableRxNotEmptyInterrupt() const {
+    LL_USART_EnableIT_RXNE_RXFNE(this->usart);
+  }
+
+  const void enableTxEmptyInterrupt() const {
+    LL_USART_EnableIT_TXE_TXFNF(this->usart);
+  }
+
+  const void enableErrorInterrupt() const {
+    LL_USART_EnableIT_ERROR(this->usart);
+  }
+
+  const bool isTxDataRegisterEmptyFlagSet() const {
+    return LL_USART_IsActiveFlag_TXE_TXFNF(this->usart);
+  }
+
+  const bool isTransmissionCompleteFlagSet() const {
+    return LL_USART_IsActiveFlag_TC(this->usart);
+  }
+
+  const void clearTransmissionCompleteFlag() const {
+    LL_USART_ClearFlag_TC(this->usart);
+  }
+
+  const bool isRxNotEmptyFlagSet() const {
+    return LL_USART_IsActiveFlag_RXNE_RXFNE(this->usart);
+  }
+
+  const bool isErrorFlagSet() const {
+    return LL_USART_IsActiveFlag_NE(this->usart);
+  }
+
+  const void disableTxEmptyInterrupt() const {
+    LL_USART_DisableIT_TXE_TXFNF(this->usart);
+  }
+
+  const void transmitData8(uint8_t b) const {
+    LL_USART_TransmitData8(this->usart, b);
+  }
+
+  const uint8_t receiveData8() const {
+    return LL_USART_ReceiveData8(this->usart);
+  }
 };
 }  // namespace hal
 

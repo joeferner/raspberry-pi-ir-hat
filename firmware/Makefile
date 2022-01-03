@@ -20,13 +20,10 @@ CPP_SOURCES = \
   src/main.cpp \
   src/setup.cpp \
   src/ir_rx.cpp \
-  src/debug.cpp \
   src/main_it.cpp \
   src/ir_tx.cpp \
-  src/rpi.cpp \
   src/uint8_ring_buffer.cpp \
   src/uint32_ring_buffer.cpp \
-  src/usart_it.cpp \
   src/current_sensor.cpp \
   src/hal/Bus.cpp \
   src/hal/NVIC.cpp \
@@ -37,8 +34,7 @@ CPP_SOURCES = \
   src/hal/GPIO.cpp \
   src/hal/Timer.cpp \
   src/hal/DMA.cpp \
-  src/hal/IWDG.cpp \
-  src/peripheral/USART.cpp
+  src/hal/IWDG.cpp
 
 ASM_SOURCES = \
   src/startup_stm32g031xx.s
@@ -77,7 +73,8 @@ C_INCLUDES =  \
   -Isrc \
   -Ilibs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Inc \
   -Ilibs/STM32CubeG0/Drivers/CMSIS/Device/ST/STM32G0xx/Include \
-  -Ilibs/STM32CubeG0/Drivers/CMSIS/Include
+  -Ilibs/STM32CubeG0/Drivers/CMSIS/Include \
+  -Ilibs/etl/include
 
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
 
@@ -143,7 +140,7 @@ format:
     src/*.h \
     src/*.cpp src/*.hpp \
     src/hal/*.cpp src/hal/*.hpp \
-    src/peripheral/*.cpp src/peripheral/*.hpp
+    src/peripheral/*.hpp
 
 serialport-list:
 	scripts/serialport-list.sh

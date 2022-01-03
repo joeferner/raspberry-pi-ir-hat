@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+#include <cstring>
+
 #include "stm32g031xx.h"
 #include "stm32g0xx_ll_adc.h"
 #include "stm32g0xx_ll_bus.h"
@@ -25,6 +27,9 @@ extern "C" {
 #else
 #define assert_param(expr) ((void)0U)
 #endif
+
+const size_t DEBUG_TX_BUFFER_SIZE = 128;
+const size_t DEBUG_RX_BUFFER_SIZE = 128;
 
 void Error_Handler(void);
 

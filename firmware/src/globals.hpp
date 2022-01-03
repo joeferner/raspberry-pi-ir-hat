@@ -5,6 +5,7 @@
 #include "peripheral/USART.hpp"
 
 extern hal::Clocks clocks;
-extern peripheral::USART debugUsart;
+extern peripheral::USART<DEBUG_TX_BUFFER_SIZE, DEBUG_RX_BUFFER_SIZE> debugUsart;
+extern peripheral::USART<DEBUG_TX_BUFFER_SIZE, DEBUG_RX_BUFFER_SIZE> rpiUsart;
 
 #endif

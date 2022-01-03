@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 
-#include "debug.hpp"
+#include "globals.hpp"
 #include "main.h"
 #include "uint32_ring_buffer.hpp"
 
@@ -80,7 +80,7 @@ void ir_tx_stop() {
 void ir_tx_next_signal() {
   if (uint32_ring_buffer_length(&ir_tx_ring_buffer) < 2) {
     ir_tx_stop();
-    debug_send_string("?send complete\n");
+    debugUsart.write("?send complete\n");
     return;
   }
 

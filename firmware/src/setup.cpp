@@ -1,5 +1,4 @@
 #include "current_sensor.hpp"
-#include "debug.hpp"
 #include "globals.hpp"
 #include "hal/Bus.hpp"
 #include "hal/Clocks.hpp"
@@ -14,7 +13,6 @@
 #include "ir_rx.hpp"
 #include "ir_tx.hpp"
 #include "main.h"
-#include "rpi.hpp"
 
 extern hal::System halSystem;
 extern hal::Clocks clocks;
@@ -67,12 +65,12 @@ void setup() {
   setupIWDG();
   setupADC1();
 
-  debugUsart.setup();
-  rpi_setup();
+  debugUsart.initialize();
+  rpiUsart.initialize();
   ir_rx_setup();
   ir_tx_setup();
   current_sensor_setup();
-  debug_send_string("?READY\n");
+  debugUsart.write("?READY\n");
   LL_IWDG_Enable(IWDG);
 }
 
