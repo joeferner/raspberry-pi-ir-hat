@@ -6,15 +6,15 @@
 #include "hal/USART.hpp"
 
 namespace peripheral {
-template <size_t TX_BUFFER_SIZE, size_t RX_BUFFER_SIZE>
+template <hal::usart::USARTAddress TAddress, size_t TX_BUFFER_SIZE, size_t RX_BUFFER_SIZE>
 class USART {
  private:
-  hal::USART* usart;
+  hal::USART<TAddress>* usart;
   etl::circular_buffer<uint8_t, TX_BUFFER_SIZE> txBuffer;
   etl::circular_buffer<uint8_t, RX_BUFFER_SIZE> rxBuffer;
 
  public:
-  USART(hal::USART* usart) : usart(usart) {
+  USART(hal::USART<TAddress>* usart) : usart(usart) {
   }
 
   const void initialize() const {

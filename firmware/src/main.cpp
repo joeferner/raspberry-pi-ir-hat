@@ -34,10 +34,10 @@ hal::GPIO irInLedPin(GPIOA, 7);
 hal::GPIO irOutPin(GPIOB, 9);
 hal::GPIO usart1RxPin(GPIOB, 7);
 hal::GPIO usart1TxPin(GPIOB, 6);
-hal::USART usart1(USART1);
+hal::USART<hal::usart::USARTAddress::USART1Address> usart1;
 hal::GPIO usart2RxPin(GPIOA, 3);
 hal::GPIO usart2TxPin(GPIOA, 2);
-hal::USART usart2(USART2);
+hal::USART<hal::usart::USARTAddress::USART2Address> usart2;
 hal::GPIO irRxPin(GPIOA, 6);
 hal::DMA dma1(DMA1);
 hal::DMAChannel irRxDmaChannel(&dma1, hal::dma::Channel::Channel5);
@@ -46,8 +46,10 @@ hal::Timer irTxCarrierTimer(TIM17);
 hal::Timer irTxSignalTimer(TIM16);
 hal::IWDGHal iwdg;
 
-peripheral::USART<DEBUG_TX_BUFFER_SIZE, DEBUG_RX_BUFFER_SIZE> debugUsart(&usart1);
-peripheral::USART<DEBUG_TX_BUFFER_SIZE, DEBUG_RX_BUFFER_SIZE> rpiUsart(&usart2);
+peripheral::USART<hal::usart::USARTAddress::USART1Address, DEBUG_TX_BUFFER_SIZE, DEBUG_RX_BUFFER_SIZE> debugUsart(
+    &usart1);
+peripheral::USART<hal::usart::USARTAddress::USART2Address, DEBUG_TX_BUFFER_SIZE, DEBUG_RX_BUFFER_SIZE> rpiUsart(
+    &usart2);
 
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
 

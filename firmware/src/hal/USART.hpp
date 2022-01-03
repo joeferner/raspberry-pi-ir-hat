@@ -6,6 +6,12 @@
 
 namespace hal {
 namespace usart {
+enum class USARTAddress : uint32_t
+{
+  USART1Address = USART1_BASE,
+  USART2Address = USART2_BASE
+};
+
 enum class FIFOThreshold : uint32_t
 {
   Threshold1_8 = LL_USART_FIFOTHRESHOLD_1_8,
@@ -77,61 +83,63 @@ enum class Prescaler : uint32_t
 };
 }  // namespace usart
 
+template <usart::USARTAddress TAddress>
 class USART {
  private:
-  USART_TypeDef* usart;
+  USART_TypeDef* USARTPort() const {
+    return reinterpret_cast<USART_TypeDef*>(TAddress);
+  }
 
  public:
-  USART(USART_TypeDef* usart) : usart(usart){};
   const void setDataWidth(usart::DataWidth dataWidth) const {
-    LL_USART_SetDataWidth(this->usart, (uint32_t)dataWidth);
+    LL_USART_SetDataWidth(USARTPort(), (uint32_t)dataWidth);
   }
 
   const void setStopBits(usart::StopBits stopBits) const {
-    LL_USART_SetStopBitsLength(this->usart, (uint32_t)stopBits);
+    LL_USART_SetStopBitsLength(USARTPort(), (uint32_t)stopBits);
   }
 
   const void setParity(usart::Parity parity) const {
-    LL_USART_SetParity(this->usart, (uint32_t)parity);
+    LL_USART_SetParity(USARTPort(), (uint32_t)parity);
   }
 
   const void setOverSampling(usart::OverSampling oversampling) const {
-    LL_USART_SetOverSampling(this->usart, (uint32_t)oversampling);
+    LL_USART_SetOverSampling(USARTPort(), (uint32_t)oversampling);
   }
 
   const usart::OverSampling getOverSampling() const {
-    return (usart::OverSampling)LL_USART_GetOverSampling(this->usart);
+    return (usart::OverSampling)LL_USART_GetOverSampling(USARTPort());
   }
 
   const void setTXFIFOThreshold(usart::FIFOThreshold threshold) const {
-    LL_USART_SetTXFIFOThreshold(this->usart, (uint32_t)threshold);
+    LL_USART_SetTXFIFOThreshold(USARTPort(), (uint32_t)threshold);
   }
 
   const void setRXFIFOThreshold(usart::FIFOThreshold threshold) const {
-    LL_USART_SetRXFIFOThreshold(this->usart, (uint32_t)threshold);
+    LL_USART_SetRXFIFOThreshold(USARTPort(), (uint32_t)threshold);
   }
 
   const void setTransferDirection(usart::TransferDirection direction) const {
-    LL_USART_SetTransferDirection(this->usart, (uint32_t)direction);
+    LL_USART_SetTransferDirection(USARTPort(), (uint32_t)direction);
   }
 
   const void setHardwareFlowControl(usart::HardwardFlowControl flowControl) const {
-    LL_USART_SetHWFlowCtrl(this->usart, (uint32_t)flowControl);
+    LL_USART_SetHWFlowCtrl(USARTPort(), (uint32_t)flowControl);
   }
 
   const void setPrescaler(usart::Prescaler prescaler) const {
-    LL_USART_SetPrescaler(this->usart, (uint32_t)prescaler);
+    LL_USART_SetPrescaler(USARTPort(), (uint32_t)prescaler);
   }
 
   const usart::Prescaler getPrescalerValue() const {
-    return (usart::Prescaler)LL_USART_GetPrescaler(this->usart);
+    return (usart::Prescaler)LL_USART_GetPrescaler(USARTPort());
   }
 
   const void setBaudRate(const RCCHal* rcc, uint32_t baudRate) const {
     uint32_t clock;
-    if (this->usart == USART1) {
+    if (USARTPort() == USART1) {
       clock = rcc->getUSART1ClockFrequency();
-    } else if (this->usart == USART2) {
+    } else if (USARTPort() == USART2) {
 #if defined(RCC_CCIPR_USART2SEL)
       clock = rcc->getUSART2ClockFrequency();
 #else
@@ -139,7 +147,7 @@ class USART {
 #endif
     }
 #if defined(USART3)
-    else if (this->usart == USART3) {
+    else if (USARTPort() == USART3) {
 #if defined(RCC_CCIPR_USART3SEL)
       clock = rcc->getUSART3ClockFrequency();
 #else
@@ -148,7 +156,7 @@ class USART {
     }
 #endif /* USART3 */
 #if defined(USART4)
-    else if (this->usart == USART4) {
+    else if (USARTPort() == USART4) {
 #if defined(RCC_CCIPR_USART4SEL)
       clock = rcc->getUSART4ClockFrequency();
 #else
@@ -157,12 +165,12 @@ class USART {
     }
 #endif /* USART4 */
 #if defined(USART5)
-    else if (this->usart == USART5) {
+    else if (USARTPort() == USART5) {
       clock = rcc->getPCLK1Frequency();
     }
 #endif /* USART5 */
 #if defined(USART6)
-    else if (this->usart == USART6) {
+    else if (USARTPort() == USART6) {
       clock = rcc->getPCLK1Frequency();
     }
 #endif /* USART6 */
@@ -171,74 +179,74 @@ class USART {
       assert_param(0);
     }
 
-    LL_USART_SetBaudRate(this->usart, clock, (uint32_t)this->getPrescalerValue(), (uint32_t)this->getOverSampling(),
+    LL_USART_SetBaudRate(USARTPort(), clock, (uint32_t)this->getPrescalerValue(), (uint32_t)this->getOverSampling(),
                          baudRate);
   }
 
   const void configAsyncMode() const {
-    LL_USART_ConfigAsyncMode(this->usart);
+    LL_USART_ConfigAsyncMode(USARTPort());
   }
 
   const void disableFIFO() const {
-    LL_USART_DisableFIFO(this->usart);
+    LL_USART_DisableFIFO(USARTPort());
   }
 
   const void enable() const {
-    LL_USART_Enable(this->usart);
+    LL_USART_Enable(USARTPort());
     while (!this->isTransmitEnableAcknowledgeFlagSet() || !this->isReceiveEnableAcknowledgeFlagSet()) {
     }
   }
 
   const bool isTransmitEnableAcknowledgeFlagSet() const {
-    return LL_USART_IsActiveFlag_TEACK(this->usart);
+    return LL_USART_IsActiveFlag_TEACK(USARTPort());
   }
 
   const bool isReceiveEnableAcknowledgeFlagSet() const {
-    return LL_USART_IsActiveFlag_REACK(this->usart);
+    return LL_USART_IsActiveFlag_REACK(USARTPort());
   }
 
   const void enableRxNotEmptyInterrupt() const {
-    LL_USART_EnableIT_RXNE_RXFNE(this->usart);
+    LL_USART_EnableIT_RXNE_RXFNE(USARTPort());
   }
 
   const void enableTxEmptyInterrupt() const {
-    LL_USART_EnableIT_TXE_TXFNF(this->usart);
+    LL_USART_EnableIT_TXE_TXFNF(USARTPort());
   }
 
   const void enableErrorInterrupt() const {
-    LL_USART_EnableIT_ERROR(this->usart);
+    LL_USART_EnableIT_ERROR(USARTPort());
   }
 
   const bool isTxDataRegisterEmptyFlagSet() const {
-    return LL_USART_IsActiveFlag_TXE_TXFNF(this->usart);
+    return LL_USART_IsActiveFlag_TXE_TXFNF(USARTPort());
   }
 
   const bool isTransmissionCompleteFlagSet() const {
-    return LL_USART_IsActiveFlag_TC(this->usart);
+    return LL_USART_IsActiveFlag_TC(USARTPort());
   }
 
   const void clearTransmissionCompleteFlag() const {
-    LL_USART_ClearFlag_TC(this->usart);
+    LL_USART_ClearFlag_TC(USARTPort());
   }
 
   const bool isRxNotEmptyFlagSet() const {
-    return LL_USART_IsActiveFlag_RXNE_RXFNE(this->usart);
+    return LL_USART_IsActiveFlag_RXNE_RXFNE(USARTPort());
   }
 
   const bool isErrorFlagSet() const {
-    return LL_USART_IsActiveFlag_NE(this->usart);
+    return LL_USART_IsActiveFlag_NE(USARTPort());
   }
 
   const void disableTxEmptyInterrupt() const {
-    LL_USART_DisableIT_TXE_TXFNF(this->usart);
+    LL_USART_DisableIT_TXE_TXFNF(USARTPort());
   }
 
   const void transmitData8(uint8_t b) const {
-    LL_USART_TransmitData8(this->usart, b);
+    LL_USART_TransmitData8(USARTPort(), b);
   }
 
   const uint8_t receiveData8() const {
-    return LL_USART_ReceiveData8(this->usart);
+    return LL_USART_ReceiveData8(USARTPort());
   }
 };
 }  // namespace hal
