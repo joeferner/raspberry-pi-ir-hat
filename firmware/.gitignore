@@ -1,14 +1,9 @@
 .idea/
 .vscode/
-cmake-build-debug/
-Drivers/
-Core/
 build/
 old/
 target/
 .cproject
 .mxproject
 .project
-CMakeLists.txt
 *.bak
-STM32Make.make
