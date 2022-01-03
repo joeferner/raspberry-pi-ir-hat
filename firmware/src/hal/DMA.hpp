@@ -5,6 +5,9 @@
 
 namespace hal {
 namespace dma {
+enum class DMAAddress : uint32_t
+{ DMA1Address = DMA1_BASE };
+
 enum class Channel : uint32_t
 {
   Channel1 = LL_DMA_CHANNEL_1,
@@ -170,35 +173,52 @@ enum class MemorySize : uint32_t
 };
 }  // namespace dma
 
-class DMAChannel;
+template <dma::DMAAddress TAddress>
+class DMA {};
 
-class DMA {
- private:
-  DMA_TypeDef *dma;
-  friend class DMAChannel;
-
- public:
-  DMA(DMA_TypeDef *dma) : dma(dma) {
-  }
-};
-
+template <dma::DMAAddress TAddress, dma::Channel TChannel>
 class DMAChannel {
  private:
-  DMA *dma;
-  dma::Channel channel;
-
- public:
-  DMAChannel(DMA *dma, dma::Channel channel) : dma(dma), channel(channel) {
+  DMA_TypeDef* DMAAddress() const {
+    return reinterpret_cast<DMA_TypeDef*>(TAddress);
   }
 
-  const void setPeripheralRequest(dma::PeripheralRequest request) const;
-  const void setDataTransferDirection(dma::TransferDirection direction) const;
-  const void setChannelPriorityLevel(dma::Priority priority) const;
-  const void setMode(dma::Mode mode) const;
-  const void setPeripheralIncrementMode(dma::PeripheralIncrementMode mode) const;
-  const void setMemoryIncrementMode(dma::MemoryIncrementMode mode) const;
-  const void setPeripheralSize(dma::PeripheralSize size) const;
-  const void setMemorySize(dma::MemorySize size) const;
+  uint32_t channel() const {
+    return (uint32_t)TChannel;
+  }
+
+ public:
+  const void setPeripheralRequest(dma::PeripheralRequest request) const {
+    LL_DMA_SetPeriphRequest(DMAAddress(), channel(), (uint32_t)request);
+  }
+
+  const void setDataTransferDirection(dma::TransferDirection direction) const {
+    LL_DMA_SetDataTransferDirection(DMAAddress(), channel(), (uint32_t)direction);
+  }
+
+  const void setChannelPriorityLevel(dma::Priority priority) const {
+    LL_DMA_SetChannelPriorityLevel(DMAAddress(), channel(), (uint32_t)priority);
+  }
+
+  const void setMode(dma::Mode mode) const {
+    LL_DMA_SetMode(DMAAddress(), channel(), (uint32_t)mode);
+  }
+
+  const void setPeripheralIncrementMode(dma::PeripheralIncrementMode mode) const {
+    LL_DMA_SetPeriphIncMode(DMAAddress(), channel(), (uint32_t)mode);
+  }
+
+  const void setMemoryIncrementMode(dma::MemoryIncrementMode mode) const {
+    LL_DMA_SetMemoryIncMode(DMAAddress(), channel(), (uint32_t)mode);
+  }
+
+  const void setPeripheralSize(dma::PeripheralSize size) const {
+    LL_DMA_SetPeriphSize(DMAAddress(), channel(), (uint32_t)size);
+  }
+
+  const void setMemorySize(dma::MemorySize size) const {
+    LL_DMA_SetMemorySize(DMAAddress(), channel(), (uint32_t)size);
+  }
 };
 }  // namespace hal
 

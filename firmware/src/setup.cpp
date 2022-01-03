@@ -29,10 +29,10 @@ extern hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin3>
 extern hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin2> usart2TxPin;
 extern hal::USART<hal::usart::USARTAddress::USART2Address> usart2;
 extern hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin6> irRxPin;
-extern hal::DMAChannel irRxDmaChannel;
-extern hal::Timer<hal::timer::TimerAddress::Timer3> irRxTimer;
-extern hal::Timer<hal::timer::TimerAddress::Timer17> irTxCarrierTimer;
-extern hal::Timer<hal::timer::TimerAddress::Timer16> irTxSignalTimer;
+extern hal::DMAChannel<hal::dma::DMAAddress::DMA1Address, hal::dma::Channel::Channel5> irRxDmaChannel;
+extern hal::Timer<hal::timer::TimerAddress::TIM3Address> irRxTimer;
+extern hal::Timer<hal::timer::TimerAddress::TIM17Address> irTxCarrierTimer;
+extern hal::Timer<hal::timer::TimerAddress::TIM16Address> irTxSignalTimer;
 extern hal::IWDGHal iwdg;
 
 static const uint32_t HCLK_FREQUENCY = 16000000;

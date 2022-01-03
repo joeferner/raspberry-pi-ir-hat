@@ -7,12 +7,12 @@ namespace hal {
 namespace timer {
 enum class TimerAddress : uint32_t
 {
-  Timer1 = TIM1_BASE,
-  Timer2 = TIM2_BASE,
-  Timer3 = TIM3_BASE,
-  Timer14 = TIM14_BASE,
-  Timer16 = TIM16_BASE,
-  Timer17 = TIM17_BASE,
+  TIM1Address = TIM1_BASE,
+  TIM2Address = TIM2_BASE,
+  TIM3Address = TIM3_BASE,
+  TIM14Address = TIM14_BASE,
+  TIM16Address = TIM16_BASE,
+  TIM17Address = TIM17_BASE,
 };
 
 enum class CounterMode : uint32_t
@@ -140,107 +140,107 @@ enum class OutputCompareIdleState : uint32_t
 template <timer::TimerAddress TAddress>
 class Timer {
  private:
-  TIM_TypeDef* TIMPort() const {
+  TIM_TypeDef* TIMAddress() const {
     return reinterpret_cast<TIM_TypeDef*>(TAddress);
   }
 
  public:
   const void setCounterMode(timer::CounterMode mode) const {
-    if (IS_TIM_COUNTER_MODE_SELECT_INSTANCE(TIMPort())) {
-      LL_TIM_SetCounterMode(TIMPort(), (uint32_t)mode);
+    if (IS_TIM_COUNTER_MODE_SELECT_INSTANCE(TIMAddress())) {
+      LL_TIM_SetCounterMode(TIMAddress(), (uint32_t)mode);
     } else {
       assert_param(0);
     }
   }
 
   const void setClockDivision(timer::ClockDivision clockDivision) const {
-    if (IS_TIM_CLOCK_DIVISION_INSTANCE(TIMPort())) {
-      LL_TIM_SetClockDivision(TIMPort(), (uint32_t)clockDivision);
+    if (IS_TIM_CLOCK_DIVISION_INSTANCE(TIMAddress())) {
+      LL_TIM_SetClockDivision(TIMAddress(), (uint32_t)clockDivision);
     } else {
       assert_param(0);
     }
   }
 
   const void setAutoReload(uint32_t autoReload) const {
-    LL_TIM_SetAutoReload(TIMPort(), autoReload);
+    LL_TIM_SetAutoReload(TIMAddress(), autoReload);
   }
 
   const void setPrescaler(uint32_t prescaler) const {
-    LL_TIM_SetPrescaler(TIMPort(), prescaler);
+    LL_TIM_SetPrescaler(TIMAddress(), prescaler);
   }
 
   const void setRepetitionCounter(uint32_t repetitionCounter) const {
-    if (IS_TIM_REPETITION_COUNTER_INSTANCE(TIMPort())) {
-      LL_TIM_SetRepetitionCounter(TIMPort(), repetitionCounter);
+    if (IS_TIM_REPETITION_COUNTER_INSTANCE(TIMAddress())) {
+      LL_TIM_SetRepetitionCounter(TIMAddress(), repetitionCounter);
     } else {
       assert_param(0);
     }
   }
 
   const void disableAutoReloadPreload() const {
-    LL_TIM_DisableARRPreload(TIMPort());
+    LL_TIM_DisableARRPreload(TIMAddress());
   }
 
   const void setTriggerOutput(timer::TriggerOutput triggerOutput) const {
-    LL_TIM_SetTriggerOutput(TIMPort(), (uint32_t)triggerOutput);
+    LL_TIM_SetTriggerOutput(TIMAddress(), (uint32_t)triggerOutput);
   }
 
   const void disableMasterSlaveMode() const {
-    LL_TIM_DisableMasterSlaveMode(TIMPort());
+    LL_TIM_DisableMasterSlaveMode(TIMAddress());
   }
 
   const void disableCaptureCompareChannel(timer::ChannelN channel) const {
-    LL_TIM_CC_DisableChannel(TIMPort(), (uint32_t)channel);
+    LL_TIM_CC_DisableChannel(TIMAddress(), (uint32_t)channel);
   }
 
   const void setInputCaptureActiveInput(timer::Channel channel, timer::InputCaptureActiveInput activeInput) const {
-    LL_TIM_IC_SetActiveInput(TIMPort(), (uint32_t)channel, (uint32_t)activeInput);
+    LL_TIM_IC_SetActiveInput(TIMAddress(), (uint32_t)channel, (uint32_t)activeInput);
   }
 
   const void setInputCapturePrescaler(timer::Channel channel, timer::InputCapturePrescaler prescaler) const {
-    LL_TIM_IC_SetPrescaler(TIMPort(), (uint32_t)channel, (uint32_t)prescaler);
+    LL_TIM_IC_SetPrescaler(TIMAddress(), (uint32_t)channel, (uint32_t)prescaler);
   }
 
   const void setInputCaptureFilter(timer::Channel channel, timer::InputCaptureFilter filter) const {
-    LL_TIM_IC_SetFilter(TIMPort(), (uint32_t)channel, (uint32_t)filter);
+    LL_TIM_IC_SetFilter(TIMAddress(), (uint32_t)channel, (uint32_t)filter);
   }
 
   const void setInputCapturePolarity(timer::Channel channel, timer::InputCapturePolarity polarity) const {
-    LL_TIM_IC_SetPolarity(TIMPort(), (uint32_t)channel, (uint32_t)polarity);
+    LL_TIM_IC_SetPolarity(TIMAddress(), (uint32_t)channel, (uint32_t)polarity);
   }
 
   const void enableOutputComparePreload(timer::Channel channel) const {
-    LL_TIM_OC_EnablePreload(TIMPort(), (uint32_t)channel);
+    LL_TIM_OC_EnablePreload(TIMAddress(), (uint32_t)channel);
   }
 
   const void setOutputCompareMode(timer::Channel channel, timer::OutputCompareMode mode) const {
-    LL_TIM_OC_SetMode(TIMPort(), (uint32_t)channel, (uint32_t)mode);
+    LL_TIM_OC_SetMode(TIMAddress(), (uint32_t)channel, (uint32_t)mode);
   }
 
   const void setOutputComparePolarity(timer::ChannelN channel, timer::OutputComparePolarity polarity) const {
-    LL_TIM_OC_SetPolarity(TIMPort(), (uint32_t)channel, (uint32_t)polarity);
+    LL_TIM_OC_SetPolarity(TIMAddress(), (uint32_t)channel, (uint32_t)polarity);
   }
 
   const void setOutputCompareIdleState(timer::ChannelN channel, timer::OutputCompareIdleState idleState) const {
-    LL_TIM_OC_SetIdleState(TIMPort(), (uint32_t)channel, (uint32_t)idleState);
+    LL_TIM_OC_SetIdleState(TIMAddress(), (uint32_t)channel, (uint32_t)idleState);
   }
 
   const void setOutputCompareValue(timer::Channel channel, uint32_t value) const {
     switch (channel) {
       case timer::Channel::Channel1:
-        LL_TIM_OC_SetCompareCH1(TIMPort(), value);
+        LL_TIM_OC_SetCompareCH1(TIMAddress(), value);
         break;
       case timer::Channel::Channel2:
-        LL_TIM_OC_SetCompareCH2(TIMPort(), value);
+        LL_TIM_OC_SetCompareCH2(TIMAddress(), value);
         break;
       case timer::Channel::Channel3:
-        LL_TIM_OC_SetCompareCH3(TIMPort(), value);
+        LL_TIM_OC_SetCompareCH3(TIMAddress(), value);
         break;
       case timer::Channel::Channel4:
-        LL_TIM_OC_SetCompareCH4(TIMPort(), value);
+        LL_TIM_OC_SetCompareCH4(TIMAddress(), value);
         break;
       case timer::Channel::Channel5:
-        LL_TIM_OC_SetCompareCH5(TIMPort(), value);
+        LL_TIM_OC_SetCompareCH5(TIMAddress(), value);
         break;
       default:
         assert_param(0);
@@ -249,7 +249,7 @@ class Timer {
   }
 
   const void disableOutputCompareFast(timer::Channel channel) const {
-    LL_TIM_OC_DisableFast(TIMPort(), (uint32_t)channel);
+    LL_TIM_OC_DisableFast(TIMAddress(), (uint32_t)channel);
   }
 };
 }  // namespace hal
