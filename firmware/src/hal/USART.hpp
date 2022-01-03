@@ -135,43 +135,43 @@ class USART {
     return (usart::Prescaler)LL_USART_GetPrescaler(USARTPort());
   }
 
-  const void setBaudRate(const RCCHal* rcc, uint32_t baudRate) const {
+  const void setBaudRate(const RCCHal& rcc, uint32_t baudRate) const {
     uint32_t clock;
     if (USARTPort() == USART1) {
-      clock = rcc->getUSART1ClockFrequency();
+      clock = rcc.getUSART1ClockFrequency();
     } else if (USARTPort() == USART2) {
 #if defined(RCC_CCIPR_USART2SEL)
-      clock = rcc->getUSART2ClockFrequency();
+      clock = rcc.getUSART2ClockFrequency();
 #else
-      clock = rcc->getPCLK1Frequency();
+      clock = rcc.getPCLK1Frequency();
 #endif
     }
 #if defined(USART3)
     else if (USARTPort() == USART3) {
 #if defined(RCC_CCIPR_USART3SEL)
-      clock = rcc->getUSART3ClockFrequency();
+      clock = rcc.getUSART3ClockFrequency();
 #else
-      clock = rcc->getPCLK1Frequency();
+      clock = rcc.getPCLK1Frequency();
 #endif
     }
 #endif /* USART3 */
 #if defined(USART4)
     else if (USARTPort() == USART4) {
 #if defined(RCC_CCIPR_USART4SEL)
-      clock = rcc->getUSART4ClockFrequency();
+      clock = rcc.getUSART4ClockFrequency();
 #else
-      clock = rcc->getPCLK1Frequency();
+      clock = rcc.getPCLK1Frequency();
 #endif /* RCC_CCIPR_USART4SEL */
     }
 #endif /* USART4 */
 #if defined(USART5)
     else if (USARTPort() == USART5) {
-      clock = rcc->getPCLK1Frequency();
+      clock = rcc.getPCLK1Frequency();
     }
 #endif /* USART5 */
 #if defined(USART6)
     else if (USARTPort() == USART6) {
-      clock = rcc->getPCLK1Frequency();
+      clock = rcc.getPCLK1Frequency();
     }
 #endif /* USART6 */
     else {
@@ -179,8 +179,8 @@ class USART {
       assert_param(0);
     }
 
-    LL_USART_SetBaudRate(USARTPort(), clock, (uint32_t)this->getPrescalerValue(), (uint32_t)this->getOverSampling(),
-                         baudRate);
+    LL_USART_SetBaudRate(
+        USARTPort(), clock, (uint32_t)this->getPrescalerValue(), (uint32_t)this->getOverSampling(), baudRate);
   }
 
   const void configAsyncMode() const {

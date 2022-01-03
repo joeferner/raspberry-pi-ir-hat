@@ -40,8 +40,6 @@ static const uint32_t HCLK_FREQUENCY = 16000000;
 static void setupSystemClock();
 static void setupGPIO();
 static void setupDMA();
-static void setupUSART1();
-static void setupUSART2();
 static void setupIRTIM();
 static void setupTIM3();
 static void setupTIM16();
@@ -56,8 +54,6 @@ void setup() {
   setupSystemClock();
   setupGPIO();
   setupDMA();
-  setupUSART1();
-  setupUSART2();
   setupIRTIM();
   setupTIM3();
   setupTIM16();
@@ -65,8 +61,26 @@ void setup() {
   setupIWDG();
   setupADC1();
 
-  debugUsart.initialize();
-  rpiUsart.initialize();
+  debugUsart.initialize(clocks,
+                        nvic,
+                        rcc,
+                        usart1,
+                        usart1TxPin,
+                        usart1RxPin,
+                        57600,
+                        hal::usart::DataWidth::DataWidth8,
+                        hal::usart::Parity::None,
+                        hal::usart::StopBits::StopBits1);
+  rpiUsart.initialize(clocks,
+                      nvic,
+                      rcc,
+                      usart2,
+                      usart2TxPin,
+                      usart2RxPin,
+                      57600,
+                      hal::usart::DataWidth::DataWidth8,
+                      hal::usart::Parity::None,
+                      hal::usart::StopBits::StopBits1);
   // TODO ir_rx_setup();
   // TODO ir_tx_setup();
   // TODO current_sensor_setup();
@@ -111,75 +125,6 @@ static void setupDMA() {
   clocks.enableDMA1Clock();
   nvic.setPriority(hal::nvic::IRQnType::DMA1_Ch4_5_DMAMUX1_OVR_Irq, 0);
   nvic.enableInterrupt(hal::nvic::IRQnType::DMA1_Ch4_5_DMAMUX1_OVR_Irq);
-}
-
-static void setupUSART1() {
-  clocks.enableUSART1Clock();
-  clocks.enableGPIOBClock();
-
-  usart1RxPin.setSpeed(hal::gpio::Speed::Low);
-  usart1RxPin.setOutputType(hal::gpio::OutputType::PushPull);
-  usart1RxPin.setPull(hal::gpio::Pull::None);
-  usart1RxPin.setAlternate(hal::gpio::Alternate::Alt0);
-  usart1RxPin.setMode(hal::gpio::Mode::Alternate);
-
-  usart1TxPin.setSpeed(hal::gpio::Speed::Low);
-  usart1TxPin.setOutputType(hal::gpio::OutputType::PushPull);
-  usart1TxPin.setPull(hal::gpio::Pull::None);
-  usart1TxPin.setAlternate(hal::gpio::Alternate::Alt0);
-  usart1TxPin.setMode(hal::gpio::Mode::Alternate);
-
-  nvic.setPriority(hal::nvic::IRQnType::USART1_Irq, 0);
-  nvic.enableInterrupt(hal::nvic::IRQnType::USART1_Irq);
-
-  usart1.setDataWidth(hal::usart::DataWidth::DataWidth8);
-  usart1.setParity(hal::usart::Parity::None);
-  usart1.setStopBits(hal::usart::StopBits::StopBits1);
-  usart1.setOverSampling(hal::usart::OverSampling::OverSampling16);
-  usart1.setTransferDirection(hal::usart::TransferDirection::TxRx);
-  usart1.setHardwareFlowControl(hal::usart::HardwardFlowControl::None);
-  usart1.setPrescaler(hal::usart::Prescaler::DIV_1);
-  usart1.setBaudRate(&rcc, 57600);
-
-  usart1.setTXFIFOThreshold(hal::usart::FIFOThreshold::Threshold1_8);
-  usart1.setRXFIFOThreshold(hal::usart::FIFOThreshold::Threshold1_8);
-  usart1.disableFIFO();
-  usart1.configAsyncMode();
-
-  usart1.enable();
-}
-
-static void setupUSART2() {
-  clocks.enableUSART2Clock();
-  clocks.enableGPIOAClock();
-
-  usart2RxPin.setSpeed(hal::gpio::Speed::Low);
-  usart2RxPin.setOutputType(hal::gpio::OutputType::PushPull);
-  usart2RxPin.setPull(hal::gpio::Pull::None);
-  usart2RxPin.setAlternate(hal::gpio::Alternate::Alt1);
-  usart2RxPin.setMode(hal::gpio::Mode::Alternate);
-
-  usart2TxPin.setSpeed(hal::gpio::Speed::Low);
-  usart2TxPin.setOutputType(hal::gpio::OutputType::PushPull);
-  usart2TxPin.setPull(hal::gpio::Pull::None);
-  usart2TxPin.setAlternate(hal::gpio::Alternate::Alt1);
-  usart2TxPin.setMode(hal::gpio::Mode::Alternate);
-
-  nvic.setPriority(hal::nvic::IRQnType::USART2_Irq, 0);
-  nvic.enableInterrupt(hal::nvic::IRQnType::USART2_Irq);
-
-  usart2.setDataWidth(hal::usart::DataWidth::DataWidth8);
-  usart2.setParity(hal::usart::Parity::None);
-  usart2.setStopBits(hal::usart::StopBits::StopBits1);
-  usart2.setOverSampling(hal::usart::OverSampling::OverSampling16);
-  usart2.setTransferDirection(hal::usart::TransferDirection::TxRx);
-  usart2.setHardwareFlowControl(hal::usart::HardwardFlowControl::None);
-  usart2.setPrescaler(hal::usart::Prescaler::DIV_1);
-  usart2.setBaudRate(&rcc, 57600);
-
-  usart2.configAsyncMode();
-
-  usart2.enable();
 }
 
 static void setupIRTIM() {
