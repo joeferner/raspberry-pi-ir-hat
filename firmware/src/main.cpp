@@ -41,9 +41,9 @@ hal::USART<hal::usart::USARTAddress::USART2Address> usart2;
 hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin6> irRxPin;
 hal::DMA dma1(DMA1);
 hal::DMAChannel irRxDmaChannel(&dma1, hal::dma::Channel::Channel5);
-hal::Timer irRxTimer(TIM3);
-hal::Timer irTxCarrierTimer(TIM17);
-hal::Timer irTxSignalTimer(TIM16);
+hal::Timer<hal::timer::TimerAddress::Timer3> irRxTimer;
+hal::Timer<hal::timer::TimerAddress::Timer17> irTxCarrierTimer;
+hal::Timer<hal::timer::TimerAddress::Timer16> irTxSignalTimer;
 hal::IWDGHal iwdg;
 
 peripheral::USART<hal::usart::USARTAddress::USART1Address, DEBUG_TX_BUFFER_SIZE, DEBUG_RX_BUFFER_SIZE> debugUsart(
