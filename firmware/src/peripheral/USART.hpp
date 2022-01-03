@@ -20,16 +20,17 @@ class USART {
   USART(hal::USART<TAddress>* usart) : usart(usart) {
   }
 
-  const void initialize(hal::Clocks& clocks,
-                        hal::NVICHal& nvic,
-                        const hal::RCCHal& rcc,
-                        hal::USART<hal::usart::USARTAddress::USART1Address>& usart1,
-                        hal::GPIO<hal::gpio::GPIOAddress::GPIOBAddress, hal::gpio::GPIOPin::Pin6>& usart1TxPin,
-                        hal::GPIO<hal::gpio::GPIOAddress::GPIOBAddress, hal::gpio::GPIOPin::Pin7>& usart1RxPin,
-                        uint32_t baudRate,
-                        hal::usart::DataWidth dataWidth,
-                        hal::usart::Parity parity,
-                        hal::usart::StopBits stopBits) const {
+  const void initialize(
+      hal::Clocks& clocks,
+      hal::NVICHal& nvic,
+      const hal::RCCHal& rcc,
+      hal::USART<hal::usart::USARTAddress::USART1Address>& usart1,
+      hal::GPIO<hal::gpio::GPIOAddress::GPIOBAddress, hal::gpio::GPIOPin::Pin6>& usart1TxPin,
+      hal::GPIO<hal::gpio::GPIOAddress::GPIOBAddress, hal::gpio::GPIOPin::Pin7>& usart1RxPin,
+      uint32_t baudRate,
+      hal::usart::DataWidth dataWidth,
+      hal::usart::Parity parity,
+      hal::usart::StopBits stopBits) const {
     clocks.enableUSART1Clock();
     clocks.enableGPIOBClock();
 
@@ -68,16 +69,17 @@ class USART {
     usart1.enable();
   }
 
-  const void initialize(hal::Clocks& clocks,
-                        hal::NVICHal& nvic,
-                        const hal::RCCHal& rcc,
-                        hal::USART<hal::usart::USARTAddress::USART2Address>& usart2,
-                        hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin2> usart2TxPin,
-                        hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin3> usart2RxPin,
-                        uint32_t baudRate,
-                        hal::usart::DataWidth dataWidth,
-                        hal::usart::Parity parity,
-                        hal::usart::StopBits stopBits) const {
+  const void initialize(
+      hal::Clocks& clocks,
+      hal::NVICHal& nvic,
+      const hal::RCCHal& rcc,
+      hal::USART<hal::usart::USARTAddress::USART2Address>& usart2,
+      hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin2> usart2TxPin,
+      hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin3> usart2RxPin,
+      uint32_t baudRate,
+      hal::usart::DataWidth dataWidth,
+      hal::usart::Parity parity,
+      hal::usart::StopBits stopBits) const {
     clocks.enableUSART2Clock();
     clocks.enableGPIOAClock();
 

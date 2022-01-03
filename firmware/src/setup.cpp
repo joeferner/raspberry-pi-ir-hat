@@ -61,26 +61,28 @@ void setup() {
   setupIWDG();
   setupADC1();
 
-  debugUsart.initialize(clocks,
-                        nvic,
-                        rcc,
-                        usart1,
-                        usart1TxPin,
-                        usart1RxPin,
-                        57600,
-                        hal::usart::DataWidth::DataWidth8,
-                        hal::usart::Parity::None,
-                        hal::usart::StopBits::StopBits1);
-  rpiUsart.initialize(clocks,
-                      nvic,
-                      rcc,
-                      usart2,
-                      usart2TxPin,
-                      usart2RxPin,
-                      57600,
-                      hal::usart::DataWidth::DataWidth8,
-                      hal::usart::Parity::None,
-                      hal::usart::StopBits::StopBits1);
+  debugUsart.initialize(
+      clocks,
+      nvic,
+      rcc,
+      usart1,
+      usart1TxPin,
+      usart1RxPin,
+      57600,
+      hal::usart::DataWidth::DataWidth8,
+      hal::usart::Parity::None,
+      hal::usart::StopBits::StopBits1);
+  rpiUsart.initialize(
+      clocks,
+      nvic,
+      rcc,
+      usart2,
+      usart2TxPin,
+      usart2RxPin,
+      57600,
+      hal::usart::DataWidth::DataWidth8,
+      hal::usart::Parity::None,
+      hal::usart::StopBits::StopBits1);
   // TODO ir_rx_setup();
   // TODO ir_tx_setup();
   // TODO current_sensor_setup();
