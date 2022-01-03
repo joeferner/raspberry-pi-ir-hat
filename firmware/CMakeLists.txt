@@ -18,6 +18,7 @@ set(SRC_FILES
   libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_tim.c
   libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_usart.c
   libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_pwr.c
+  libs/STM32CubeG0/Drivers/CMSIS/Device/ST/STM32G0xx/Source/Templates/gcc/startup_stm32g031xx.s
   src/main.cpp
   src/setup.cpp
   src/ir_rx.cpp
@@ -32,7 +33,6 @@ set(SRC_FILES
   src/hal/Clocks.cpp
   src/hal/System.cpp
   src/hal/IWDG.cpp
-  src/startup_stm32g031xx.s
 )
 
 set(EXECUTABLE ${PROJECT_NAME}.out)

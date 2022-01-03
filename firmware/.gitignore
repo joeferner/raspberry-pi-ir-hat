@@ -7,3 +7,5 @@ target/
 .mxproject
 .project
 *.bak
+STM32Make.make
+STM32-for-VSCode.config.yaml
