@@ -169,6 +169,11 @@ class Timer {
     LL_TIM_SetPrescaler(TIMAddress(), prescaler);
   }
 
+  const void setPrescaler(uint32_t timerInputClockFrequency, uint32_t counterClockFrequency) const {
+    uint32_t prescaler = __LL_TIM_CALC_PSC(timerInputClockFrequency, counterClockFrequency);
+    LL_TIM_SetPrescaler(TIMAddress(), prescaler);
+  }
+
   const void setRepetitionCounter(uint32_t repetitionCounter) const {
     if (IS_TIM_REPETITION_COUNTER_INSTANCE(TIMAddress())) {
       LL_TIM_SetRepetitionCounter(TIMAddress(), repetitionCounter);
@@ -250,6 +255,58 @@ class Timer {
 
   const void disableOutputCompareFast(timer::Channel channel) const {
     LL_TIM_OC_DisableFast(TIMAddress(), (uint32_t)channel);
+  }
+
+  const void enableCaptureCompareInterrupt(timer::Channel channel) const {
+    switch (channel) {
+      case timer::Channel::Channel1:
+        LL_TIM_EnableIT_CC1(TIMAddress());
+        break;
+      case timer::Channel::Channel2:
+        LL_TIM_EnableIT_CC2(TIMAddress());
+        break;
+      case timer::Channel::Channel3:
+        LL_TIM_EnableIT_CC3(TIMAddress());
+        break;
+      case timer::Channel::Channel4:
+        LL_TIM_EnableIT_CC4(TIMAddress());
+        break;
+      default:
+        assert_param(0);
+        break;
+    }
+  }
+
+  const void enableCaptureCompareDMARequest(timer::Channel channel) const {
+    switch (channel) {
+      case timer::Channel::Channel1:
+        LL_TIM_EnableDMAReq_CC1(TIMAddress());
+        break;
+      case timer::Channel::Channel2:
+        LL_TIM_EnableDMAReq_CC2(TIMAddress());
+        break;
+      case timer::Channel::Channel3:
+        LL_TIM_EnableDMAReq_CC3(TIMAddress());
+        break;
+      case timer::Channel::Channel4:
+        LL_TIM_EnableDMAReq_CC4(TIMAddress());
+        break;
+      default:
+        assert_param(0);
+        break;
+    }
+  }
+
+  const void enableChannel(timer::ChannelN channel) const {
+    LL_TIM_CC_EnableChannel(TIMAddress(), (uint32_t)channel);
+  }
+
+  const void enableCounter() const {
+    LL_TIM_EnableCounter(TIMAddress());
+  }
+
+  volatile void* getCaptureCompare1RegisterAddress() const {
+    return &(TIMAddress()->CCR1);
   }
 };
 }  // namespace hal

@@ -83,6 +83,7 @@ void setup() {
       hal::usart::DataWidth::DataWidth8,
       hal::usart::Parity::None,
       hal::usart::StopBits::StopBits1);
+  irRx.initialize(irRxTimer);
   // TODO ir_rx_setup();
   // TODO ir_tx_setup();
   // TODO current_sensor_setup();

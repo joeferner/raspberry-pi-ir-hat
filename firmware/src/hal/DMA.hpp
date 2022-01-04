@@ -219,6 +219,70 @@ class DMAChannel {
   const void setMemorySize(dma::MemorySize size) const {
     LL_DMA_SetMemorySize(DMAAddress(), channel(), (uint32_t)size);
   }
+
+  const void enableTransferCompleteInterrupt() const {
+    LL_DMA_EnableIT_TC(DMAAddress(), channel());
+  }
+
+  const void enableTransferErrorInterrupt() const {
+    LL_DMA_EnableIT_TE(DMAAddress(), channel());
+  }
+
+  const void disable() const {
+    LL_DMA_DisableChannel(DMAAddress(), channel());
+  }
+
+  const void enable() const {
+    LL_DMA_EnableChannel(DMAAddress(), channel());
+  }
+
+  const void clearGlobalInterruptFlag() const {
+    switch (TChannel) {
+      case dma::Channel::Channel1:
+        LL_DMA_ClearFlag_GI1(DMAAddress());
+        break;
+      case dma::Channel::Channel2:
+        LL_DMA_ClearFlag_GI2(DMAAddress());
+        break;
+      case dma::Channel::Channel3:
+        LL_DMA_ClearFlag_GI3(DMAAddress());
+        break;
+      case dma::Channel::Channel4:
+        LL_DMA_ClearFlag_GI4(DMAAddress());
+        break;
+      case dma::Channel::Channel5:
+        LL_DMA_ClearFlag_GI5(DMAAddress());
+        break;
+#ifdef LL_DMA_CHANNEL_6
+      case dma::Channel::Channel6:
+        LL_DMA_ClearFlag_GI6(DMAAddress());
+        break;
+#endif
+#ifdef LL_DMA_CHANNEL_7
+      case dma::Channel::Channel7:
+        LL_DMA_ClearFlag_GI7(DMAAddress());
+        break;
+#endif
+      default:
+        assert_param(0);
+    }
+  }
+
+  const void setDataLength(uint32_t dataLength) const {
+    LL_DMA_SetDataLength(DMAAddress(), channel(), dataLength);
+  }
+
+  const uint32_t getDataLength() const {
+    return LL_DMA_GetDataLength(DMAAddress(), channel());
+  }
+
+  const void setPeripheralAddress(const void* p) const {
+    LL_DMA_SetPeriphAddress(DMAAddress(), channel(), (uint32_t)p);
+  }
+
+  const void setMemoryAddress(const void* p) const {
+    LL_DMA_SetMemoryAddress(DMAAddress(), channel(), (uint32_t)p);
+  }
 };
 }  // namespace hal
 

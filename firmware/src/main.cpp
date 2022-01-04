@@ -16,6 +16,7 @@
 #include "hal/USART.hpp"
 #include "ir_rx.hpp"
 #include "ir_tx.hpp"
+#include "peripheral/IrRx.hpp"
 #include "peripheral/USART.hpp"
 #include "setup.hpp"
 #include "time.h"
@@ -49,6 +50,7 @@ peripheral::USART<hal::usart::USARTAddress::USART1Address, DEBUG_TX_BUFFER_SIZE,
     &usart1);
 peripheral::USART<hal::usart::USARTAddress::USART2Address, DEBUG_TX_BUFFER_SIZE, DEBUG_RX_BUFFER_SIZE> rpiUsart(
     &usart2);
+peripheral::IrRx irRx(&irRxDmaChannel);
 
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
 
