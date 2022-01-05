@@ -21,7 +21,6 @@ set(SRC_FILES
   libs/STM32CubeG0/Drivers/CMSIS/Device/ST/STM32G0xx/Source/Templates/gcc/startup_stm32g031xx.s
   src/main.cpp
   src/setup.cpp
-  src/ir_rx.cpp
   src/main_it.cpp
   src/ir_tx.cpp
   src/uint8_ring_buffer.cpp

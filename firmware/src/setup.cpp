@@ -10,7 +10,6 @@
 #include "hal/System.hpp"
 #include "hal/Timer.hpp"
 #include "hal/USART.hpp"
-#include "ir_rx.hpp"
 #include "ir_tx.hpp"
 #include "main.h"
 

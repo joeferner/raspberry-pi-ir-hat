@@ -6,7 +6,9 @@
 namespace hal {
 namespace dma {
 enum class DMAAddress : uint32_t
-{ DMA1Address = DMA1_BASE };
+{
+  DMA1Address = DMA1_BASE
+};
 
 enum class Channel : uint32_t
 {
@@ -178,7 +180,7 @@ class DMA {};
 
 template <dma::DMAAddress TAddress, dma::Channel TChannel>
 class DMAChannel {
- private:
+private:
   DMA_TypeDef* DMAAddress() const {
     return reinterpret_cast<DMA_TypeDef*>(TAddress);
   }
@@ -187,7 +189,7 @@ class DMAChannel {
     return (uint32_t)TChannel;
   }
 
- public:
+public:
   const void setPeripheralRequest(dma::PeripheralRequest request) const {
     LL_DMA_SetPeriphRequest(DMAAddress(), channel(), (uint32_t)request);
   }
@@ -238,33 +240,33 @@ class DMAChannel {
 
   const void clearGlobalInterruptFlag() const {
     switch (TChannel) {
-      case dma::Channel::Channel1:
-        LL_DMA_ClearFlag_GI1(DMAAddress());
-        break;
-      case dma::Channel::Channel2:
-        LL_DMA_ClearFlag_GI2(DMAAddress());
-        break;
-      case dma::Channel::Channel3:
-        LL_DMA_ClearFlag_GI3(DMAAddress());
-        break;
-      case dma::Channel::Channel4:
-        LL_DMA_ClearFlag_GI4(DMAAddress());
-        break;
-      case dma::Channel::Channel5:
-        LL_DMA_ClearFlag_GI5(DMAAddress());
-        break;
+    case dma::Channel::Channel1:
+      LL_DMA_ClearFlag_GI1(DMAAddress());
+      break;
+    case dma::Channel::Channel2:
+      LL_DMA_ClearFlag_GI2(DMAAddress());
+      break;
+    case dma::Channel::Channel3:
+      LL_DMA_ClearFlag_GI3(DMAAddress());
+      break;
+    case dma::Channel::Channel4:
+      LL_DMA_ClearFlag_GI4(DMAAddress());
+      break;
+    case dma::Channel::Channel5:
+      LL_DMA_ClearFlag_GI5(DMAAddress());
+      break;
 #ifdef LL_DMA_CHANNEL_6
-      case dma::Channel::Channel6:
-        LL_DMA_ClearFlag_GI6(DMAAddress());
-        break;
+    case dma::Channel::Channel6:
+      LL_DMA_ClearFlag_GI6(DMAAddress());
+      break;
 #endif
 #ifdef LL_DMA_CHANNEL_7
-      case dma::Channel::Channel7:
-        LL_DMA_ClearFlag_GI7(DMAAddress());
-        break;
+    case dma::Channel::Channel7:
+      LL_DMA_ClearFlag_GI7(DMAAddress());
+      break;
 #endif
-      default:
-        assert_param(0);
+    default:
+      assert_param(0);
     }
   }
 
@@ -282,6 +284,56 @@ class DMAChannel {
 
   const void setMemoryAddress(const void* p) const {
     LL_DMA_SetMemoryAddress(DMAAddress(), channel(), (uint32_t)p);
+  }
+
+  const bool isTransferCompleteFlagSet() const {
+    switch (TChannel) {
+    case dma::Channel::Channel1:
+      return LL_DMA_IsActiveFlag_TC1(DMAAddress());
+    case dma::Channel::Channel2:
+      return  LL_DMA_IsActiveFlag_TC2(DMAAddress());
+    case dma::Channel::Channel3:
+      return LL_DMA_IsActiveFlag_TC3(DMAAddress());
+    case dma::Channel::Channel4:
+      return  LL_DMA_IsActiveFlag_TC4(DMAAddress());
+    case dma::Channel::Channel5:
+      return LL_DMA_IsActiveFlag_TC5(DMAAddress());
+#ifdef LL_DMA_CHANNEL_6
+    case dma::Channel::Channel6:
+      return LL_DMA_IsActiveFlag_TC6(DMAAddress());
+#endif
+#ifdef LL_DMA_CHANNEL_7
+    case dma::Channel::Channel7:
+      return LL_DMA_IsActiveFlag_TC7(DMAAddress());
+#endif
+    default:
+      assert_param(0);
+    }
+  }
+
+  const bool isGlobalInterruptFlagSet() const {
+    switch (TChannel) {
+    case dma::Channel::Channel1:
+      return LL_DMA_IsActiveFlag_GI1(DMAAddress());
+    case dma::Channel::Channel2:
+      return  LL_DMA_IsActiveFlag_GI2(DMAAddress());
+    case dma::Channel::Channel3:
+      return LL_DMA_IsActiveFlag_GI3(DMAAddress());
+    case dma::Channel::Channel4:
+      return  LL_DMA_IsActiveFlag_GI4(DMAAddress());
+    case dma::Channel::Channel5:
+      return LL_DMA_IsActiveFlag_GI5(DMAAddress());
+#ifdef LL_DMA_CHANNEL_6
+    case dma::Channel::Channel6:
+      return LL_DMA_IsActiveFlag_GI6(DMAAddress());
+#endif
+#ifdef LL_DMA_CHANNEL_7
+    case dma::Channel::Channel7:
+      return LL_DMA_IsActiveFlag_GI7(DMAAddress());
+#endif
+    default:
+      assert_param(0);
+    }
   }
 };
 }  // namespace hal
