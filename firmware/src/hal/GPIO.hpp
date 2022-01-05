@@ -132,6 +132,22 @@ class GPIO {
   const void setOutputType(gpio::OutputType outputType) const {
     LL_GPIO_SetPinOutputType(GPIOPort(), GPIOPin(), (uint32_t)outputType);
   }
+
+  const void enableClock(const hal::Clocks& clocks) const {
+    switch (TAddress) {
+      case gpio::GPIOAddress::GPIOAAddress:
+        clocks.enableGPIOAClock();
+        break;
+      case gpio::GPIOAddress::GPIOBAddress:
+        clocks.enableGPIOBClock();
+        break;
+      case gpio::GPIOAddress::GPIOFAddress:
+        clocks.enableGPIOFClock();
+        break;
+      default:
+        assert_param(0);
+    }
+  }
 };
 
 }  // namespace hal

@@ -29,7 +29,6 @@ set(SRC_FILES
   src/hal/Bus.cpp
   src/hal/NVIC.cpp
   src/hal/RCC.cpp
-  src/hal/Clocks.cpp
   src/hal/System.cpp
   src/hal/IWDG.cpp
 )

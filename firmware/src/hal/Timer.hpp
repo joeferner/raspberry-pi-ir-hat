@@ -308,6 +308,32 @@ class Timer {
   volatile void* getCaptureCompare1RegisterAddress() const {
     return &(TIMAddress()->CCR1);
   }
+
+  const void enableClock(const hal::Clocks& clocks) const {
+    switch (TAddress) {
+      case timer::TimerAddress::TIM1Address:
+        clocks.enableTIM1Clock();
+        break;
+      case timer::TimerAddress::TIM2Address:
+        clocks.enableTIM2Clock();
+        break;
+      case timer::TimerAddress::TIM3Address:
+        clocks.enableTIM3Clock();
+        break;
+      case timer::TimerAddress::TIM14Address:
+        clocks.enableTIM14Clock();
+        break;
+      case timer::TimerAddress::TIM16Address:
+        clocks.enableTIM16Clock();
+        break;
+      case timer::TimerAddress::TIM17Address:
+        clocks.enableTIM17Clock();
+        break;
+      default:
+        assert_param(0);
+        break;
+    }
+  }
 };
 }  // namespace hal
 

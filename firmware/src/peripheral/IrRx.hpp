@@ -28,12 +28,14 @@ class IrRx {
     clocks.enableTIM3Clock();
     clocks.enableGPIOAClock();
 
+    irRxPin.enableClock(clocks);
     irRxPin.setSpeed(hal::gpio::Speed::Low);
     irRxPin.setOutputType(hal::gpio::OutputType::PushPull);
     irRxPin.setPull(hal::gpio::Pull::None);
     irRxPin.setAlternate(hal::gpio::Alternate::Alt1);
     irRxPin.setMode(hal::gpio::Mode::Alternate);
 
+    irRxTimer.enableClock(clocks);
     irRxTimer.setCounterMode(hal::timer::CounterMode::Up);
     irRxTimer.setClockDivision(hal::timer::ClockDivision::DIV_1);
     irRxTimer.setAutoReload(65535);
