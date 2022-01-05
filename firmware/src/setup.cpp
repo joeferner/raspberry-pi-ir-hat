@@ -40,7 +40,6 @@ static void setupSystemClock();
 static void setupGPIO();
 static void setupDMA();
 static void setupIRTIM();
-static void setupTIM3();
 static void setupTIM16();
 static void setupTIM17();
 static void setupIWDG();
@@ -54,7 +53,6 @@ void setup() {
   setupGPIO();
   setupDMA();
   setupIRTIM();
-  setupTIM3();
   setupTIM16();
   setupTIM17();
   setupIWDG();
@@ -82,8 +80,7 @@ void setup() {
       hal::usart::DataWidth::DataWidth8,
       hal::usart::Parity::None,
       hal::usart::StopBits::StopBits1);
-  irRx.initialize(irRxTimer);
-  // TODO ir_rx_setup();
+  irRx.initialize(nvic, clocks, irRxPin, irRxTimer);
   // TODO ir_tx_setup();
   // TODO current_sensor_setup();
   debugUsart.write("?READY\n");
@@ -132,42 +129,6 @@ static void setupDMA() {
 static void setupIRTIM() {
   halSystem.setIRModulationEnvelopeSignalSource(hal::system::IRModulationEnvelopeSignalSource::IR_TIM16);
   halSystem.setIRPolarity(hal::system::IRPolarity::NotInverted);
-}
-
-static void setupTIM3() {
-  clocks.enableTIM3Clock();
-  clocks.enableGPIOAClock();
-
-  irRxPin.setSpeed(hal::gpio::Speed::Low);
-  irRxPin.setOutputType(hal::gpio::OutputType::PushPull);
-  irRxPin.setPull(hal::gpio::Pull::None);
-  irRxPin.setAlternate(hal::gpio::Alternate::Alt1);
-  irRxPin.setMode(hal::gpio::Mode::Alternate);
-
-  irRxDmaChannel.setPeripheralRequest(hal::dma::PeripheralRequest::TIM3_CH1);
-  irRxDmaChannel.setDataTransferDirection(hal::dma::TransferDirection::PeripheralToMemory);
-  irRxDmaChannel.setChannelPriorityLevel(hal::dma::Priority::Low);
-  irRxDmaChannel.setMode(hal::dma::Mode::Circular);
-  irRxDmaChannel.setPeripheralIncrementMode(hal::dma::PeripheralIncrementMode::NoIncrement);
-  irRxDmaChannel.setMemoryIncrementMode(hal::dma::MemoryIncrementMode::Increment);
-  irRxDmaChannel.setPeripheralSize(hal::dma::PeripheralSize::HalfWord);
-  irRxDmaChannel.setMemorySize(hal::dma::MemorySize::HalfWord);
-
-  nvic.setPriority(hal::nvic::IRQnType::TIM3_Irq, 0);
-  nvic.enableInterrupt(hal::nvic::IRQnType::TIM3_Irq);
-
-  irRxTimer.setCounterMode(hal::timer::CounterMode::Up);
-  irRxTimer.setClockDivision(hal::timer::ClockDivision::DIV_1);
-  irRxTimer.setAutoReload(65535);
-  irRxTimer.setPrescaler(0);
-  irRxTimer.setRepetitionCounter(0);
-  irRxTimer.disableAutoReloadPreload();
-  irRxTimer.setTriggerOutput(hal::timer::TriggerOutput::Reset);
-  irRxTimer.disableMasterSlaveMode();
-  irRxTimer.setInputCaptureActiveInput(hal::timer::Channel::Channel1, hal::timer::InputCaptureActiveInput::DirectTI);
-  irRxTimer.setInputCapturePrescaler(hal::timer::Channel::Channel1, hal::timer::InputCapturePrescaler::DIV_1);
-  irRxTimer.setInputCaptureFilter(hal::timer::Channel::Channel1, hal::timer::InputCaptureFilter::FDIV1);
-  irRxTimer.setInputCapturePolarity(hal::timer::Channel::Channel1, hal::timer::InputCapturePolarity::BothEdges);
 }
 
 static void setupTIM16() {

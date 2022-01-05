@@ -2,26 +2,60 @@
 #define _PERIPHERAL_HPP_
 
 #include "hal/DMA.hpp"
+#include "hal/GPIO.hpp"
+#include "hal/NVIC.hpp"
 #include "hal/Timer.hpp"
 
 namespace peripheral {
 class IrRx {
-private:
+ private:
   hal::DMAChannel<hal::dma::DMAAddress::DMA1Address, hal::dma::Channel::Channel5>* irRxDmaChannel;
   uint16_t buffer[IR_RX_BUFFER_SAMPLES];
   uint32_t readIndex;
   uint16_t lastValue;
   uint32_t lastTick;
 
-public:
+ public:
   IrRx(hal::DMAChannel<hal::dma::DMAAddress::DMA1Address, hal::dma::Channel::Channel5>* irRxDmaChannel)
-    : irRxDmaChannel(irRxDmaChannel) {
+      : irRxDmaChannel(irRxDmaChannel) {
   }
 
-  const void initialize(hal::Timer<hal::timer::TimerAddress::TIM3Address>& irRxTimer) {
+  const void initialize(
+      hal::NVICHal& nvic,
+      const hal::Clocks& clocks,
+      hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin6>& irRxPin,
+      hal::Timer<hal::timer::TimerAddress::TIM3Address>& irRxTimer) {
+    clocks.enableTIM3Clock();
+    clocks.enableGPIOAClock();
+
+    irRxPin.setSpeed(hal::gpio::Speed::Low);
+    irRxPin.setOutputType(hal::gpio::OutputType::PushPull);
+    irRxPin.setPull(hal::gpio::Pull::None);
+    irRxPin.setAlternate(hal::gpio::Alternate::Alt1);
+    irRxPin.setMode(hal::gpio::Mode::Alternate);
+
+    irRxTimer.setCounterMode(hal::timer::CounterMode::Up);
+    irRxTimer.setClockDivision(hal::timer::ClockDivision::DIV_1);
+    irRxTimer.setAutoReload(65535);
+    irRxTimer.setRepetitionCounter(0);
+    irRxTimer.disableAutoReloadPreload();
+    irRxTimer.setTriggerOutput(hal::timer::TriggerOutput::Reset);
+    irRxTimer.disableMasterSlaveMode();
+    irRxTimer.setInputCaptureActiveInput(hal::timer::Channel::Channel1, hal::timer::InputCaptureActiveInput::DirectTI);
+    irRxTimer.setInputCapturePrescaler(hal::timer::Channel::Channel1, hal::timer::InputCapturePrescaler::DIV_1);
+    irRxTimer.setInputCaptureFilter(hal::timer::Channel::Channel1, hal::timer::InputCaptureFilter::FDIV1);
+    irRxTimer.setInputCapturePolarity(hal::timer::Channel::Channel1, hal::timer::InputCapturePolarity::BothEdges);
     irRxTimer.setPrescaler(SystemCoreClock, 1000000);
 
     this->irRxDmaChannel->disable();
+    this->irRxDmaChannel->setPeripheralRequest(hal::dma::PeripheralRequest::TIM3_CH1);
+    this->irRxDmaChannel->setDataTransferDirection(hal::dma::TransferDirection::PeripheralToMemory);
+    this->irRxDmaChannel->setChannelPriorityLevel(hal::dma::Priority::Low);
+    this->irRxDmaChannel->setMode(hal::dma::Mode::Circular);
+    this->irRxDmaChannel->setPeripheralIncrementMode(hal::dma::PeripheralIncrementMode::NoIncrement);
+    this->irRxDmaChannel->setMemoryIncrementMode(hal::dma::MemoryIncrementMode::Increment);
+    this->irRxDmaChannel->setPeripheralSize(hal::dma::PeripheralSize::HalfWord);
+    this->irRxDmaChannel->setMemorySize(hal::dma::MemorySize::HalfWord);
     this->irRxDmaChannel->enableTransferCompleteInterrupt();
     this->irRxDmaChannel->enableTransferErrorInterrupt();
     this->irRxDmaChannel->clearGlobalInterruptFlag();
@@ -32,14 +66,17 @@ public:
     memset(this->buffer, 0, sizeof(this->buffer));
     this->irRxDmaChannel->enable();
 
-    this->lastValue = 0;
-    this->readIndex = this->getDmaPosition();
-    this->lastTick = 0;
-
     irRxTimer.enableCaptureCompareInterrupt(hal::timer::Channel::Channel1);
     irRxTimer.enableCaptureCompareDMARequest(hal::timer::Channel::Channel1);
     irRxTimer.enableChannel(hal::timer::ChannelN::Channel1);
     irRxTimer.enableCounter();
+
+    this->lastValue = 0;
+    this->readIndex = this->getDmaPosition();
+    this->lastTick = 0;
+
+    nvic.setPriority(hal::nvic::IRQnType::TIM3_Irq, 0);
+    nvic.enableInterrupt(hal::nvic::IRQnType::TIM3_Irq);
   }
 
   const bool read(const hal::Clocks& clocks, uint16_t* result) {
@@ -71,7 +108,7 @@ public:
     }
   }
 
-private:
+ private:
   const size_t getDmaPosition() const {
     return IR_RX_BUFFER_SAMPLES - this->irRxDmaChannel->getDataLength();
   }
