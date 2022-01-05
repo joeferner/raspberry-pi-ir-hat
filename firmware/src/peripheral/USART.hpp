@@ -80,15 +80,14 @@ class USART {
       hal::usart::DataWidth dataWidth,
       hal::usart::Parity parity,
       hal::usart::StopBits stopBits) const {
-    clocks.enableUSART2Clock();
-    clocks.enableGPIOAClock();
-
+    usart2RxPin.enableClock(clocks);
     usart2RxPin.setSpeed(hal::gpio::Speed::Low);
     usart2RxPin.setOutputType(hal::gpio::OutputType::PushPull);
     usart2RxPin.setPull(hal::gpio::Pull::None);
     usart2RxPin.setAlternate(hal::gpio::Alternate::Alt1);
     usart2RxPin.setMode(hal::gpio::Mode::Alternate);
 
+    usart2TxPin.enableClock(clocks);
     usart2TxPin.setSpeed(hal::gpio::Speed::Low);
     usart2TxPin.setOutputType(hal::gpio::OutputType::PushPull);
     usart2TxPin.setPull(hal::gpio::Pull::None);
@@ -98,6 +97,7 @@ class USART {
     nvic.setPriority(hal::nvic::IRQnType::USART2_Irq, 0);
     nvic.enableInterrupt(hal::nvic::IRQnType::USART2_Irq);
 
+    usart2.enableClock(clocks);
     usart2.setDataWidth(dataWidth);
     usart2.setParity(parity);
     usart2.setStopBits(stopBits);

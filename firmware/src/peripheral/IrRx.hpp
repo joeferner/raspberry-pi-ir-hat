@@ -25,9 +25,6 @@ class IrRx {
       const hal::Clocks& clocks,
       hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin6>& irRxPin,
       hal::Timer<hal::timer::TimerAddress::TIM3Address>& irRxTimer) {
-    clocks.enableTIM3Clock();
-    clocks.enableGPIOAClock();
-
     irRxPin.enableClock(clocks);
     irRxPin.setSpeed(hal::gpio::Speed::Low);
     irRxPin.setOutputType(hal::gpio::OutputType::PushPull);

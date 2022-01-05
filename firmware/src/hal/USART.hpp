@@ -137,47 +137,55 @@ class USART {
 
   const void setBaudRate(const RCCHal& rcc, uint32_t baudRate) const {
     uint32_t clock;
-    if (USARTPort() == USART1) {
-      clock = rcc.getUSART1ClockFrequency();
-    } else if (USARTPort() == USART2) {
+    switch (TAddress) {
+      case usart::USARTAddress::USART1Address:
+        clock = rcc.getUSART1ClockFrequency();
+        break;
+      case usart::USARTAddress::USART2Address:
 #if defined(RCC_CCIPR_USART2SEL)
-      clock = rcc.getUSART2ClockFrequency();
+        clock = rcc.getUSART2ClockFrequency();
 #else
-      clock = rcc.getPCLK1Frequency();
+        clock = rcc.getPCLK1Frequency();
 #endif
+        break;
+      default:
+        assert_param(0);
+        break;
     }
-#if defined(USART3)
-    else if (USARTPort() == USART3) {
-#if defined(RCC_CCIPR_USART3SEL)
-      clock = rcc.getUSART3ClockFrequency();
-#else
-      clock = rcc.getPCLK1Frequency();
-#endif
-    }
-#endif /* USART3 */
-#if defined(USART4)
-    else if (USARTPort() == USART4) {
-#if defined(RCC_CCIPR_USART4SEL)
-      clock = rcc.getUSART4ClockFrequency();
-#else
-      clock = rcc.getPCLK1Frequency();
-#endif /* RCC_CCIPR_USART4SEL */
-    }
-#endif /* USART4 */
-#if defined(USART5)
-    else if (USARTPort() == USART5) {
-      clock = rcc.getPCLK1Frequency();
-    }
-#endif /* USART5 */
-#if defined(USART6)
-    else if (USARTPort() == USART6) {
-      clock = rcc.getPCLK1Frequency();
-    }
-#endif /* USART6 */
-    else {
-      clock = 0;
-      assert_param(0);
-    }
+
+    // TODO
+    // #if defined(USART3)
+    //     else if (USARTPort() == USART3) {
+    // #if defined(RCC_CCIPR_USART3SEL)
+    //       clock = rcc.getUSART3ClockFrequency();
+    // #else
+    //       clock = rcc.getPCLK1Frequency();
+    // #endif
+    //     }
+    // #endif /* USART3 */
+    // #if defined(USART4)
+    //     else if (USARTPort() == USART4) {
+    // #if defined(RCC_CCIPR_USART4SEL)
+    //       clock = rcc.getUSART4ClockFrequency();
+    // #else
+    //       clock = rcc.getPCLK1Frequency();
+    // #endif /* RCC_CCIPR_USART4SEL */
+    //     }
+    // #endif /* USART4 */
+    // #if defined(USART5)
+    //     else if (USARTPort() == USART5) {
+    //       clock = rcc.getPCLK1Frequency();
+    //     }
+    // #endif /* USART5 */
+    // #if defined(USART6)
+    //     else if (USARTPort() == USART6) {
+    //       clock = rcc.getPCLK1Frequency();
+    //     }
+    // #endif /* USART6 */
+    //     else {
+    //       clock = 0;
+    //       assert_param(0);
+    //     }
 
     LL_USART_SetBaudRate(
         USARTPort(), clock, (uint32_t)this->getPrescalerValue(), (uint32_t)this->getOverSampling(), baudRate);
@@ -247,6 +255,20 @@ class USART {
 
   const uint8_t receiveData8() const {
     return LL_USART_ReceiveData8(USARTPort());
+  }
+
+  const void enableClock(const hal::Clocks& clocks) const {
+    switch (TAddress) {
+      case hal::usart::USARTAddress::USART1Address:
+        clocks.enableUSART1Clock();
+        break;
+      case hal::usart::USARTAddress::USART2Address:
+        clocks.enableUSART2Clock();
+        break;
+      default:
+        assert_param(0);
+        break;
+    }
   }
 };
 }  // namespace hal
