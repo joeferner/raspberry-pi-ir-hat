@@ -1,5 +1,5 @@
-#ifndef _PERIPHERAL_HPP_
-#define _PERIPHERAL_HPP_
+#ifndef _PERIPHERAL_IR_RX_HPP_
+#define _PERIPHERAL_IR_RX_HPP_
 
 #include "hal/DMA.hpp"
 #include "hal/GPIO.hpp"
@@ -8,29 +8,40 @@
 
 namespace peripheral {
 class IrRx {
- private:
+private:
   hal::DMAChannel<hal::dma::DMAAddress::DMA1Address, hal::dma::Channel::Channel5>* irRxDmaChannel;
+  hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin7>* irInLedPin;
   uint16_t buffer[IR_RX_BUFFER_SAMPLES];
   uint32_t readIndex;
   uint16_t lastValue;
   uint32_t lastTick;
 
- public:
-  IrRx(hal::DMAChannel<hal::dma::DMAAddress::DMA1Address, hal::dma::Channel::Channel5>* irRxDmaChannel)
-      : irRxDmaChannel(irRxDmaChannel) {
+public:
+  IrRx(
+    hal::DMAChannel<hal::dma::DMAAddress::DMA1Address, hal::dma::Channel::Channel5>* irRxDmaChannel,
+    hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin7>* irInLedPin
+  )
+    : irRxDmaChannel(irRxDmaChannel), irInLedPin(irInLedPin) {
   }
 
   const void initialize(
-      hal::NVICHal& nvic,
-      const hal::Clocks& clocks,
-      hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin6>& irRxPin,
-      hal::Timer<hal::timer::TimerAddress::TIM3Address>& irRxTimer) {
+    hal::NVICHal& nvic,
+    hal::Clocks& clocks,
+    hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin6>& irRxPin,
+    hal::Timer<hal::timer::TimerAddress::TIM3Address>& irRxTimer) {
     irRxPin.enableClock(clocks);
     irRxPin.setSpeed(hal::gpio::Speed::Low);
     irRxPin.setOutputType(hal::gpio::OutputType::PushPull);
     irRxPin.setPull(hal::gpio::Pull::None);
     irRxPin.setAlternate(hal::gpio::Alternate::Alt1);
     irRxPin.setMode(hal::gpio::Mode::Alternate);
+
+    this->irInLedPin->enableClock(clocks);
+    this->irInLedPin->resetOutputPin();
+    this->irInLedPin->setSpeed(hal::gpio::Speed::Low);
+    this->irInLedPin->setOutputType(hal::gpio::OutputType::PushPull);
+    this->irInLedPin->setPull(hal::gpio::Pull::None);
+    this->irInLedPin->setMode(hal::gpio::Mode::Output);
 
     irRxTimer.enableClock(clocks);
     irRxTimer.setCounterMode(hal::timer::CounterMode::Up);
@@ -83,6 +94,8 @@ class IrRx {
       return false;
     }
 
+    // TODO toggle this->irInLedPin
+
     uint16_t value = this->buffer[this->readIndex++];
     if (this->readIndex >= IR_RX_BUFFER_SAMPLES) {
       this->readIndex = 0;
@@ -107,7 +120,7 @@ class IrRx {
     }
   }
 
- private:
+private:
   const size_t getDmaPosition() const {
     return IR_RX_BUFFER_SAMPLES - this->irRxDmaChannel->getDataLength();
   }

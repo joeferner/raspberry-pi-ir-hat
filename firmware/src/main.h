@@ -51,6 +51,8 @@ void Error_Handler(void);
 #define RPI_TX_BUFFER_LEN 200
 #define RPI_RX_BUFFER_LEN 200
 
+#define IR_TX_BUFFER_SAMPLES 128
+
 #define IR_RX_BUFFER_SAMPLES 128
 #define IR_RX_TIMEOUT_MS 1000
 

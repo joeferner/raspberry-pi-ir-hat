@@ -85,12 +85,12 @@ enum class Prescaler : uint32_t
 
 template <usart::USARTAddress TAddress>
 class USART {
- private:
+private:
   USART_TypeDef* USARTPort() const {
     return reinterpret_cast<USART_TypeDef*>(TAddress);
   }
 
- public:
+public:
   const void setDataWidth(usart::DataWidth dataWidth) const {
     LL_USART_SetDataWidth(USARTPort(), (uint32_t)dataWidth);
   }
@@ -138,19 +138,19 @@ class USART {
   const void setBaudRate(const RCCHal& rcc, uint32_t baudRate) const {
     uint32_t clock;
     switch (TAddress) {
-      case usart::USARTAddress::USART1Address:
-        clock = rcc.getUSART1ClockFrequency();
-        break;
-      case usart::USARTAddress::USART2Address:
+    case usart::USARTAddress::USART1Address:
+      clock = rcc.getUSART1ClockFrequency();
+      break;
+    case usart::USARTAddress::USART2Address:
 #if defined(RCC_CCIPR_USART2SEL)
-        clock = rcc.getUSART2ClockFrequency();
+      clock = rcc.getUSART2ClockFrequency();
 #else
-        clock = rcc.getPCLK1Frequency();
+      clock = rcc.getPCLK1Frequency();
 #endif
-        break;
-      default:
-        assert_param(0);
-        break;
+      break;
+    default:
+      assert_param(0);
+      break;
     }
 
     // TODO
@@ -188,7 +188,7 @@ class USART {
     //     }
 
     LL_USART_SetBaudRate(
-        USARTPort(), clock, (uint32_t)this->getPrescalerValue(), (uint32_t)this->getOverSampling(), baudRate);
+      USARTPort(), clock, (uint32_t)this->getPrescalerValue(), (uint32_t)this->getOverSampling(), baudRate);
   }
 
   const void configAsyncMode() const {
@@ -257,17 +257,17 @@ class USART {
     return LL_USART_ReceiveData8(USARTPort());
   }
 
-  const void enableClock(const hal::Clocks& clocks) const {
+  const void enableClock(hal::Clocks& clocks) const {
     switch (TAddress) {
-      case hal::usart::USARTAddress::USART1Address:
-        clocks.enableUSART1Clock();
-        break;
-      case hal::usart::USARTAddress::USART2Address:
-        clocks.enableUSART2Clock();
-        break;
-      default:
-        assert_param(0);
-        break;
+    case hal::usart::USARTAddress::USART1Address:
+      clocks.enableUSART1Clock();
+      break;
+    case hal::usart::USARTAddress::USART2Address:
+      clocks.enableUSART2Clock();
+      break;
+    default:
+      assert_param(0);
+      break;
     }
   }
 };

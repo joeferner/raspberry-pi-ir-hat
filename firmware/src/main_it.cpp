@@ -1,6 +1,5 @@
 #include "current_sensor.hpp"
 #include "globals.hpp"
-#include "ir_tx.hpp"
 #include "main.h"
 
 extern "C" void NMI_Handler() {
@@ -47,7 +46,7 @@ extern "C" void TIM3_IRQHandler() {
 }
 
 extern "C" void TIM16_IRQHandler() {
-  ir_tx_irq();
+  irTx.handleInterrupt();
 }
 
 extern "C" void WWDG_IRQHandler() {

@@ -10,7 +10,6 @@
 #include "hal/System.hpp"
 #include "hal/Timer.hpp"
 #include "hal/USART.hpp"
-#include "ir_tx.hpp"
 #include "main.h"
 
 extern hal::System halSystem;
@@ -81,6 +80,7 @@ void setup() {
       hal::usart::Parity::None,
       hal::usart::StopBits::StopBits1);
   irRx.initialize(nvic, clocks, irRxPin, irRxTimer);
+  irTx.initialize(clocks, halSystem);
   // TODO ir_tx_setup();
   // TODO current_sensor_setup();
   debugUsart.write("?READY\n");
@@ -104,20 +104,8 @@ static void setupGPIO() {
   clocks.enableGPIOBClock();
   clocks.enableGPIOFClock();
 
-  irOutPin.setSpeed(hal::gpio::Speed::Low);
-  irOutPin.setOutputType(hal::gpio::OutputType::PushPull);
-  irOutPin.setPull(hal::gpio::Pull::None);
-  irOutPin.setAlternate(hal::gpio::Alternate::Alt0);
-  irOutPin.setMode(hal::gpio::Mode::Alternate);
-
   resetPin.setPull(hal::gpio::Pull::None);
   resetPin.setMode(hal::gpio::Mode::Input);
-
-  irInLedPin.resetOutputPin();
-  irInLedPin.setSpeed(hal::gpio::Speed::Low);
-  irInLedPin.setOutputType(hal::gpio::OutputType::PushPull);
-  irInLedPin.setPull(hal::gpio::Pull::None);
-  irInLedPin.setMode(hal::gpio::Mode::Output);
 }
 
 static void setupDMA() {

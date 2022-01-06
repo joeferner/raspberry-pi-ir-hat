@@ -22,7 +22,6 @@ set(SRC_FILES
   src/main.cpp
   src/setup.cpp
   src/main_it.cpp
-  src/ir_tx.cpp
   src/uint8_ring_buffer.cpp
   src/uint32_ring_buffer.cpp
   src/current_sensor.cpp

@@ -5,14 +5,14 @@
 
 namespace hal {
 class Clocks {
- private:
+private:
   volatile uint32_t tickCount;
 
- public:
+public:
   Clocks() : tickCount(0) {
   }
 
-  const void init1msTick(uint32_t hclkFrequency) const {
+  const void init1msTick(uint32_t hclkFrequency) {
     LL_Init1msTick(hclkFrequency);
     SystemCoreClockUpdate();
   }
@@ -25,55 +25,55 @@ class Clocks {
     this->tickCount++;
   }
 
-  const void setSystemCoreClock(uint32_t hclkFrequency) const {
+  const void setSystemCoreClock(uint32_t hclkFrequency) {
     LL_SetSystemCoreClock(hclkFrequency);
   }
 
-  const void enableGPIOAClock() const {
+  const void enableGPIOAClock() {
     LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOA);
   }
 
-  const void enableGPIOBClock() const {
+  const void enableGPIOBClock() {
     LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOB);
   }
 
-  const void enableGPIOFClock() const {
+  const void enableGPIOFClock() {
     LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOF);
   }
 
-  const void enableDMA1Clock() const {
+  const void enableDMA1Clock() {
     LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
   }
 
-  const void enableUSART1Clock() const {
+  const void enableUSART1Clock() {
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_USART1);
   }
 
-  const void enableUSART2Clock() const {
+  const void enableUSART2Clock() {
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_USART2);
   }
 
-  const void enableTIM1Clock() const {
+  const void enableTIM1Clock() {
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM1);
   }
 
-  const void enableTIM2Clock() const {
+  const void enableTIM2Clock() {
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
   }
 
-  const void enableTIM3Clock() const {
+  const void enableTIM3Clock() {
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
   }
 
-  const void enableTIM14Clock() const {
+  const void enableTIM14Clock() {
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM14);
   }
 
-  const void enableTIM16Clock() const {
+  const void enableTIM16Clock() {
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM16);
   }
 
-  const void enableTIM17Clock() const {
+  const void enableTIM17Clock() {
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM17);
   }
 };

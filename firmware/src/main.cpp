@@ -14,15 +14,11 @@
 #include "hal/System.hpp"
 #include "hal/Timer.hpp"
 #include "hal/USART.hpp"
-#include "ir_tx.hpp"
 #include "peripheral/IrRx.hpp"
+#include "peripheral/IrTx.hpp"
 #include "peripheral/USART.hpp"
 #include "setup.hpp"
 #include "time.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 hal::System halSystem;
 hal::Clocks clocks;
@@ -49,7 +45,8 @@ peripheral::USART<hal::usart::USARTAddress::USART1Address, DEBUG_TX_BUFFER_SIZE,
     &usart1);
 peripheral::USART<hal::usart::USARTAddress::USART2Address, DEBUG_TX_BUFFER_SIZE, DEBUG_RX_BUFFER_SIZE> rpiUsart(
     &usart2);
-peripheral::IrRx irRx(&irRxDmaChannel);
+peripheral::IrRx irRx(&irRxDmaChannel, &irInLedPin);
+peripheral::IrTx irTx(&irOutPin);
 
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
 
@@ -61,7 +58,7 @@ void loop();
 
 void process_rx(char* data, send_string send_string);
 
-int main() {
+extern "C" int main() {
   setup();
   while (1) {
     loop();
@@ -165,7 +162,3 @@ void Error_Handler(void) {
   while (1) {
   }
 }
-
-#ifdef __cplusplus
-}
-#endif
