@@ -1,8 +1,9 @@
 #ifndef _CURRENT_SENSOR_HPP_
 #define _CURRENT_SENSOR_HPP_
 
-#include "main.h"
 #include <stdlib.h>
+
+#include "main.h"
 
 const uint32_t VREF_mV = 3300;
 const uint16_t VREF_DECAY = 10;

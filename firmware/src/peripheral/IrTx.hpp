@@ -124,21 +124,22 @@ class IrTx {
     this->stop();
 
     // init carrier timer
-    uint32_t autoReload = __LL_TIM_CALC_ARR(SystemCoreClock, IR_OUT_CARRIER_PRESCALER, carrierFrequency);
-    LL_TIM_SetPrescaler(IR_OUT_CARRIER_TIMER, IR_OUT_CARRIER_PRESCALER);
-    LL_TIM_SetAutoReload(IR_OUT_CARRIER_TIMER, autoReload);
-    LL_TIM_CC_EnableChannel(IR_OUT_CARRIER_TIMER, IR_OUT_CARRIER_CHANNEL);
-    IR_OUT_CARRIER_TIM_OC_SetCompare(autoReload / 4);  // 25% duty cycle
-    LL_TIM_EnableAllOutputs(IR_OUT_CARRIER_TIMER);
+    const uint32_t carrierPrescaler = 0;
+    this->irTxCarrierTimer->setPrescaler(carrierPrescaler);
+    uint32_t autoReload = this->irTxCarrierTimer->setAutoReload(SystemCoreClock, carrierPrescaler, carrierFrequency);
+    this->irTxCarrierTimer->setOutputCompareValue(hal::timer::Channel::Channel1, autoReload / 4);  // 25% duty cycle
+    this->irTxCarrierTimer->enableCaptureCompareChannel(hal::timer::ChannelN::Channel1);
+    this->irTxCarrierTimer->enableAllOutputs();
 
     // init signal timer
-    LL_TIM_SetPrescaler(IR_OUT_SIGNAL_TIMER, IR_OUT_SIGNAL_PRESCALER);
-    LL_TIM_SetAutoReload(IR_OUT_SIGNAL_TIMER, 65000);
-    LL_TIM_OC_DisablePreload(IR_OUT_SIGNAL_TIMER, IR_OUT_SIGNAL_CHANNEL);
-    LL_TIM_EnableIT_UPDATE(IR_OUT_SIGNAL_TIMER);
-    LL_TIM_CC_EnableChannel(IR_OUT_SIGNAL_TIMER, IR_OUT_SIGNAL_CHANNEL);
-    IR_OUT_SIGNAL_TIM_OC_SetCompare(30000);
-    LL_TIM_EnableAllOutputs(IR_OUT_SIGNAL_TIMER);
+    const uint32_t signalPrescaler = 10;
+    this->irTxSignalTimer->setPrescaler(signalPrescaler);
+    this->irTxSignalTimer->setAutoReload(65000);
+    this->irTxSignalTimer->disableOutputComparePreload(hal::timer::Channel::Channel1);
+    this->irTxSignalTimer->enableUpdateInterrupt();
+    this->irTxSignalTimer->enableCaptureCompareChannel(hal::timer::ChannelN::Channel1);
+    this->irTxSignalTimer->setOutputCompareValue(hal::timer::Channel::Channel1, 30000);
+    this->irTxSignalTimer->enableAllOutputs();
   }
 
   const void write(uint32_t t_on, uint32_t t_off) {
@@ -152,14 +153,14 @@ class IrTx {
 
       this->nextSignal();
       this->enableGpio(true);
-      LL_TIM_EnableCounter(IR_OUT_CARRIER_TIMER);
-      LL_TIM_EnableCounter(IR_OUT_SIGNAL_TIMER);
+      this->irTxCarrierTimer->enableCounter();
+      this->irTxSignalTimer->enableCounter();
     }
   }
 
   const void handleInterrupt() {
-    if (LL_TIM_IsActiveFlag_UPDATE(IR_OUT_SIGNAL_TIMER)) {
-      LL_TIM_ClearFlag_UPDATE(IR_OUT_SIGNAL_TIMER);
+    if (this->irTxSignalTimer->isUpdateFlagSet()) {
+      this->irTxSignalTimer->clearUpdateFlag();
       this->nextSignal();
     }
   }

@@ -77,7 +77,7 @@ class IrRx {
 
     irRxTimer.enableCaptureCompareInterrupt(hal::timer::Channel::Channel1);
     irRxTimer.enableCaptureCompareDMARequest(hal::timer::Channel::Channel1);
-    irRxTimer.enableChannel(hal::timer::ChannelN::Channel1);
+    irRxTimer.enableCaptureCompareChannel(hal::timer::ChannelN::Channel1);
     irRxTimer.enableCounter();
 
     this->lastValue = 0;
