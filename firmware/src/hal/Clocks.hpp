@@ -76,6 +76,10 @@ class Clocks {
   void enableTIM17Clock() {
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM17);
   }
+
+  void enableADCClock() {
+    LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_ADC);
+  }
 };
 }  // namespace hal
 

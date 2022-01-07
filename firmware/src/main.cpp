@@ -3,6 +3,7 @@
 #include <memory.h>
 #include <stdlib.h>
 
+#include "hal/ADC.hpp"
 #include "hal/Bus.hpp"
 #include "hal/Clocks.hpp"
 #include "hal/DMA.hpp"
@@ -25,20 +26,28 @@ hal::Clocks clocks;
 hal::Bus bus;
 hal::NVICHal nvic;
 hal::RCCHal rcc;
-hal::GPIO<hal::gpio::GPIOAddress::GPIOFAddress, hal::gpio::GPIOPin::Pin2> resetPin;
-hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin7> irInLedPin;
-hal::GPIO<hal::gpio::GPIOAddress::GPIOBAddress, hal::gpio::GPIOPin::Pin9> irOutPin;
-hal::GPIO<hal::gpio::GPIOAddress::GPIOBAddress, hal::gpio::GPIOPin::Pin7> usart1RxPin;
-hal::GPIO<hal::gpio::GPIOAddress::GPIOBAddress, hal::gpio::GPIOPin::Pin6> usart1TxPin;
-hal::USART<hal::usart::USARTAddress::USART1Address> usart1;
-hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin3> usart2RxPin;
+
+hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin0> currentRefPin;
 hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin2> usart2TxPin;
-hal::USART<hal::usart::USARTAddress::USART2Address> usart2;
+hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin3> usart2RxPin;
+hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin4> current0Pin;
+hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin5> current1Pin;
 hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin6> irRxPin;
+hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin7> irInLedPin;
+
+hal::GPIO<hal::gpio::GPIOAddress::GPIOBAddress, hal::gpio::GPIOPin::Pin6> usart1TxPin;
+hal::GPIO<hal::gpio::GPIOAddress::GPIOBAddress, hal::gpio::GPIOPin::Pin7> usart1RxPin;
+hal::GPIO<hal::gpio::GPIOAddress::GPIOBAddress, hal::gpio::GPIOPin::Pin9> irOutPin;
+
+hal::GPIO<hal::gpio::GPIOAddress::GPIOFAddress, hal::gpio::GPIOPin::Pin2> resetPin;
+
+hal::USART<hal::usart::USARTAddress::USART1Address> usart1;
+hal::USART<hal::usart::USARTAddress::USART2Address> usart2;
 hal::DMAChannel<hal::dma::DMAAddress::DMA1Address, hal::dma::Channel::Channel5> irRxDmaChannel;
 hal::Timer<hal::timer::TimerAddress::TIM3Address> irRxTimer;
 hal::Timer<hal::timer::TimerAddress::TIM17Address> irTxCarrierTimer;
 hal::Timer<hal::timer::TimerAddress::TIM16Address> irTxSignalTimer;
+hal::ADCHal<hal::adc::ADCAddress::ADC1Address> currentSensorAdc;
 hal::IWDGHal iwdg;
 
 peripheral::USART<hal::usart::USARTAddress::USART1Address, USART_TX_BUFFER_SIZE, USART_RX_BUFFER_SIZE> debugUsart(
@@ -47,7 +56,7 @@ peripheral::USART<hal::usart::USARTAddress::USART2Address, USART_TX_BUFFER_SIZE,
     &usart2);
 peripheral::IrRx irRx(&irRxDmaChannel, &irInLedPin);
 peripheral::IrTx irTx(&irOutPin, &irTxCarrierTimer, &irTxSignalTimer);
-peripheral::CurrentSensor currentSensor;
+peripheral::CurrentSensor currentSensor(&currentSensorAdc);
 
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
 

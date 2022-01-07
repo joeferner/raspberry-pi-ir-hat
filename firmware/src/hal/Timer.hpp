@@ -140,11 +140,6 @@ enum class OutputCompareIdleState : uint32_t
 // TODO split out timer channels to new classes?
 template <timer::TimerAddress TAddress>
 class Timer {
- private:
-  TIM_TypeDef* TIMAddress() const {
-    return reinterpret_cast<TIM_TypeDef*>(TAddress);
-  }
-
  public:
   void setCounterMode(timer::CounterMode mode) const {
     if (IS_TIM_COUNTER_MODE_SELECT_INSTANCE(TIMAddress())) {
@@ -369,6 +364,11 @@ class Timer {
         assert_param(0);
         break;
     }
+  }
+
+ private:
+  TIM_TypeDef* TIMAddress() const {
+    return reinterpret_cast<TIM_TypeDef*>(TAddress);
   }
 };
 }  // namespace hal

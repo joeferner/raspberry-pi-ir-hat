@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 
+#include "hal/ADC.hpp"
 #include "main.h"
 
 const uint32_t VREF_mV = 3300;
@@ -38,6 +39,9 @@ enum class CurrentSensorInput
 };
 
 class CurrentSensor {
+ private:
+  hal::ADCHal<hal::adc::ADCAddress::ADC1Address>* adc;
+
   uint16_t currentReference_mV;
   uint16_t current_0_mV;
   uint16_t current_0_localMax_mV;
@@ -49,38 +53,33 @@ class CurrentSensor {
   volatile bool endOfSequence;
 
  public:
-  void initialize() {
+  CurrentSensor(hal::ADCHal<hal::adc::ADCAddress::ADC1Address>* adc) : adc(adc) {
+  }
+
+  void initialize(
+      hal::Clocks& clocks,
+      hal::NVICHal& nvic,
+      hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin0>& currentRefPin,
+      hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin4>& current0Pin,
+      hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin5>& current1Pin) {
+    this->adc->enableClock(clocks);
+
+    currentRefPin.enableClock(clocks);
+    currentRefPin.setSpeed(hal::gpio::Speed::Low);
+    currentRefPin.setPull(hal::gpio::Pull::None);
+    currentRefPin.setMode(hal::gpio::Mode::Analog);
+
+    current0Pin.enableClock(clocks);
+    current0Pin.setSpeed(hal::gpio::Speed::Low);
+    current0Pin.setPull(hal::gpio::Pull::None);
+    current0Pin.setMode(hal::gpio::Mode::Analog);
+
+    current1Pin.enableClock(clocks);
+    current1Pin.setSpeed(hal::gpio::Speed::Low);
+    current1Pin.setPull(hal::gpio::Pull::None);
+    current1Pin.setMode(hal::gpio::Mode::Analog);
+
     // TODO ADC
-    //   /* Peripheral clock enable */
-    //   LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_ADC);
-
-    //   LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOA);
-    //   /**ADC1 GPIO Configuration
-    //   PA0   ------> ADC1_IN0
-    //   PA4   ------> ADC1_IN4
-    //   PA5   ------> ADC1_IN5
-    //   */
-    //   GPIO_InitStruct.Pin = CURREF_Pin;
-    //   GPIO_InitStruct.Mode = LL_GPIO_MODE_ANALOG;
-    //   GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-    //   LL_GPIO_Init(CURREF_GPIO_Port, &GPIO_InitStruct);
-
-    //   GPIO_InitStruct.Pin = CUR1_Pin;
-    //   GPIO_InitStruct.Mode = LL_GPIO_MODE_ANALOG;
-    //   GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-    //   LL_GPIO_Init(CUR1_GPIO_Port, &GPIO_InitStruct);
-
-    //   GPIO_InitStruct.Pin = CUR2_Pin;
-    //   GPIO_InitStruct.Mode = LL_GPIO_MODE_ANALOG;
-    //   GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-    //   LL_GPIO_Init(CUR2_GPIO_Port, &GPIO_InitStruct);
-
-    //   /* ADC1 interrupt Init */
-    //   NVIC_SetPriority(ADC1_IRQn, 0);
-    //   NVIC_EnableIRQ(ADC1_IRQn);
-
-    //   /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
-    //   */
 
     // #define ADC_CHANNEL_CONF_RDY_TIMEOUT_MS ( 1U)
     // #if (USE_TIMEOUT == 1)
@@ -201,11 +200,14 @@ class CurrentSensor {
     sequenceCount = 0;
     // TODO after PCBs created set this to CurrentReadRank::Reference
     currentReadRank = CurrentReadRank::Current1;
-    LL_ADC_EnableIT_EOC(ADC1);
-    LL_ADC_EnableIT_EOS(ADC1);
-    LL_ADC_EnableIT_OVR(ADC1);
-    LL_ADC_Enable(ADC1);
-    LL_ADC_REG_StartConversion(ADC1);
+    this->adc->enableEndOfConversionInterrupt();
+    this->adc->enableEndOfSequenceInterrupt();
+    this->adc->enableOverruneInterrupt();
+    this->adc->enable();
+    this->adc->startConversion();
+
+    nvic.setPriority(hal::nvic::IRQnType::ADC1_Irq, 0);
+    nvic.enableInterrupt(hal::nvic::IRQnType::ADC1_Irq);
   }
 
   void loop() {
