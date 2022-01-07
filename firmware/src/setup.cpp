@@ -71,7 +71,7 @@ void setup() {
       hal::usart::StopBits::StopBits1);
   irRx.initialize(nvic, clocks, irRxPin, irRxTimer);
   irTx.initialize(clocks, halSystem, nvic);
-  // TODO current_sensor_setup();
+  currentSensor.initialize();
   debugUsart.write("?READY\n");
   iwdg.enable();
 }

@@ -38,19 +38,19 @@ enum class CurrentSensorInput
 };
 
 class CurrentSensor {
-  uint16_t current_reference_mV;
+  uint16_t currentReference_mV;
   uint16_t current_0_mV;
-  uint16_t current_0_local_max_mV;
+  uint16_t current_0_localMax_mV;
   uint16_t current_1_mV;
-  uint16_t current_1_local_max_mV;
-  uint16_t sequence_count;
-  CurrentReadRank current_read_rank;
-  volatile bool end_of_conversion;
-  volatile bool end_of_sequence;
+  uint16_t current_1_localMax_mV;
+  uint16_t sequenceCount;
+  CurrentReadRank currentReadRank;
+  volatile bool endOfConversion;
+  volatile bool endOfSequence;
 
  public:
   void initialize() {
-    // TODO
+    // TODO ADC
     //   /* Peripheral clock enable */
     //   LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_ADC);
 
@@ -194,13 +194,13 @@ class CurrentSensor {
     //   LL_ADC_ClearFlag_CCRDY(ADC1);
     //   LL_ADC_SetChannelSamplingTime(ADC1, LL_ADC_CHANNEL_5, LL_ADC_SAMPLINGTIME_COMMON_1);
 
-    end_of_conversion = false;
-    end_of_sequence = false;
-    current_0_mV = current_1_mV = current_reference_mV = 3300 / 2;
-    current_0_local_max_mV = current_1_local_max_mV = 0;
-    sequence_count = 0;
+    endOfConversion = false;
+    endOfSequence = false;
+    current_0_mV = current_1_mV = currentReference_mV = 3300 / 2;
+    current_0_localMax_mV = current_1_localMax_mV = 0;
+    sequenceCount = 0;
     // TODO after PCBs created set this to CurrentReadRank::Reference
-    current_read_rank = CurrentReadRank::Current1;
+    currentReadRank = CurrentReadRank::Current1;
     LL_ADC_EnableIT_EOC(ADC1);
     LL_ADC_EnableIT_EOS(ADC1);
     LL_ADC_EnableIT_OVR(ADC1);
@@ -211,41 +211,41 @@ class CurrentSensor {
   void loop() {
     bool start_conversion = false;
 
-    if (end_of_conversion) {
+    if (endOfConversion) {
       uint16_t raw_data = LL_ADC_REG_ReadConversionData12(ADC1);
       uint32_t data_mV = __LL_ADC_CALC_DATA_TO_VOLTAGE(VREF_mV, raw_data, LL_ADC_RESOLUTION_12B);
 
-      if (current_read_rank == CurrentReadRank::Reference) {
-        current_reference_mV = ((VREF_DECAY * data_mV) + ((100 - VREF_DECAY) * current_reference_mV)) / 100;
-        current_read_rank = CurrentReadRank::Current0;
-      } else if (current_read_rank == CurrentReadRank::Current0 || current_read_rank == CurrentReadRank::Current1) {
-        uint16_t diff = abs((int32_t)current_reference_mV - (int32_t)data_mV);
+      if (currentReadRank == CurrentReadRank::Reference) {
+        currentReference_mV = ((VREF_DECAY * data_mV) + ((100 - VREF_DECAY) * currentReference_mV)) / 100;
+        currentReadRank = CurrentReadRank::Current0;
+      } else if (currentReadRank == CurrentReadRank::Current0 || currentReadRank == CurrentReadRank::Current1) {
+        uint16_t diff = abs((int32_t)currentReference_mV - (int32_t)data_mV);
 
-        if (current_read_rank == CurrentReadRank::Current0) {
-          current_0_local_max_mV = MAX(diff, current_0_local_max_mV);
-          current_read_rank = CurrentReadRank::Unknown;  // TODO CurrentReadRank::Current1
-        } else if (current_read_rank == CurrentReadRank::Current1) {
-          current_1_local_max_mV = MAX(diff, current_1_local_max_mV);
-          current_read_rank = CurrentReadRank::Reference;  // TODO CurrentReadRank::Unknown
+        if (currentReadRank == CurrentReadRank::Current0) {
+          current_0_localMax_mV = MAX(diff, current_0_localMax_mV);
+          currentReadRank = CurrentReadRank::Unknown;  // TODO CurrentReadRank::Current1
+        } else if (currentReadRank == CurrentReadRank::Current1) {
+          current_1_localMax_mV = MAX(diff, current_1_localMax_mV);
+          currentReadRank = CurrentReadRank::Reference;  // TODO CurrentReadRank::Unknown
         } else {
           assert_param(false);
         }
       }
 
-      end_of_conversion = false;
+      endOfConversion = false;
       start_conversion = true;
     }
 
-    if (end_of_sequence) {
-      current_read_rank = CurrentReadRank::Current1;  // TODO CurrentReadRank::Reference
-      end_of_sequence = false;
-      sequence_count++;
-      if (sequence_count > LOCAL_SEQUENCE_COUNT) {
-        current_0_mV = ((CURRENT_DECAY * current_0_local_max_mV) + ((100 - CURRENT_DECAY) * current_0_mV)) / 100;
-        current_0_local_max_mV = 0;
-        current_1_mV = ((CURRENT_DECAY * current_1_local_max_mV) + ((100 - CURRENT_DECAY) * current_1_mV)) / 100;
-        current_1_local_max_mV = 0;
-        sequence_count = 0;
+    if (endOfSequence) {
+      currentReadRank = CurrentReadRank::Current1;  // TODO CurrentReadRank::Reference
+      endOfSequence = false;
+      sequenceCount++;
+      if (sequenceCount > LOCAL_SEQUENCE_COUNT) {
+        current_0_mV = ((CURRENT_DECAY * current_0_localMax_mV) + ((100 - CURRENT_DECAY) * current_0_mV)) / 100;
+        current_0_localMax_mV = 0;
+        current_1_mV = ((CURRENT_DECAY * current_1_localMax_mV) + ((100 - CURRENT_DECAY) * current_1_mV)) / 100;
+        current_1_localMax_mV = 0;
+        sequenceCount = 0;
       }
     }
 
@@ -255,7 +255,7 @@ class CurrentSensor {
   }
 
   void handleInterrupt() {
-    // TODO
+    // TODO ADC
     if (LL_ADC_IsActiveFlag_EOC(ADC1)) {
       LL_ADC_ClearFlag_EOC(ADC1);
       this->handleEndOfConversion();
@@ -279,7 +279,7 @@ class CurrentSensor {
       case CurrentSensorInput::Current1:
         return to_mA(this->current_1_mV);
       case CurrentSensorInput::Reference:
-        return this->current_reference_mV;
+        return this->currentReference_mV;
       default:
         assert_param(0);
         return 0;
@@ -288,11 +288,11 @@ class CurrentSensor {
 
  private:
   void handleEndOfConversion() {
-    this->end_of_conversion = true;
+    this->endOfConversion = true;
   }
 
   void handleEndOfSequence() {
-    this->end_of_sequence = true;
+    this->endOfSequence = true;
   }
 
   void handleOverrunError() {

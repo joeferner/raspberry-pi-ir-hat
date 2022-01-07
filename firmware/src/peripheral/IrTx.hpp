@@ -66,7 +66,7 @@ class IrTx {
         hal::timer::ChannelN::Channel1N, hal::timer::OutputCompareIdleState::Low);
     this->irTxSignalTimer->setOutputCompareValue(hal::timer::Channel::Channel1, 0);
     this->irTxSignalTimer->disableOutputCompareFast(hal::timer::Channel::Channel1);
-    // TODO
+    // TODO do we need this?
     // TIM_BDTRInitStruct.OSSRState = LL_TIM_OSSR_DISABLE;
     // TIM_BDTRInitStruct.OSSIState = LL_TIM_OSSI_DISABLE;
     // TIM_BDTRInitStruct.LockLevel = LL_TIM_LOCKLEVEL_OFF;
@@ -99,7 +99,7 @@ class IrTx {
         hal::timer::ChannelN::Channel1N, hal::timer::OutputCompareIdleState::Low);
     this->irTxCarrierTimer->setOutputCompareValue(hal::timer::Channel::Channel1, 0);
     this->irTxCarrierTimer->disableOutputCompareFast(hal::timer::Channel::Channel1);
-    // TODO
+    // TODO do we need this?
     // TIM_BDTRInitStruct.OSSRState = LL_TIM_OSSR_DISABLE;
     // TIM_BDTRInitStruct.OSSIState = LL_TIM_OSSI_DISABLE;
     // TIM_BDTRInitStruct.LockLevel = LL_TIM_LOCKLEVEL_OFF;
