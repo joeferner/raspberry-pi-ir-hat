@@ -77,7 +77,7 @@ enum class OutputType : uint32_t
 
 template <gpio::GPIOAddress TAddress, gpio::GPIOPin TPin>
 class GPIO {
-private:
+ private:
   GPIO_TypeDef* GPIOPort() const {
     return reinterpret_cast<GPIO_TypeDef*>(TAddress);
   }
@@ -86,7 +86,7 @@ private:
     return (uint32_t)TPin;
   }
 
-public:
+ public:
   /**
    * @brief Set the pin mode (input, output, etc)
    */
@@ -142,17 +142,17 @@ public:
 
   const void enableClock(hal::Clocks& clocks) const {
     switch (TAddress) {
-    case gpio::GPIOAddress::GPIOAAddress:
-      clocks.enableGPIOAClock();
-      break;
-    case gpio::GPIOAddress::GPIOBAddress:
-      clocks.enableGPIOBClock();
-      break;
-    case gpio::GPIOAddress::GPIOFAddress:
-      clocks.enableGPIOFClock();
-      break;
-    default:
-      assert_param(0);
+      case gpio::GPIOAddress::GPIOAAddress:
+        clocks.enableGPIOAClock();
+        break;
+      case gpio::GPIOAddress::GPIOBAddress:
+        clocks.enableGPIOBClock();
+        break;
+      case gpio::GPIOAddress::GPIOFAddress:
+        clocks.enableGPIOFClock();
+        break;
+      default:
+        assert_param(0);
     }
   }
 };

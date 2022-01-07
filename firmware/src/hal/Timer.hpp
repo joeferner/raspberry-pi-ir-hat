@@ -139,12 +139,12 @@ enum class OutputCompareIdleState : uint32_t
 
 template <timer::TimerAddress TAddress>
 class Timer {
-private:
+ private:
   TIM_TypeDef* TIMAddress() const {
     return reinterpret_cast<TIM_TypeDef*>(TAddress);
   }
 
-public:
+ public:
   const void setCounterMode(timer::CounterMode mode) const {
     if (IS_TIM_COUNTER_MODE_SELECT_INSTANCE(TIMAddress())) {
       LL_TIM_SetCounterMode(TIMAddress(), (uint32_t)mode);
@@ -232,24 +232,24 @@ public:
 
   const void setOutputCompareValue(timer::Channel channel, uint32_t value) {
     switch (channel) {
-    case timer::Channel::Channel1:
-      LL_TIM_OC_SetCompareCH1(TIMAddress(), value);
-      break;
-    case timer::Channel::Channel2:
-      LL_TIM_OC_SetCompareCH2(TIMAddress(), value);
-      break;
-    case timer::Channel::Channel3:
-      LL_TIM_OC_SetCompareCH3(TIMAddress(), value);
-      break;
-    case timer::Channel::Channel4:
-      LL_TIM_OC_SetCompareCH4(TIMAddress(), value);
-      break;
-    case timer::Channel::Channel5:
-      LL_TIM_OC_SetCompareCH5(TIMAddress(), value);
-      break;
-    default:
-      assert_param(0);
-      break;
+      case timer::Channel::Channel1:
+        LL_TIM_OC_SetCompareCH1(TIMAddress(), value);
+        break;
+      case timer::Channel::Channel2:
+        LL_TIM_OC_SetCompareCH2(TIMAddress(), value);
+        break;
+      case timer::Channel::Channel3:
+        LL_TIM_OC_SetCompareCH3(TIMAddress(), value);
+        break;
+      case timer::Channel::Channel4:
+        LL_TIM_OC_SetCompareCH4(TIMAddress(), value);
+        break;
+      case timer::Channel::Channel5:
+        LL_TIM_OC_SetCompareCH5(TIMAddress(), value);
+        break;
+      default:
+        assert_param(0);
+        break;
     }
   }
 
@@ -259,41 +259,41 @@ public:
 
   const void enableCaptureCompareInterrupt(timer::Channel channel) {
     switch (channel) {
-    case timer::Channel::Channel1:
-      LL_TIM_EnableIT_CC1(TIMAddress());
-      break;
-    case timer::Channel::Channel2:
-      LL_TIM_EnableIT_CC2(TIMAddress());
-      break;
-    case timer::Channel::Channel3:
-      LL_TIM_EnableIT_CC3(TIMAddress());
-      break;
-    case timer::Channel::Channel4:
-      LL_TIM_EnableIT_CC4(TIMAddress());
-      break;
-    default:
-      assert_param(0);
-      break;
+      case timer::Channel::Channel1:
+        LL_TIM_EnableIT_CC1(TIMAddress());
+        break;
+      case timer::Channel::Channel2:
+        LL_TIM_EnableIT_CC2(TIMAddress());
+        break;
+      case timer::Channel::Channel3:
+        LL_TIM_EnableIT_CC3(TIMAddress());
+        break;
+      case timer::Channel::Channel4:
+        LL_TIM_EnableIT_CC4(TIMAddress());
+        break;
+      default:
+        assert_param(0);
+        break;
     }
   }
 
   const void enableCaptureCompareDMARequest(timer::Channel channel) {
     switch (channel) {
-    case timer::Channel::Channel1:
-      LL_TIM_EnableDMAReq_CC1(TIMAddress());
-      break;
-    case timer::Channel::Channel2:
-      LL_TIM_EnableDMAReq_CC2(TIMAddress());
-      break;
-    case timer::Channel::Channel3:
-      LL_TIM_EnableDMAReq_CC3(TIMAddress());
-      break;
-    case timer::Channel::Channel4:
-      LL_TIM_EnableDMAReq_CC4(TIMAddress());
-      break;
-    default:
-      assert_param(0);
-      break;
+      case timer::Channel::Channel1:
+        LL_TIM_EnableDMAReq_CC1(TIMAddress());
+        break;
+      case timer::Channel::Channel2:
+        LL_TIM_EnableDMAReq_CC2(TIMAddress());
+        break;
+      case timer::Channel::Channel3:
+        LL_TIM_EnableDMAReq_CC3(TIMAddress());
+        break;
+      case timer::Channel::Channel4:
+        LL_TIM_EnableDMAReq_CC4(TIMAddress());
+        break;
+      default:
+        assert_param(0);
+        break;
     }
   }
 
@@ -311,27 +311,27 @@ public:
 
   const void enableClock(hal::Clocks& clocks) const {
     switch (TAddress) {
-    case timer::TimerAddress::TIM1Address:
-      clocks.enableTIM1Clock();
-      break;
-    case timer::TimerAddress::TIM2Address:
-      clocks.enableTIM2Clock();
-      break;
-    case timer::TimerAddress::TIM3Address:
-      clocks.enableTIM3Clock();
-      break;
-    case timer::TimerAddress::TIM14Address:
-      clocks.enableTIM14Clock();
-      break;
-    case timer::TimerAddress::TIM16Address:
-      clocks.enableTIM16Clock();
-      break;
-    case timer::TimerAddress::TIM17Address:
-      clocks.enableTIM17Clock();
-      break;
-    default:
-      assert_param(0);
-      break;
+      case timer::TimerAddress::TIM1Address:
+        clocks.enableTIM1Clock();
+        break;
+      case timer::TimerAddress::TIM2Address:
+        clocks.enableTIM2Clock();
+        break;
+      case timer::TimerAddress::TIM3Address:
+        clocks.enableTIM3Clock();
+        break;
+      case timer::TimerAddress::TIM14Address:
+        clocks.enableTIM14Clock();
+        break;
+      case timer::TimerAddress::TIM16Address:
+        clocks.enableTIM16Clock();
+        break;
+      case timer::TimerAddress::TIM17Address:
+        clocks.enableTIM17Clock();
+        break;
+      default:
+        assert_param(0);
+        break;
     }
   }
 };

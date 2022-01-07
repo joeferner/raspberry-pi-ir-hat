@@ -5,10 +5,10 @@
 
 namespace hal {
 class Clocks {
-private:
+ private:
   volatile uint32_t tickCount;
 
-public:
+ public:
   Clocks() : tickCount(0) {
   }
 

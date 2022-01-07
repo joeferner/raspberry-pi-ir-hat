@@ -1,4 +1,3 @@
-#include "current_sensor.hpp"
 #include "globals.hpp"
 #include "hal/Bus.hpp"
 #include "hal/Clocks.hpp"
@@ -44,7 +43,6 @@ static void setupADC1();
 void setup() {
   bus.enableSyscfgClock();
   bus.enablePwrClock();
-  nvic.setPriority(hal::nvic::IRQnType::SysTick_Irq, 3);
   setupSystemClock();
   setupGPIO();
   setupDMA();
@@ -75,13 +73,13 @@ void setup() {
       hal::usart::StopBits::StopBits1);
   irRx.initialize(nvic, clocks, irRxPin, irRxTimer);
   irTx.initialize(clocks, halSystem, nvic);
-  // TODO ir_tx_setup();
   // TODO current_sensor_setup();
   debugUsart.write("?READY\n");
-  // TODO LL_IWDG_Enable(IWDG);
+  iwdg.enable();
 }
 
 static void setupSystemClock() {
+  nvic.setPriority(hal::nvic::IRQnType::SysTick_Irq, 3);
   rcc.enableHSI();
   rcc.enableLSI();
   rcc.setAHBPrescaler(hal::rcc::AHBPrescaler::DIV_1);

@@ -3,7 +3,6 @@
 #include <memory.h>
 #include <stdlib.h>
 
-#include "current_sensor.hpp"
 #include "hal/Bus.hpp"
 #include "hal/Clocks.hpp"
 #include "hal/DMA.hpp"
@@ -14,6 +13,7 @@
 #include "hal/System.hpp"
 #include "hal/Timer.hpp"
 #include "hal/USART.hpp"
+#include "peripheral/CurrentSensor.hpp"
 #include "peripheral/IrRx.hpp"
 #include "peripheral/IrTx.hpp"
 #include "peripheral/USART.hpp"
@@ -42,21 +42,18 @@ hal::Timer<hal::timer::TimerAddress::TIM16Address> irTxSignalTimer;
 hal::IWDGHal iwdg;
 
 peripheral::USART<hal::usart::USARTAddress::USART1Address, DEBUG_TX_BUFFER_SIZE, DEBUG_RX_BUFFER_SIZE> debugUsart(
-  &usart1);
+    &usart1);
 peripheral::USART<hal::usart::USARTAddress::USART2Address, DEBUG_TX_BUFFER_SIZE, DEBUG_RX_BUFFER_SIZE> rpiUsart(
-  &usart2);
+    &usart2);
 peripheral::IrRx irRx(&irRxDmaChannel, &irInLedPin);
 peripheral::IrTx irTx(&irOutPin, &irTxCarrierTimer, &irTxSignalTimer);
+peripheral::CurrentSensor currentSensor;
 
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
 
-typedef void (*send_string)(const char*);
+static void loop();
 
-void setupSystemClock();
-
-void loop();
-
-void process_rx(char* data, send_string send_string);
+void processUsartLine(peripheral::USARTWriter& usartWriter, const char* buffer);
 
 extern "C" int main() {
   setup();
@@ -65,96 +62,82 @@ extern "C" int main() {
   }
 }
 
-void loop() {
+static void loop() {
   char buffer[DEBUG_RX_BUFFER_SIZE];
   size_t lineLen;
   uint16_t irRxValue;
 
   LL_IWDG_ReloadCounter(IWDG);
   if ((lineLen = debugUsart.readLine(buffer, sizeof(buffer)))) {
-    debugUsart.write("OK\n");
+    processUsartLine(debugUsart, buffer);
   }
   if ((lineLen = rpiUsart.readLine(buffer, sizeof(buffer)))) {
-    rpiUsart.write("OK\n");
+    processUsartLine(rpiUsart, buffer);
   }
   while (irRx.read(clocks, &irRxValue)) {
-    // TODO
-    // char buffer[20];
-    // buffer[0] = '!';
-    // buffer[1] = 's';
-    // utoa(value, buffer + 2, 10);
-    // strcat(buffer, "\n");
+    char buffer[20];
+    buffer[0] = '!';
+    buffer[1] = 's';
+    utoa(irRxValue, buffer + 2, 10);
+    strcat(buffer, "\n");
 
-    // TODO
-    // rpi_send_string(buffer);
-    // debug_send_string(buffer);
+    rpiUsart.write(buffer);
+    debugUsart.write(buffer);
   }
-  current_sensor_loop();
+  currentSensor.loop();
 }
 
-// TODO
-// void debug_rx(char* data) {
-//   process_rx(data, debug_send_string);
-// }
-
-// void rpi_rx(char* data) {
-//   process_rx(data, rpi_send_string);
-// }
-
-// void process_rx(char* data, send_string send_string) {
-//   if (strcmp(data, "+iwdg") == 0) {
-//     send_string("+OK\n");
-//     while (1)
-//       ;
-//   } else if (strcmp(data, "+send") == 0) {
-//     ir_tx_send();
-//     send_string("+OK\n");
-//   } else if (strncmp(data, "+f", 2) == 0) {
-//     uint32_t carrier_freq = atoi(data + 2);
-//     ir_tx_reset(carrier_freq);
-//     send_string("+OK\n");
-//   } else if (strncmp(data, "+s", 2) == 0) {
-//     char* pon = data + 2;
-//     char* p = strchr(pon, ',');
-//     if (p == NULL) {
-//       send_string("-ERR missing comma\n");
-//       return;
-//     }
-//     *p = '\0';
-//     uint32_t t_on = atoi(pon);
-//     uint32_t t_off = atoi(p + 1);
-//     ir_tx_write(t_on, t_off);
-//     if (ir_tx_buffer_length() > IR_TX_BUFFER_LEN_BEFORE_SEND) {
-//       ir_tx_send();
-//     }
-//     send_string("+OK\n");
-//   } else if (strncmp(data, "+c", 2) == 0) {
-//     uint16_t d;
-//     if (data[2] == '0') {
-//       d = current_sensor_get0();
-//     } else if (data[2] == '1') {
-//       d = current_sensor_get1();
-//     } else {
-//       send_string("-ERR invalid channel\n");
-//       return;
-//     }
-//     char buffer[50];
-//     strcpy(buffer, "+OK ");
-//     itoa(d, buffer + strlen(buffer), 10);
-//     strcat(buffer, "\n");
-//     send_string(buffer);
-//   } else {
-//     send_string("-ERR \"");
-//     send_string(data);
-//     send_string("\"\n");
-//   }
-// }
-
-void current_sensor_overrun_error() {
-  // TODO
-  // const char* str = "-ERR current sensor overrun\n";
-  // rpi_send_string(str);
-  // debug_send_string(str);
+void processUsartLine(peripheral::USARTWriter& usartWriter, const char* data) {
+  if (strcmp(data, "+iwdg") == 0) {
+    usartWriter.write("+OK\n");
+    while (1)
+      ;
+  } else if (strcmp(data, "+send") == 0) {
+    irTx.send();
+    usartWriter.write("+OK\n");
+  } else if (strncmp(data, "+f", 2) == 0) {
+    uint32_t carrierFrequency = atoi(data + 2);
+    irTx.reset(carrierFrequency);
+    usartWriter.write("+OK\n");
+  } else if (strncmp(data, "+s", 2) == 0) {
+    const char* pon = data + 2;
+    const char* p = strchr(pon, ',');
+    if (p == NULL) {
+      usartWriter.write("-ERR missing comma\n");
+      return;
+    }
+    char temp[10];
+    // TODO verify length and does zero terminate
+    strncpy(temp, pon, p - pon);
+    uint32_t t_on = atoi(temp);
+    uint32_t t_off = atoi(p + 1);
+    irTx.write(t_on, t_off);
+    if (irTx.getNumberOfSamplesInBuffer() > IR_TX_BUFFER_LEN_BEFORE_SEND) {
+      irTx.send();
+    }
+    usartWriter.write("+OK\n");
+  } else if (strncmp(data, "+c", 2) == 0) {
+    uint16_t d;
+    if (data[2] == '0') {
+      d = currentSensor.get(peripheral::CurrentSensorInput::Current0);
+    } else if (data[2] == '1') {
+      d = currentSensor.get(peripheral::CurrentSensorInput::Current1);
+    } else if (data[2] == 'r') {
+      d = currentSensor.get(peripheral::CurrentSensorInput::Reference);
+    } else {
+      usartWriter.write("-ERR invalid channel\n");
+      return;
+    }
+    char buffer[50];
+    strcpy(buffer, "+OK ");
+    itoa(d, buffer + strlen(buffer), 10);
+    strcat(buffer, "\n");
+    usartWriter.write(buffer);
+  } else {
+    usartWriter.write("-ERR \"");
+    usartWriter.write(data);
+    usartWriter.write("\"\n");
+  }
 }
 
 void Error_Handler(void) {

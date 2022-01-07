@@ -22,14 +22,10 @@ set(SRC_FILES
   src/main.cpp
   src/setup.cpp
   src/main_it.cpp
-  src/uint8_ring_buffer.cpp
-  src/uint32_ring_buffer.cpp
-  src/current_sensor.cpp
   src/hal/Bus.cpp
   src/hal/NVIC.cpp
   src/hal/RCC.cpp
   src/hal/System.cpp
-  src/hal/IWDG.cpp
 )
 
 set(EXECUTABLE ${PROJECT_NAME}.out)

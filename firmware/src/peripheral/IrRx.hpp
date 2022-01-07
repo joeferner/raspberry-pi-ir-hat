@@ -8,7 +8,7 @@
 
 namespace peripheral {
 class IrRx {
-private:
+ private:
   hal::DMAChannel<hal::dma::DMAAddress::DMA1Address, hal::dma::Channel::Channel5>* irRxDmaChannel;
   hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin7>* irInLedPin;
   uint16_t buffer[IR_RX_BUFFER_SAMPLES];
@@ -16,19 +16,18 @@ private:
   uint16_t lastValue;
   uint32_t lastTick;
 
-public:
+ public:
   IrRx(
-    hal::DMAChannel<hal::dma::DMAAddress::DMA1Address, hal::dma::Channel::Channel5>* irRxDmaChannel,
-    hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin7>* irInLedPin
-  )
-    : irRxDmaChannel(irRxDmaChannel), irInLedPin(irInLedPin) {
+      hal::DMAChannel<hal::dma::DMAAddress::DMA1Address, hal::dma::Channel::Channel5>* irRxDmaChannel,
+      hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin7>* irInLedPin)
+      : irRxDmaChannel(irRxDmaChannel), irInLedPin(irInLedPin) {
   }
 
   const void initialize(
-    hal::NVICHal& nvic,
-    hal::Clocks& clocks,
-    hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin6>& irRxPin,
-    hal::Timer<hal::timer::TimerAddress::TIM3Address>& irRxTimer) {
+      hal::NVICHal& nvic,
+      hal::Clocks& clocks,
+      hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin6>& irRxPin,
+      hal::Timer<hal::timer::TimerAddress::TIM3Address>& irRxTimer) {
     irRxPin.enableClock(clocks);
     irRxPin.setSpeed(hal::gpio::Speed::Low);
     irRxPin.setOutputType(hal::gpio::OutputType::PushPull);
@@ -120,7 +119,7 @@ public:
     }
   }
 
-private:
+ private:
   const size_t getDmaPosition() const {
     return IR_RX_BUFFER_SAMPLES - this->irRxDmaChannel->getDataLength();
   }

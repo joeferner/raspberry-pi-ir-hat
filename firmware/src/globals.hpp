@@ -2,6 +2,7 @@
 #define _GLOBALS_HPP_
 
 #include "hal/Clocks.hpp"
+#include "peripheral/CurrentSensor.hpp"
 #include "peripheral/IrRx.hpp"
 #include "peripheral/IrTx.hpp"
 #include "peripheral/USART.hpp"
@@ -14,5 +15,7 @@ extern peripheral::USART<hal::usart::USARTAddress::USART2Address, DEBUG_TX_BUFFE
 
 extern peripheral::IrRx irRx;
 extern peripheral::IrTx irTx;
+
+extern peripheral::CurrentSensor currentSensor;
 
 #endif

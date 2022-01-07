@@ -9,8 +9,14 @@
 #include "hal/USART.hpp"
 
 namespace peripheral {
+class USARTWriter {
+ public:
+  virtual const void write(const char* buffer) = 0;
+  virtual const void write(const uint8_t* buffer, size_t length) = 0;
+};
+
 template <hal::usart::USARTAddress TAddress, size_t TX_BUFFER_SIZE, size_t RX_BUFFER_SIZE>
-class USART {
+class USART : public USARTWriter {
  private:
   hal::USART<TAddress>* usart;
   etl::circular_buffer<uint8_t, TX_BUFFER_SIZE> txBuffer;

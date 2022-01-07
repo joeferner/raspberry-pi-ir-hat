@@ -1,4 +1,3 @@
-#include "current_sensor.hpp"
 #include "globals.hpp"
 #include "main.h"
 
@@ -78,19 +77,5 @@ extern "C" void TIM1_BRK_UP_TRG_COM_IRQHandler() {
 }
 
 extern "C" void ADC1_IRQHandler(void) {
-  // TODO
-  if (LL_ADC_IsActiveFlag_EOC(ADC1)) {
-    LL_ADC_ClearFlag_EOC(ADC1);
-    current_sensor_end_of_conversion();
-  }
-
-  if (LL_ADC_IsActiveFlag_EOS(ADC1)) {
-    LL_ADC_ClearFlag_EOS(ADC1);
-    current_sensor_end_of_sequence();
-  }
-
-  if (LL_ADC_IsActiveFlag_OVR(ADC1)) {
-    LL_ADC_ClearFlag_OVR(ADC1);
-    current_sensor_overrun_error();
-  }
+  currentSensor.handleInterrupt();
 }
