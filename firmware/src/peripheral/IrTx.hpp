@@ -30,7 +30,7 @@ class IrTx {
       : irOutPin(irOutPin), irTxCarrierTimer(irTxCarrierTimer), irTxSignalTimer(irTxSignalTimer) {
   }
 
-  const void initialize(hal::Clocks& clocks, hal::System& system, hal::NVICHal& nvic) {
+  void initialize(hal::Clocks& clocks, hal::System& system, hal::NVICHal& nvic) {
     this->irOutPin->enableClock(clocks);
     this->irOutPin->setSpeed(hal::gpio::Speed::Low);
     this->irOutPin->setOutputType(hal::gpio::OutputType::PushPull);
@@ -120,7 +120,7 @@ class IrTx {
     this->send();
   }
 
-  const void reset(uint32_t carrierFrequency) {
+  void reset(uint32_t carrierFrequency) {
     this->stop();
 
     // init carrier timer
@@ -142,12 +142,12 @@ class IrTx {
     this->irTxSignalTimer->enableAllOutputs();
   }
 
-  const void write(uint32_t t_on, uint32_t t_off) {
+  void write(uint32_t t_on, uint32_t t_off) {
     this->txBuffer.push(t_on);
     this->txBuffer.push(t_off);
   }
 
-  const void send() {
+  void send() {
     if (!this->sending) {
       this->sending = true;
 
@@ -158,7 +158,7 @@ class IrTx {
     }
   }
 
-  const void handleInterrupt() {
+  void handleInterrupt() {
     if (this->irTxSignalTimer->isUpdateFlagSet()) {
       this->irTxSignalTimer->clearUpdateFlag();
       this->nextSignal();
@@ -170,7 +170,7 @@ class IrTx {
   }
 
  private:
-  const void enableGpio(bool enable) const {
+  void enableGpio(bool enable) const {
     this->irOutPin->setMode(enable ? hal::gpio::Mode::Alternate : hal::gpio::Mode::Output);
     if (enable) {
       this->irOutPin->setOutputPin();
@@ -179,14 +179,14 @@ class IrTx {
     }
   }
 
-  const void stop() {
+  void stop() {
     this->sending = false;
     LL_TIM_DisableCounter(IR_OUT_CARRIER_TIMER);
     LL_TIM_DisableCounter(IR_OUT_SIGNAL_TIMER);
     this->enableGpio(false);
   }
 
-  const void nextSignal() {
+  void nextSignal() {
     if (this->txBuffer.available() < 2) {
       this->stop();
       debugUsart.write("?send complete\n");

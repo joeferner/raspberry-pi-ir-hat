@@ -55,13 +55,13 @@ enum class ADCClockSource : uint32_t
 
 class RCCHal {
  public:
-  const void enableHSI() const;
-  const void enableLSI() const;
-  const void setAHBPrescaler(rcc::AHBPrescaler prescaler) const;
-  const void setSysClkSource(rcc::SysClkSource source) const;
-  const void setAPB1Prescaler(rcc::APB1Prescaler prescaler) const;
-  const void setUSART1ClockSource(rcc::USART1ClockSource clockSource) const;
-  const void setADCClockSource(rcc::ADCClockSource clockSource) const;
+  void enableHSI() const;
+  void enableLSI() const;
+  void setAHBPrescaler(rcc::AHBPrescaler prescaler) const;
+  void setSysClkSource(rcc::SysClkSource source) const;
+  void setAPB1Prescaler(rcc::APB1Prescaler prescaler) const;
+  void setUSART1ClockSource(rcc::USART1ClockSource clockSource) const;
+  void setADCClockSource(rcc::ADCClockSource clockSource) const;
   const uint32_t getUSART1ClockFrequency() const;
   const uint32_t getPCLK1Frequency() const;
 };

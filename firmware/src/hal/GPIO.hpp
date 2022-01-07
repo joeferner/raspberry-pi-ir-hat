@@ -90,21 +90,21 @@ class GPIO {
   /**
    * @brief Set the pin mode (input, output, etc)
    */
-  const void setMode(gpio::Mode mode) const {
+  void setMode(gpio::Mode mode) const {
     LL_GPIO_SetPinMode(GPIOPort(), GPIOPin(), (uint32_t)mode);
   }
 
   /**
    * @brief Set the pin to have no pull up or pull down resistor
    */
-  const void setPull(gpio::Pull pull) const {
+  void setPull(gpio::Pull pull) const {
     LL_GPIO_SetPinPull(GPIOPort(), GPIOPin(), (uint32_t)pull);
   }
 
   /**
    * @brief Set the pin alternate mode
    */
-  const void setAlternate(gpio::Alternate alternate) const {
+  void setAlternate(gpio::Alternate alternate) const {
     if (GPIOPin() < LL_GPIO_PIN_8) {
       LL_GPIO_SetAFPin_0_7(GPIOPort(), GPIOPin(), (uint32_t)alternate);
     } else {
@@ -115,32 +115,32 @@ class GPIO {
   /**
    * @brief set pin to low
    */
-  const void resetOutputPin() const {
+  void resetOutputPin() const {
     LL_GPIO_ResetOutputPin(GPIOPort(), GPIOPin());
   }
 
   /**
    * @brief set pin high
    */
-  const void setOutputPin() {
+  void setOutputPin() {
     LL_GPIO_SetOutputPin(GPIOPort(), GPIOPin());
   }
 
   /**
    * @brief Set pin speed
    */
-  const void setSpeed(gpio::Speed speed) const {
+  void setSpeed(gpio::Speed speed) const {
     LL_GPIO_SetPinSpeed(GPIOPort(), GPIOPin(), (uint32_t)speed);
   }
 
   /**
    * @brief Set pin output type
    */
-  const void setOutputType(gpio::OutputType outputType) const {
+  void setOutputType(gpio::OutputType outputType) const {
     LL_GPIO_SetPinOutputType(GPIOPort(), GPIOPin(), (uint32_t)outputType);
   }
 
-  const void enableClock(hal::Clocks& clocks) const {
+  void enableClock(hal::Clocks& clocks) const {
     switch (TAddress) {
       case gpio::GPIOAddress::GPIOAAddress:
         clocks.enableGPIOAClock();

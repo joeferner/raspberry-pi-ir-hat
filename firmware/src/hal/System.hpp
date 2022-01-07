@@ -26,8 +26,8 @@ enum class IRPolarity : uint32_t
 
 class System {
  public:
-  const void setIRModulationEnvelopeSignalSource(system::IRModulationEnvelopeSignalSource source) const;
-  const void setIRPolarity(system::IRPolarity polarity);
+  void setIRModulationEnvelopeSignalSource(system::IRModulationEnvelopeSignalSource source) const;
+  void setIRPolarity(system::IRPolarity polarity);
 };
 }  // namespace hal
 

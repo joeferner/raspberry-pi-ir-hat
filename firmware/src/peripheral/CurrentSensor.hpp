@@ -49,7 +49,7 @@ class CurrentSensor {
   volatile bool end_of_sequence;
 
  public:
-  const void initialize() {
+  void initialize() {
     end_of_conversion = false;
     end_of_sequence = false;
     current_0_mV = current_1_mV = current_reference_mV = 3300 / 2;
@@ -64,7 +64,7 @@ class CurrentSensor {
     LL_ADC_REG_StartConversion(ADC1);
   }
 
-  const void loop() {
+  void loop() {
     bool start_conversion = false;
 
     if (end_of_conversion) {
@@ -110,7 +110,7 @@ class CurrentSensor {
     }
   }
 
-  const void handleInterrupt() {
+  void handleInterrupt() {
     // TODO
     if (LL_ADC_IsActiveFlag_EOC(ADC1)) {
       LL_ADC_ClearFlag_EOC(ADC1);
@@ -143,15 +143,15 @@ class CurrentSensor {
   }
 
  private:
-  const void handleEndOfConversion() {
+  void handleEndOfConversion() {
     this->end_of_conversion = true;
   }
 
-  const void handleEndOfSequence() {
+  void handleEndOfSequence() {
     this->end_of_sequence = true;
   }
 
-  const void handleOverrunError() {
+  void handleOverrunError() {
     // TODO ADC
     // const char* str = "-ERR current sensor overrun\n";
     // rpi_send_string(str);

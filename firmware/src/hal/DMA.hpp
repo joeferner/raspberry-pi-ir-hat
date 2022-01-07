@@ -188,55 +188,55 @@ class DMAChannel {
   }
 
  public:
-  const void setPeripheralRequest(dma::PeripheralRequest request) const {
+  void setPeripheralRequest(dma::PeripheralRequest request) const {
     LL_DMA_SetPeriphRequest(DMAAddress(), channel(), (uint32_t)request);
   }
 
-  const void setDataTransferDirection(dma::TransferDirection direction) const {
+  void setDataTransferDirection(dma::TransferDirection direction) const {
     LL_DMA_SetDataTransferDirection(DMAAddress(), channel(), (uint32_t)direction);
   }
 
-  const void setChannelPriorityLevel(dma::Priority priority) const {
+  void setChannelPriorityLevel(dma::Priority priority) const {
     LL_DMA_SetChannelPriorityLevel(DMAAddress(), channel(), (uint32_t)priority);
   }
 
-  const void setMode(dma::Mode mode) const {
+  void setMode(dma::Mode mode) const {
     LL_DMA_SetMode(DMAAddress(), channel(), (uint32_t)mode);
   }
 
-  const void setPeripheralIncrementMode(dma::PeripheralIncrementMode mode) const {
+  void setPeripheralIncrementMode(dma::PeripheralIncrementMode mode) const {
     LL_DMA_SetPeriphIncMode(DMAAddress(), channel(), (uint32_t)mode);
   }
 
-  const void setMemoryIncrementMode(dma::MemoryIncrementMode mode) const {
+  void setMemoryIncrementMode(dma::MemoryIncrementMode mode) const {
     LL_DMA_SetMemoryIncMode(DMAAddress(), channel(), (uint32_t)mode);
   }
 
-  const void setPeripheralSize(dma::PeripheralSize size) const {
+  void setPeripheralSize(dma::PeripheralSize size) const {
     LL_DMA_SetPeriphSize(DMAAddress(), channel(), (uint32_t)size);
   }
 
-  const void setMemorySize(dma::MemorySize size) const {
+  void setMemorySize(dma::MemorySize size) const {
     LL_DMA_SetMemorySize(DMAAddress(), channel(), (uint32_t)size);
   }
 
-  const void enableTransferCompleteInterrupt() const {
+  void enableTransferCompleteInterrupt() const {
     LL_DMA_EnableIT_TC(DMAAddress(), channel());
   }
 
-  const void enableTransferErrorInterrupt() const {
+  void enableTransferErrorInterrupt() const {
     LL_DMA_EnableIT_TE(DMAAddress(), channel());
   }
 
-  const void disable() const {
+  void disable() const {
     LL_DMA_DisableChannel(DMAAddress(), channel());
   }
 
-  const void enable() const {
+  void enable() const {
     LL_DMA_EnableChannel(DMAAddress(), channel());
   }
 
-  const void clearGlobalInterruptFlag() const {
+  void clearGlobalInterruptFlag() const {
     switch (TChannel) {
       case dma::Channel::Channel1:
         LL_DMA_ClearFlag_GI1(DMAAddress());
@@ -268,7 +268,7 @@ class DMAChannel {
     }
   }
 
-  const void setDataLength(uint32_t dataLength) const {
+  void setDataLength(uint32_t dataLength) const {
     LL_DMA_SetDataLength(DMAAddress(), channel(), dataLength);
   }
 
@@ -276,11 +276,11 @@ class DMAChannel {
     return LL_DMA_GetDataLength(DMAAddress(), channel());
   }
 
-  const void setPeripheralAddress(const void* p) const {
+  void setPeripheralAddress(const void* p) const {
     LL_DMA_SetPeriphAddress(DMAAddress(), channel(), (uint32_t)p);
   }
 
-  const void setMemoryAddress(const void* p) const {
+  void setMemoryAddress(const void* p) const {
     LL_DMA_SetMemoryAddress(DMAAddress(), channel(), (uint32_t)p);
   }
 

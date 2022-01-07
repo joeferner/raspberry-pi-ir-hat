@@ -146,7 +146,7 @@ class Timer {
   }
 
  public:
-  const void setCounterMode(timer::CounterMode mode) const {
+  void setCounterMode(timer::CounterMode mode) const {
     if (IS_TIM_COUNTER_MODE_SELECT_INSTANCE(TIMAddress())) {
       LL_TIM_SetCounterMode(TIMAddress(), (uint32_t)mode);
     } else {
@@ -154,7 +154,7 @@ class Timer {
     }
   }
 
-  const void setClockDivision(timer::ClockDivision clockDivision) const {
+  void setClockDivision(timer::ClockDivision clockDivision) const {
     if (IS_TIM_CLOCK_DIVISION_INSTANCE(TIMAddress())) {
       LL_TIM_SetClockDivision(TIMAddress(), (uint32_t)clockDivision);
     } else {
@@ -162,7 +162,7 @@ class Timer {
     }
   }
 
-  const void setAutoReload(uint32_t autoReload) {
+  void setAutoReload(uint32_t autoReload) {
     LL_TIM_SetAutoReload(TIMAddress(), autoReload);
   }
 
@@ -173,16 +173,16 @@ class Timer {
     return autoReload;
   }
 
-  const void setPrescaler(uint32_t prescaler) const {
+  void setPrescaler(uint32_t prescaler) const {
     LL_TIM_SetPrescaler(TIMAddress(), prescaler);
   }
 
-  const void setPrescaler(uint32_t timerInputClockFrequency, uint32_t counterClockFrequency) const {
+  void setPrescaler(uint32_t timerInputClockFrequency, uint32_t counterClockFrequency) const {
     uint32_t prescaler = __LL_TIM_CALC_PSC(timerInputClockFrequency, counterClockFrequency);
     LL_TIM_SetPrescaler(TIMAddress(), prescaler);
   }
 
-  const void setRepetitionCounter(uint32_t repetitionCounter) const {
+  void setRepetitionCounter(uint32_t repetitionCounter) const {
     if (IS_TIM_REPETITION_COUNTER_INSTANCE(TIMAddress())) {
       LL_TIM_SetRepetitionCounter(TIMAddress(), repetitionCounter);
     } else {
@@ -190,59 +190,59 @@ class Timer {
     }
   }
 
-  const void disableAutoReloadPreload() {
+  void disableAutoReloadPreload() {
     LL_TIM_DisableARRPreload(TIMAddress());
   }
 
-  const void setTriggerOutput(timer::TriggerOutput triggerOutput) {
+  void setTriggerOutput(timer::TriggerOutput triggerOutput) {
     LL_TIM_SetTriggerOutput(TIMAddress(), (uint32_t)triggerOutput);
   }
 
-  const void disableMasterSlaveMode() {
+  void disableMasterSlaveMode() {
     LL_TIM_DisableMasterSlaveMode(TIMAddress());
   }
 
-  const void disableCaptureCompareChannel(timer::ChannelN channel) {
+  void disableCaptureCompareChannel(timer::ChannelN channel) {
     LL_TIM_CC_DisableChannel(TIMAddress(), (uint32_t)channel);
   }
 
-  const void disableOutputComparePreload(hal::timer::Channel channel) {
+  void disableOutputComparePreload(hal::timer::Channel channel) {
     LL_TIM_OC_DisablePreload(TIMAddress(), (uint32_t)channel);
   }
 
-  const void setInputCaptureActiveInput(timer::Channel channel, timer::InputCaptureActiveInput activeInput) const {
+  void setInputCaptureActiveInput(timer::Channel channel, timer::InputCaptureActiveInput activeInput) const {
     LL_TIM_IC_SetActiveInput(TIMAddress(), (uint32_t)channel, (uint32_t)activeInput);
   }
 
-  const void setInputCapturePrescaler(timer::Channel channel, timer::InputCapturePrescaler prescaler) const {
+  void setInputCapturePrescaler(timer::Channel channel, timer::InputCapturePrescaler prescaler) const {
     LL_TIM_IC_SetPrescaler(TIMAddress(), (uint32_t)channel, (uint32_t)prescaler);
   }
 
-  const void setInputCaptureFilter(timer::Channel channel, timer::InputCaptureFilter filter) const {
+  void setInputCaptureFilter(timer::Channel channel, timer::InputCaptureFilter filter) const {
     LL_TIM_IC_SetFilter(TIMAddress(), (uint32_t)channel, (uint32_t)filter);
   }
 
-  const void setInputCapturePolarity(timer::Channel channel, timer::InputCapturePolarity polarity) const {
+  void setInputCapturePolarity(timer::Channel channel, timer::InputCapturePolarity polarity) const {
     LL_TIM_IC_SetPolarity(TIMAddress(), (uint32_t)channel, (uint32_t)polarity);
   }
 
-  const void enableOutputComparePreload(timer::Channel channel) const {
+  void enableOutputComparePreload(timer::Channel channel) const {
     LL_TIM_OC_EnablePreload(TIMAddress(), (uint32_t)channel);
   }
 
-  const void setOutputCompareMode(timer::Channel channel, timer::OutputCompareMode mode) const {
+  void setOutputCompareMode(timer::Channel channel, timer::OutputCompareMode mode) const {
     LL_TIM_OC_SetMode(TIMAddress(), (uint32_t)channel, (uint32_t)mode);
   }
 
-  const void setOutputComparePolarity(timer::ChannelN channel, timer::OutputComparePolarity polarity) const {
+  void setOutputComparePolarity(timer::ChannelN channel, timer::OutputComparePolarity polarity) const {
     LL_TIM_OC_SetPolarity(TIMAddress(), (uint32_t)channel, (uint32_t)polarity);
   }
 
-  const void setOutputCompareIdleState(timer::ChannelN channel, timer::OutputCompareIdleState idleState) const {
+  void setOutputCompareIdleState(timer::ChannelN channel, timer::OutputCompareIdleState idleState) const {
     LL_TIM_OC_SetIdleState(TIMAddress(), (uint32_t)channel, (uint32_t)idleState);
   }
 
-  const void setOutputCompareValue(timer::Channel channel, uint32_t value) {
+  void setOutputCompareValue(timer::Channel channel, uint32_t value) {
     switch (channel) {
       case timer::Channel::Channel1:
         LL_TIM_OC_SetCompareCH1(TIMAddress(), value);
@@ -265,15 +265,15 @@ class Timer {
     }
   }
 
-  const void disableOutputCompareFast(timer::Channel channel) {
+  void disableOutputCompareFast(timer::Channel channel) {
     LL_TIM_OC_DisableFast(TIMAddress(), (uint32_t)channel);
   }
 
-  const void enableUpdateInterrupt() {
+  void enableUpdateInterrupt() {
     LL_TIM_EnableIT_UPDATE(TIMAddress());
   }
 
-  const void enableCaptureCompareInterrupt(timer::Channel channel) {
+  void enableCaptureCompareInterrupt(timer::Channel channel) {
     switch (channel) {
       case timer::Channel::Channel1:
         LL_TIM_EnableIT_CC1(TIMAddress());
@@ -293,7 +293,7 @@ class Timer {
     }
   }
 
-  const void enableCaptureCompareDMARequest(timer::Channel channel) {
+  void enableCaptureCompareDMARequest(timer::Channel channel) {
     switch (channel) {
       case timer::Channel::Channel1:
         LL_TIM_EnableDMAReq_CC1(TIMAddress());
@@ -313,15 +313,15 @@ class Timer {
     }
   }
 
-  const void enableCaptureCompareChannel(timer::ChannelN channel) {
+  void enableCaptureCompareChannel(timer::ChannelN channel) {
     LL_TIM_CC_EnableChannel(TIMAddress(), (uint32_t)channel);
   }
 
-  const void enableAllOutputs() {
+  void enableAllOutputs() {
     LL_TIM_EnableAllOutputs(TIMAddress());
   }
 
-  const void enableCounter() {
+  void enableCounter() {
     LL_TIM_EnableCounter(TIMAddress());
   }
 
@@ -329,7 +329,7 @@ class Timer {
     return LL_TIM_IsActiveFlag_UPDATE(TIMAddress());
   }
 
-  const void clearUpdateFlag() {
+  void clearUpdateFlag() {
     LL_TIM_ClearFlag_UPDATE(TIMAddress());
   }
 
@@ -337,7 +337,7 @@ class Timer {
     return &(TIMAddress()->CCR1);
   }
 
-  const void enableClock(hal::Clocks& clocks) const {
+  void enableClock(hal::Clocks& clocks) const {
     switch (TAddress) {
       case timer::TimerAddress::TIM1Address:
         clocks.enableTIM1Clock();

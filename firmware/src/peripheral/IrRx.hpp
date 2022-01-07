@@ -23,7 +23,7 @@ class IrRx {
       : irRxDmaChannel(irRxDmaChannel), irInLedPin(irInLedPin) {
   }
 
-  const void initialize(
+  void initialize(
       hal::NVICHal& nvic,
       hal::Clocks& clocks,
       hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin6>& irRxPin,
@@ -108,7 +108,7 @@ class IrRx {
     return !timeout;
   }
 
-  const void handleInterrupt() const {
+  void handleInterrupt() const {
     // TODO do we need any of this?
     if (this->irRxDmaChannel->isTransferCompleteFlagSet()) {
       this->irRxDmaChannel->clearGlobalInterruptFlag();

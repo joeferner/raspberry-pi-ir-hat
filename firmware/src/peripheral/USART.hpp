@@ -11,8 +11,8 @@
 namespace peripheral {
 class USARTWriter {
  public:
-  virtual const void write(const char* buffer) = 0;
-  virtual const void write(const uint8_t* buffer, size_t length) = 0;
+  virtual void write(const char* buffer) = 0;
+  virtual void write(const uint8_t* buffer, size_t length) = 0;
 };
 
 template <hal::usart::USARTAddress TAddress, size_t TX_BUFFER_SIZE, size_t RX_BUFFER_SIZE>
@@ -26,7 +26,7 @@ class USART : public USARTWriter {
   USART(hal::USART<TAddress>* usart) : usart(usart) {
   }
 
-  const void initialize(
+  void initialize(
       hal::Clocks& clocks,
       hal::NVICHal& nvic,
       const hal::RCCHal& rcc,
@@ -75,7 +75,7 @@ class USART : public USARTWriter {
     usart1.enable();
   }
 
-  const void initialize(
+  void initialize(
       hal::Clocks& clocks,
       hal::NVICHal& nvic,
       const hal::RCCHal& rcc,
@@ -136,11 +136,11 @@ class USART : public USARTWriter {
     return 0;
   }
 
-  const void write(const char* buffer) {
+  void write(const char* buffer) {
     write((const uint8_t*)buffer, strlen(buffer));
   }
 
-  const void write(const uint8_t* buffer, size_t length) {
+  void write(const uint8_t* buffer, size_t length) {
     for (size_t i = 0; i < length; i++) {
       if (this->txBuffer.full()) {
         this->usart->enableTxEmptyInterrupt();
@@ -151,7 +151,7 @@ class USART : public USARTWriter {
     this->usart->enableTxEmptyInterrupt();
   }
 
-  const void handleInterrupt() {
+  void handleInterrupt() {
     if (this->usart->isTxDataRegisterEmptyFlagSet()) {
       if (this->txBuffer.empty()) {
         this->usart->disableTxEmptyInterrupt();

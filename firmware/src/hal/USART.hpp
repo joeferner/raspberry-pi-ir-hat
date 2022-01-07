@@ -91,19 +91,19 @@ class USART {
   }
 
  public:
-  const void setDataWidth(usart::DataWidth dataWidth) const {
+  void setDataWidth(usart::DataWidth dataWidth) const {
     LL_USART_SetDataWidth(USARTPort(), (uint32_t)dataWidth);
   }
 
-  const void setStopBits(usart::StopBits stopBits) const {
+  void setStopBits(usart::StopBits stopBits) const {
     LL_USART_SetStopBitsLength(USARTPort(), (uint32_t)stopBits);
   }
 
-  const void setParity(usart::Parity parity) const {
+  void setParity(usart::Parity parity) const {
     LL_USART_SetParity(USARTPort(), (uint32_t)parity);
   }
 
-  const void setOverSampling(usart::OverSampling oversampling) const {
+  void setOverSampling(usart::OverSampling oversampling) const {
     LL_USART_SetOverSampling(USARTPort(), (uint32_t)oversampling);
   }
 
@@ -111,23 +111,23 @@ class USART {
     return (usart::OverSampling)LL_USART_GetOverSampling(USARTPort());
   }
 
-  const void setTXFIFOThreshold(usart::FIFOThreshold threshold) const {
+  void setTXFIFOThreshold(usart::FIFOThreshold threshold) const {
     LL_USART_SetTXFIFOThreshold(USARTPort(), (uint32_t)threshold);
   }
 
-  const void setRXFIFOThreshold(usart::FIFOThreshold threshold) const {
+  void setRXFIFOThreshold(usart::FIFOThreshold threshold) const {
     LL_USART_SetRXFIFOThreshold(USARTPort(), (uint32_t)threshold);
   }
 
-  const void setTransferDirection(usart::TransferDirection direction) const {
+  void setTransferDirection(usart::TransferDirection direction) const {
     LL_USART_SetTransferDirection(USARTPort(), (uint32_t)direction);
   }
 
-  const void setHardwareFlowControl(usart::HardwardFlowControl flowControl) const {
+  void setHardwareFlowControl(usart::HardwardFlowControl flowControl) const {
     LL_USART_SetHWFlowCtrl(USARTPort(), (uint32_t)flowControl);
   }
 
-  const void setPrescaler(usart::Prescaler prescaler) const {
+  void setPrescaler(usart::Prescaler prescaler) const {
     LL_USART_SetPrescaler(USARTPort(), (uint32_t)prescaler);
   }
 
@@ -135,7 +135,7 @@ class USART {
     return (usart::Prescaler)LL_USART_GetPrescaler(USARTPort());
   }
 
-  const void setBaudRate(const RCCHal& rcc, uint32_t baudRate) const {
+  void setBaudRate(const RCCHal& rcc, uint32_t baudRate) const {
     uint32_t clock;
     switch (TAddress) {
       case usart::USARTAddress::USART1Address:
@@ -191,15 +191,15 @@ class USART {
         USARTPort(), clock, (uint32_t)this->getPrescalerValue(), (uint32_t)this->getOverSampling(), baudRate);
   }
 
-  const void configAsyncMode() const {
+  void configAsyncMode() const {
     LL_USART_ConfigAsyncMode(USARTPort());
   }
 
-  const void disableFIFO() const {
+  void disableFIFO() const {
     LL_USART_DisableFIFO(USARTPort());
   }
 
-  const void enable() const {
+  void enable() const {
     LL_USART_Enable(USARTPort());
     while (!this->isTransmitEnableAcknowledgeFlagSet() || !this->isReceiveEnableAcknowledgeFlagSet()) {
     }
@@ -213,15 +213,15 @@ class USART {
     return LL_USART_IsActiveFlag_REACK(USARTPort());
   }
 
-  const void enableRxNotEmptyInterrupt() const {
+  void enableRxNotEmptyInterrupt() const {
     LL_USART_EnableIT_RXNE_RXFNE(USARTPort());
   }
 
-  const void enableTxEmptyInterrupt() const {
+  void enableTxEmptyInterrupt() const {
     LL_USART_EnableIT_TXE_TXFNF(USARTPort());
   }
 
-  const void enableErrorInterrupt() const {
+  void enableErrorInterrupt() const {
     LL_USART_EnableIT_ERROR(USARTPort());
   }
 
@@ -233,7 +233,7 @@ class USART {
     return LL_USART_IsActiveFlag_TC(USARTPort());
   }
 
-  const void clearTransmissionCompleteFlag() const {
+  void clearTransmissionCompleteFlag() const {
     LL_USART_ClearFlag_TC(USARTPort());
   }
 
@@ -245,11 +245,11 @@ class USART {
     return LL_USART_IsActiveFlag_NE(USARTPort());
   }
 
-  const void disableTxEmptyInterrupt() const {
+  void disableTxEmptyInterrupt() const {
     LL_USART_DisableIT_TXE_TXFNF(USARTPort());
   }
 
-  const void transmitData8(uint8_t b) const {
+  void transmitData8(uint8_t b) const {
     LL_USART_TransmitData8(USARTPort(), b);
   }
 
@@ -257,7 +257,7 @@ class USART {
     return LL_USART_ReceiveData8(USARTPort());
   }
 
-  const void enableClock(hal::Clocks& clocks) const {
+  void enableClock(hal::Clocks& clocks) const {
     switch (TAddress) {
       case hal::usart::USARTAddress::USART1Address:
         clocks.enableUSART1Clock();

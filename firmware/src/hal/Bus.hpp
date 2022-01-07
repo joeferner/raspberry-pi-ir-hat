@@ -7,8 +7,8 @@ namespace hal {
 
 class Bus {
  public:
-  const void enableSyscfgClock() const;
-  const void enablePwrClock() const;
+  void enableSyscfgClock() const;
+  void enablePwrClock() const;
 };
 
 }  // namespace hal

@@ -19,11 +19,11 @@ enum class Prescaler
 
 class IWDGHal {
  public:
-  const void setPrescaler(iwdg::Prescaler prescaler) const {
+  void setPrescaler(iwdg::Prescaler prescaler) const {
     LL_IWDG_SetPrescaler(IWDG, (uint32_t)prescaler);
   }
 
-  const void setReloadCounter(uint32_t counter) const {
+  void setReloadCounter(uint32_t counter) const {
     assert_param(counter < 0x0fff);
     LL_IWDG_SetReloadCounter(IWDG, counter);
   }
@@ -32,11 +32,11 @@ class IWDGHal {
     return LL_IWDG_IsReady(IWDG) == 1;
   }
 
-  const void reloadCounter() const {
+  void reloadCounter() const {
     LL_IWDG_ReloadCounter(IWDG);
   }
 
-  const void enable() {
+  void enable() {
     LL_IWDG_Enable(IWDG);
   }
 };
