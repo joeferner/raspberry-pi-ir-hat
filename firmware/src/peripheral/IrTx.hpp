@@ -10,12 +10,15 @@
 #include "hal/System.hpp"
 #include "hal/Timer.hpp"
 
-extern peripheral::USART<hal::usart::USARTAddress::USART1Address, DEBUG_TX_BUFFER_SIZE, DEBUG_RX_BUFFER_SIZE>
+extern peripheral::USART<hal::usart::USARTAddress::USART1Address, USART_TX_BUFFER_SIZE, USART_RX_BUFFER_SIZE>
     debugUsart;
 
 namespace peripheral {
 class IrTx {
  private:
+  const uint32_t carrierPrescaler = 0;
+  const uint32_t signalPrescaler = 10;
+
   hal::GPIO<hal::gpio::GPIOAddress::GPIOBAddress, hal::gpio::GPIOPin::Pin9>* irOutPin;
   hal::Timer<hal::timer::TimerAddress::TIM17Address>* irTxCarrierTimer;
   hal::Timer<hal::timer::TimerAddress::TIM16Address>* irTxSignalTimer;
@@ -124,7 +127,6 @@ class IrTx {
     this->stop();
 
     // init carrier timer
-    const uint32_t carrierPrescaler = 0;
     this->irTxCarrierTimer->setPrescaler(carrierPrescaler);
     uint32_t autoReload = this->irTxCarrierTimer->setAutoReload(SystemCoreClock, carrierPrescaler, carrierFrequency);
     this->irTxCarrierTimer->setOutputCompareValue(hal::timer::Channel::Channel1, autoReload / 4);  // 25% duty cycle
@@ -132,7 +134,6 @@ class IrTx {
     this->irTxCarrierTimer->enableAllOutputs();
 
     // init signal timer
-    const uint32_t signalPrescaler = 10;
     this->irTxSignalTimer->setPrescaler(signalPrescaler);
     this->irTxSignalTimer->setAutoReload(65000);
     this->irTxSignalTimer->disableOutputComparePreload(hal::timer::Channel::Channel1);
@@ -181,8 +182,8 @@ class IrTx {
 
   void stop() {
     this->sending = false;
-    LL_TIM_DisableCounter(IR_OUT_CARRIER_TIMER);
-    LL_TIM_DisableCounter(IR_OUT_SIGNAL_TIMER);
+    this->irTxCarrierTimer->disableCounter();
+    this->irTxSignalTimer->disableCounter();
     this->enableGpio(false);
   }
 
@@ -198,12 +199,12 @@ class IrTx {
     uint32_t t_off = this->txBuffer.front();
     this->txBuffer.pop();
 
-    uint32_t on_t = __LL_TIM_CALC_DELAY(SystemCoreClock, IR_OUT_SIGNAL_PRESCALER, t_on);
-    uint32_t off_t = __LL_TIM_CALC_DELAY(SystemCoreClock, IR_OUT_SIGNAL_PRESCALER, t_off);
+    uint32_t on_t = this->irTxSignalTimer->calculateDelay(SystemCoreClock, signalPrescaler, t_on);
+    uint32_t off_t = this->irTxSignalTimer->calculateDelay(SystemCoreClock, signalPrescaler, t_off);
     uint32_t total_t = on_t + off_t;
 
-    LL_TIM_SetAutoReload(IR_OUT_SIGNAL_TIMER, total_t);
-    IR_OUT_SIGNAL_TIM_OC_SetCompare(on_t);
+    this->irTxSignalTimer->setAutoReload(total_t);
+    this->irTxSignalTimer->setOutputCompareValue(hal::timer::Channel::Channel1, on_t);
   }
 };
 }  // namespace peripheral

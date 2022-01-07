@@ -166,6 +166,10 @@ class Timer {
     LL_TIM_SetAutoReload(TIMAddress(), autoReload);
   }
 
+  uint32_t calculateDelay(uint32_t timerInputClockFrequency, uint32_t prescaler, uint32_t delay) const {
+    return __LL_TIM_CALC_DELAY(timerInputClockFrequency, prescaler, delay);
+  }
+
   const uint32_t setAutoReload(uint32_t timerInputClockFrequency, uint32_t prescaler, uint32_t frequency) {
     // TODO can we calculate this? timerInputClockFrequency and prescaler
     uint32_t autoReload = __LL_TIM_CALC_ARR(timerInputClockFrequency, prescaler, frequency);
@@ -325,7 +329,11 @@ class Timer {
     LL_TIM_EnableCounter(TIMAddress());
   }
 
-  const bool isUpdateFlagSet() const {
+  void disableCounter() {
+    LL_TIM_DisableCounter(TIMAddress());
+  }
+
+  bool isUpdateFlagSet() const {
     return LL_TIM_IsActiveFlag_UPDATE(TIMAddress());
   }
 

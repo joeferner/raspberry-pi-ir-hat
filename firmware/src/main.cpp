@@ -41,9 +41,9 @@ hal::Timer<hal::timer::TimerAddress::TIM17Address> irTxCarrierTimer;
 hal::Timer<hal::timer::TimerAddress::TIM16Address> irTxSignalTimer;
 hal::IWDGHal iwdg;
 
-peripheral::USART<hal::usart::USARTAddress::USART1Address, DEBUG_TX_BUFFER_SIZE, DEBUG_RX_BUFFER_SIZE> debugUsart(
+peripheral::USART<hal::usart::USARTAddress::USART1Address, USART_TX_BUFFER_SIZE, USART_RX_BUFFER_SIZE> debugUsart(
     &usart1);
-peripheral::USART<hal::usart::USARTAddress::USART2Address, DEBUG_TX_BUFFER_SIZE, DEBUG_RX_BUFFER_SIZE> rpiUsart(
+peripheral::USART<hal::usart::USARTAddress::USART2Address, USART_TX_BUFFER_SIZE, USART_RX_BUFFER_SIZE> rpiUsart(
     &usart2);
 peripheral::IrRx irRx(&irRxDmaChannel, &irInLedPin);
 peripheral::IrTx irTx(&irOutPin, &irTxCarrierTimer, &irTxSignalTimer);
@@ -63,11 +63,11 @@ extern "C" int main() {
 }
 
 static void loop() {
-  char buffer[DEBUG_RX_BUFFER_SIZE];
+  char buffer[USART_RX_BUFFER_SIZE];
   size_t lineLen;
   uint16_t irRxValue;
 
-  LL_IWDG_ReloadCounter(IWDG);
+  iwdg.reloadCounter();
   if ((lineLen = debugUsart.readLine(buffer, sizeof(buffer)))) {
     processUsartLine(debugUsart, buffer);
   }
