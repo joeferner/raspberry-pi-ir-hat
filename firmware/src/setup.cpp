@@ -38,9 +38,6 @@ static const uint32_t HCLK_FREQUENCY = 16000000;
 static void setupSystemClock();
 static void setupGPIO();
 static void setupDMA();
-static void setupIRTIM();
-static void setupTIM16();
-static void setupTIM17();
 static void setupIWDG();
 static void setupADC1();
 
@@ -51,9 +48,6 @@ void setup() {
   setupSystemClock();
   setupGPIO();
   setupDMA();
-  setupIRTIM();
-  setupTIM16();
-  setupTIM17();
   setupIWDG();
   setupADC1();
 
@@ -80,7 +74,7 @@ void setup() {
       hal::usart::Parity::None,
       hal::usart::StopBits::StopBits1);
   irRx.initialize(nvic, clocks, irRxPin, irRxTimer);
-  irTx.initialize(clocks, halSystem);
+  irTx.initialize(clocks, halSystem, nvic);
   // TODO ir_tx_setup();
   // TODO current_sensor_setup();
   debugUsart.write("?READY\n");
@@ -112,78 +106,6 @@ static void setupDMA() {
   clocks.enableDMA1Clock();
   nvic.setPriority(hal::nvic::IRQnType::DMA1_Ch4_5_DMAMUX1_OVR_Irq, 0);
   nvic.enableInterrupt(hal::nvic::IRQnType::DMA1_Ch4_5_DMAMUX1_OVR_Irq);
-}
-
-static void setupIRTIM() {
-  halSystem.setIRModulationEnvelopeSignalSource(hal::system::IRModulationEnvelopeSignalSource::IR_TIM16);
-  halSystem.setIRPolarity(hal::system::IRPolarity::NotInverted);
-}
-
-static void setupTIM16() {
-  clocks.enableTIM16Clock();
-
-  nvic.setPriority(hal::nvic::IRQnType::TIM16_Irq, 0);
-  nvic.enableInterrupt(hal::nvic::IRQnType::TIM16_Irq);
-
-  irTxSignalTimer.setCounterMode(hal::timer::CounterMode::Up);
-  irTxSignalTimer.setClockDivision(hal::timer::ClockDivision::DIV_1);
-  irTxSignalTimer.setAutoReload(65535);
-  irTxSignalTimer.setPrescaler(0);
-  irTxSignalTimer.setRepetitionCounter(0);
-  irTxSignalTimer.disableAutoReloadPreload();
-  irTxSignalTimer.enableOutputComparePreload(hal::timer::Channel::Channel1);
-  irTxSignalTimer.disableCaptureCompareChannel(hal::timer::ChannelN::Channel1);
-  irTxSignalTimer.disableCaptureCompareChannel(hal::timer::ChannelN::Channel1N);
-  irTxSignalTimer.setOutputCompareMode(hal::timer::Channel::Channel1, hal::timer::OutputCompareMode::PWM1);
-  irTxSignalTimer.setOutputComparePolarity(hal::timer::ChannelN::Channel1, hal::timer::OutputComparePolarity::High);
-  irTxSignalTimer.setOutputComparePolarity(hal::timer::ChannelN::Channel1N, hal::timer::OutputComparePolarity::High);
-  // TODO set this to high?
-  irTxSignalTimer.setOutputCompareIdleState(hal::timer::ChannelN::Channel1, hal::timer::OutputCompareIdleState::Low);
-  irTxSignalTimer.setOutputCompareIdleState(hal::timer::ChannelN::Channel1N, hal::timer::OutputCompareIdleState::Low);
-  irTxSignalTimer.setOutputCompareValue(hal::timer::Channel::Channel1, 0);
-  irTxSignalTimer.disableOutputCompareFast(hal::timer::Channel::Channel1);
-  // TODO
-  // TIM_BDTRInitStruct.OSSRState = LL_TIM_OSSR_DISABLE;
-  // TIM_BDTRInitStruct.OSSIState = LL_TIM_OSSI_DISABLE;
-  // TIM_BDTRInitStruct.LockLevel = LL_TIM_LOCKLEVEL_OFF;
-  // TIM_BDTRInitStruct.DeadTime = 0;
-  // TIM_BDTRInitStruct.BreakState = LL_TIM_BREAK_DISABLE;
-  // TIM_BDTRInitStruct.BreakPolarity = LL_TIM_BREAK_POLARITY_HIGH;
-  // TIM_BDTRInitStruct.BreakFilter = LL_TIM_BREAK_FILTER_FDIV1;
-  // TIM_BDTRInitStruct.AutomaticOutput = LL_TIM_AUTOMATICOUTPUT_DISABLE;
-  // LL_TIM_BDTR_Init(TIM16, &TIM_BDTRInitStruct);
-}
-
-static void setupTIM17() {
-  clocks.enableTIM17Clock();
-
-  irTxCarrierTimer.setCounterMode(hal::timer::CounterMode::Up);
-  irTxCarrierTimer.setClockDivision(hal::timer::ClockDivision::DIV_1);
-  irTxCarrierTimer.setAutoReload(65535);
-  irTxCarrierTimer.setPrescaler(0);
-  irTxCarrierTimer.setRepetitionCounter(0);
-  irTxCarrierTimer.disableAutoReloadPreload();
-  irTxCarrierTimer.enableOutputComparePreload(hal::timer::Channel::Channel1);
-  irTxCarrierTimer.disableCaptureCompareChannel(hal::timer::ChannelN::Channel1);
-  irTxCarrierTimer.disableCaptureCompareChannel(hal::timer::ChannelN::Channel1N);
-  irTxCarrierTimer.setOutputCompareMode(hal::timer::Channel::Channel1, hal::timer::OutputCompareMode::PWM1);
-  irTxCarrierTimer.setOutputComparePolarity(hal::timer::ChannelN::Channel1, hal::timer::OutputComparePolarity::High);
-  irTxCarrierTimer.setOutputComparePolarity(hal::timer::ChannelN::Channel1N, hal::timer::OutputComparePolarity::High);
-  // TODO set this to high?
-  irTxCarrierTimer.setOutputCompareIdleState(hal::timer::ChannelN::Channel1, hal::timer::OutputCompareIdleState::Low);
-  irTxCarrierTimer.setOutputCompareIdleState(hal::timer::ChannelN::Channel1N, hal::timer::OutputCompareIdleState::Low);
-  irTxCarrierTimer.setOutputCompareValue(hal::timer::Channel::Channel1, 0);
-  irTxCarrierTimer.disableOutputCompareFast(hal::timer::Channel::Channel1);
-  // TODO
-  // TIM_BDTRInitStruct.OSSRState = LL_TIM_OSSR_DISABLE;
-  // TIM_BDTRInitStruct.OSSIState = LL_TIM_OSSI_DISABLE;
-  // TIM_BDTRInitStruct.LockLevel = LL_TIM_LOCKLEVEL_OFF;
-  // TIM_BDTRInitStruct.DeadTime = 0;
-  // TIM_BDTRInitStruct.BreakState = LL_TIM_BREAK_DISABLE;
-  // TIM_BDTRInitStruct.BreakPolarity = LL_TIM_BREAK_POLARITY_HIGH;
-  // TIM_BDTRInitStruct.BreakFilter = LL_TIM_BREAK_FILTER_FDIV1;
-  // TIM_BDTRInitStruct.AutomaticOutput = LL_TIM_AUTOMATICOUTPUT_DISABLE;
-  // LL_TIM_BDTR_Init(TIM17, &TIM_BDTRInitStruct);
 }
 
 static void setupIWDG() {

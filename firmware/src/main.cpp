@@ -42,11 +42,11 @@ hal::Timer<hal::timer::TimerAddress::TIM16Address> irTxSignalTimer;
 hal::IWDGHal iwdg;
 
 peripheral::USART<hal::usart::USARTAddress::USART1Address, DEBUG_TX_BUFFER_SIZE, DEBUG_RX_BUFFER_SIZE> debugUsart(
-    &usart1);
+  &usart1);
 peripheral::USART<hal::usart::USARTAddress::USART2Address, DEBUG_TX_BUFFER_SIZE, DEBUG_RX_BUFFER_SIZE> rpiUsart(
-    &usart2);
+  &usart2);
 peripheral::IrRx irRx(&irRxDmaChannel, &irInLedPin);
-peripheral::IrTx irTx(&irOutPin);
+peripheral::IrTx irTx(&irOutPin, &irTxCarrierTimer, &irTxSignalTimer);
 
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
 
