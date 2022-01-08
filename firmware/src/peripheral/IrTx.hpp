@@ -1,14 +1,13 @@
 #ifndef _PERIPHERAL_IR_TX_HPP_
 #define _PERIPHERAL_IR_TX_HPP_
 
-#include <etl/queue.h>
-
 #include "USART.hpp"
 #include "hal/DMA.hpp"
 #include "hal/GPIO.hpp"
 #include "hal/NVIC.hpp"
 #include "hal/System.hpp"
 #include "hal/Timer.hpp"
+#include "utils/Queue.hpp"
 
 extern peripheral::USART<hal::usart::USARTAddress::USART1Address, USART_TX_BUFFER_SIZE, USART_RX_BUFFER_SIZE>
     debugUsart;
@@ -22,7 +21,7 @@ class IrTx {
   hal::GPIO<hal::gpio::GPIOAddress::GPIOBAddress, hal::gpio::GPIOPin::Pin9>* irOutPin;
   hal::Timer<hal::timer::TimerAddress::TIM17Address>* irTxCarrierTimer;
   hal::Timer<hal::timer::TimerAddress::TIM16Address>* irTxSignalTimer;
-  etl::queue<uint32_t, IR_TX_BUFFER_SAMPLES> txBuffer;
+  Queue<uint32_t, IR_TX_BUFFER_SAMPLES> txBuffer;
   bool sending;
 
  public:
@@ -167,7 +166,7 @@ class IrTx {
   }
 
   const uint32_t getNumberOfSamplesInBuffer() const {
-    return this->txBuffer.available();
+    return this->txBuffer.getAvailable();
   }
 
  private:
@@ -188,16 +187,14 @@ class IrTx {
   }
 
   void nextSignal() {
-    if (this->txBuffer.available() < 2) {
+    if (this->txBuffer.getAvailable() < 2) {
       this->stop();
       debugUsart.write("?send complete\n");
       return;
     }
 
-    uint32_t t_on = this->txBuffer.front();
-    this->txBuffer.pop();
-    uint32_t t_off = this->txBuffer.front();
-    this->txBuffer.pop();
+    uint32_t t_on = this->txBuffer.pop();
+    uint32_t t_off = this->txBuffer.pop();
 
     uint32_t on_t = this->irTxSignalTimer->calculateDelay(SystemCoreClock, signalPrescaler, t_on);
     uint32_t off_t = this->irTxSignalTimer->calculateDelay(SystemCoreClock, signalPrescaler, t_off);

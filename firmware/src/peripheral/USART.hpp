@@ -1,12 +1,11 @@
 #ifndef _PERIPHERAL_USART_HPP_
 #define _PERIPHERAL_USART_HPP_
 
-#include <etl/circular_buffer.h>
-
 #include "hal/Clocks.hpp"
 #include "hal/GPIO.hpp"
 #include "hal/NVIC.hpp"
 #include "hal/USART.hpp"
+#include "utils/Queue.hpp"
 
 namespace peripheral {
 class USARTWriter {
@@ -19,8 +18,8 @@ template <hal::usart::USARTAddress TAddress, size_t TX_BUFFER_SIZE, size_t RX_BU
 class USART : public USARTWriter {
  private:
   hal::USART<TAddress>* usart;
-  etl::circular_buffer<uint8_t, TX_BUFFER_SIZE> txBuffer;
-  etl::circular_buffer<uint8_t, RX_BUFFER_SIZE> rxBuffer;
+  Queue<char, TX_BUFFER_SIZE> txBuffer;
+  Queue<char, RX_BUFFER_SIZE> rxBuffer;
 
  public:
   USART(hal::USART<TAddress>* usart) : usart(usart) {
@@ -133,6 +132,9 @@ class USART : public USARTWriter {
       }
       bufferOffset++;
     }
+    if (this->rxBuffer.isFull()) {
+      this->rxBuffer.pop();
+    }
     return 0;
   }
 
@@ -142,7 +144,7 @@ class USART : public USARTWriter {
 
   void write(const uint8_t* buffer, size_t length) {
     for (size_t i = 0; i < length; i++) {
-      if (this->txBuffer.full()) {
+      if (this->txBuffer.isFull()) {
         this->usart->enableTxEmptyInterrupt();
         continue;
       }
@@ -153,11 +155,10 @@ class USART : public USARTWriter {
 
   void handleInterrupt() {
     if (this->usart->isTxDataRegisterEmptyFlagSet()) {
-      if (this->txBuffer.empty()) {
+      if (this->txBuffer.isEmpty()) {
         this->usart->disableTxEmptyInterrupt();
       } else {
-        uint8_t b = this->txBuffer[0];
-        this->txBuffer.pop();
+        uint8_t b = this->txBuffer.pop();
         // TXE flag will be automatically cleared when writing new data in TDR register
         this->usart->transmitData8(b);
       }
