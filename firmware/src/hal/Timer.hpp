@@ -141,11 +141,15 @@ enum class OutputCompareIdleState : uint32_t
 template <timer::TimerAddress TAddress>
 class Timer {
  public:
+  bool supportsCounterMode() const {
+    return IS_TIM_COUNTER_MODE_SELECT_INSTANCE(TIMAddress());
+  }
+
   void setCounterMode(timer::CounterMode mode) const {
-    if (IS_TIM_COUNTER_MODE_SELECT_INSTANCE(TIMAddress())) {
+    if (this->supportsCounterMode()) {
       LL_TIM_SetCounterMode(TIMAddress(), (uint32_t)mode);
     } else {
-      assert_param(0);
+      assert_param(mode == timer::CounterMode::Up);
     }
   }
 
@@ -181,11 +185,15 @@ class Timer {
     LL_TIM_SetPrescaler(TIMAddress(), prescaler);
   }
 
-  void setRepetitionCounter(uint32_t repetitionCounter) const {
-    if (IS_TIM_REPETITION_COUNTER_INSTANCE(TIMAddress())) {
+  bool supportsRepetitionCounter() const {
+    return IS_TIM_REPETITION_COUNTER_INSTANCE(TIMAddress());
+  }
+
+  void setRepetitionCounter(uint32_t repetitionCounter) {
+    if (this->supportsRepetitionCounter()) {
       LL_TIM_SetRepetitionCounter(TIMAddress(), repetitionCounter);
     } else {
-      assert_param(0);
+      assert_param(repetitionCounter == 0);
     }
   }
 

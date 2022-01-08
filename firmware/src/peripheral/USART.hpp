@@ -124,8 +124,10 @@ class USART : public USARTWriter {
     for (auto it = this->rxBuffer.begin(); it != this->rxBuffer.end(); it++) {
       buffer[bufferOffset] = *it;
       if (*it == '\r' || *it == '\n') {
-        for (size_t i = 0; i < bufferOffset; i++) {
-          this->rxBuffer.pop();
+        for (size_t i = 0; i <= bufferOffset; i++) {
+          if (this->rxBuffer.pop() != buffer[i]) {
+            assert_param(0);
+          }
         }
         buffer[bufferOffset] = '\0';
         return bufferOffset;
@@ -176,14 +178,17 @@ class USART : public USARTWriter {
 
     if (this->usart->isOverrunErrorFlagSet()) {
       this->usart->clearOverrunErrorFlag();
+      this->write("-ERR USART:OVR\n");
     }
 
     if (this->usart->isFramingErrorFlagSet()) {
       this->usart->clearFramingErrorFlag();
+      this->write("-ERR USART:FE\n");
     }
 
     if (this->usart->isNoiseErrorFlagSet()) {
       this->usart->clearNoiseErrorFlag();
+      this->write("-ERR USART:NE\n");
     }
   }
 };

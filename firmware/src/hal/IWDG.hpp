@@ -19,6 +19,8 @@ enum class Prescaler
 
 class IWDGHal {
  public:
+  static const uint32_t MAX_RELOAD = (0x0fff - 1);
+
   void setPrescaler(iwdg::Prescaler prescaler) const {
     LL_IWDG_SetPrescaler(IWDG, (uint32_t)prescaler);
   }

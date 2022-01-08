@@ -46,10 +46,12 @@ target_compile_definitions(${EXECUTABLE} PRIVATE
   -DPREFETCH_ENABLE=0
   -DINSTRUCTION_CACHE_ENABLE=1
   -DDATA_CACHE_ENABLE=1
+  -DUSE_FULL_ASSERT=1
 )
 
 target_include_directories(${EXECUTABLE} PRIVATE
   src
+  src/stm32
   libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Inc
   libs/STM32CubeG0/Drivers/CMSIS/Device/ST/STM32G0xx/Include
   libs/STM32CubeG0/Drivers/CMSIS/Include

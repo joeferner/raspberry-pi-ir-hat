@@ -115,7 +115,7 @@ static void setupDMA() {
 
 static void setupIWDG() {
   iwdg.setPrescaler(hal::iwdg::Prescaler::Prescaler4);
-  iwdg.setReloadCounter(4096);
+  iwdg.setReloadCounter(hal::IWDGHal::MAX_RELOAD);
   while (!iwdg.isReady()) {
   }
   iwdg.reloadCounter();

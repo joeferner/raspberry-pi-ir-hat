@@ -36,8 +36,6 @@ const size_t IR_TX_BUFFER_SAMPLES = 128;
 const size_t IR_RX_BUFFER_SAMPLES = 128;
 const size_t IR_RX_TIMEOUT_MS = 1000;
 
-void Error_Handler(void);
-
 #ifdef __cplusplus
 }
 #endif

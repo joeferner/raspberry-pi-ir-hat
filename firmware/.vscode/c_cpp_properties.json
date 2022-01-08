@@ -6,6 +6,7 @@
                 "src",
                 "src/hal",
                 "src/peripheral",
+                "src/stm32",
                 "libs/etl/include",
                 "libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Inc",
                 "libs/STM32CubeG0/Drivers/CMSIS/Device/ST/STM32G0xx/Include",

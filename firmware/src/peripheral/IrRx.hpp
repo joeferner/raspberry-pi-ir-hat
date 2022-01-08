@@ -48,7 +48,9 @@ class IrRx {
     irRxTimer.setCounterMode(hal::timer::CounterMode::Up);
     irRxTimer.setClockDivision(hal::timer::ClockDivision::DIV_1);
     irRxTimer.setAutoReload(65535);
-    irRxTimer.setRepetitionCounter(0);
+    if (irRxTimer.supportsRepetitionCounter()) {
+      irRxTimer.setRepetitionCounter(0);
+    }
     irRxTimer.disableAutoReloadPreload();
     irRxTimer.setTriggerOutput(hal::timer::TriggerOutput::Reset);
     irRxTimer.disableMasterSlaveMode();
