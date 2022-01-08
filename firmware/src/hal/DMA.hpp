@@ -284,7 +284,7 @@ class DMAChannel {
     LL_DMA_SetMemoryAddress(DMAAddress(), channel(), (uint32_t)p);
   }
 
-  const bool isTransferCompleteFlagSet() const {
+  bool isTransferCompleteFlagSet() const {
     switch (TChannel) {
       case dma::Channel::Channel1:
         return LL_DMA_IsActiveFlag_TC1(DMAAddress());
@@ -309,7 +309,7 @@ class DMAChannel {
     }
   }
 
-  const bool isGlobalInterruptFlagSet() const {
+  bool isGlobalInterruptFlagSet() const {
     switch (TChannel) {
       case dma::Channel::Channel1:
         return LL_DMA_IsActiveFlag_GI1(DMAAddress());

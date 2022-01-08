@@ -19,31 +19,6 @@ extern "C" void SysTick_Handler() {
   clocks.incrementTick();
 }
 
-extern "C" void DMA1_Channel1_IRQHandler() {
-  // TODO which one?
-  irRx.handleInterrupt();
-}
-
-extern "C" void DMA1_Channel2_3_IRQHandler() {
-  // TODO which one?
-  irRx.handleInterrupt();
-}
-
-extern "C" void DMA1_Channel4_5_6_7_IRQHandler() {
-  // TODO which one?
-  irRx.handleInterrupt();
-}
-
-extern "C" void DMA1_Ch4_5_DMAMUX1_OVR_IRQHandler() {
-  // TODO which one?
-  irRx.handleInterrupt();
-}
-
-extern "C" void TIM3_IRQHandler() {
-  // TODO which one?
-  irRx.handleInterrupt();
-}
-
 extern "C" void TIM16_IRQHandler() {
   irTx.handleInterrupt();
 }

@@ -28,6 +28,8 @@ class IrRx {
       hal::Clocks& clocks,
       hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin6>& irRxPin,
       hal::Timer<hal::timer::TimerAddress::TIM3Address>& irRxTimer) {
+    clocks.enableDMA1Clock();
+
     irRxPin.enableClock(clocks);
     irRxPin.setSpeed(hal::gpio::Speed::Low);
     irRxPin.setOutputType(hal::gpio::OutputType::PushPull);
@@ -83,12 +85,9 @@ class IrRx {
     this->lastValue = 0;
     this->readIndex = this->getDmaPosition();
     this->lastTick = 0;
-
-    nvic.setPriority(hal::nvic::IRQnType::TIM3_Irq, 0);
-    nvic.enableInterrupt(hal::nvic::IRQnType::TIM3_Irq);
   }
 
-  const bool read(const hal::Clocks& clocks, uint16_t* result) {
+  bool read(const hal::Clocks& clocks, uint16_t* result) {
     if (this->getDmaPosition() == this->readIndex) {
       return false;
     }
@@ -108,19 +107,8 @@ class IrRx {
     return !timeout;
   }
 
-  void handleInterrupt() const {
-    // TODO do we need any of this?
-    if (this->irRxDmaChannel->isTransferCompleteFlagSet()) {
-      this->irRxDmaChannel->clearGlobalInterruptFlag();
-    }
-
-    if (this->irRxDmaChannel->isGlobalInterruptFlagSet()) {
-      this->irRxDmaChannel->clearGlobalInterruptFlag();
-    }
-  }
-
  private:
-  const size_t getDmaPosition() const {
+  size_t getDmaPosition() const {
     return IR_RX_BUFFER_SAMPLES - this->irRxDmaChannel->getDataLength();
   }
 };

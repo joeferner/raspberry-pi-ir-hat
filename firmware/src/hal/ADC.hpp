@@ -1,6 +1,7 @@
 #ifndef _ADC_HPP_
 #define _ADC_HPP_
 
+#include "hal/Clocks.hpp"
 #include "main.h"
 
 namespace hal {

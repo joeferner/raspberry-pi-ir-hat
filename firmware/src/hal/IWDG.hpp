@@ -28,7 +28,7 @@ class IWDGHal {
     LL_IWDG_SetReloadCounter(IWDG, counter);
   }
 
-  const bool isReady() const {
+  bool isReady() const {
     return LL_IWDG_IsReady(IWDG) == 1;
   }
 

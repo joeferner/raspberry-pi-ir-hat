@@ -37,15 +37,14 @@ class USART : public USARTWriter {
       hal::usart::DataWidth dataWidth,
       hal::usart::Parity parity,
       hal::usart::StopBits stopBits) const {
-    clocks.enableUSART1Clock();
-    clocks.enableGPIOBClock();
-
+    usart1RxPin.enableClock(clocks);
     usart1RxPin.setSpeed(hal::gpio::Speed::Low);
     usart1RxPin.setOutputType(hal::gpio::OutputType::PushPull);
     usart1RxPin.setPull(hal::gpio::Pull::None);
     usart1RxPin.setAlternate(hal::gpio::Alternate::Alt0);
     usart1RxPin.setMode(hal::gpio::Mode::Alternate);
 
+    usart1TxPin.enableClock(clocks);
     usart1TxPin.setSpeed(hal::gpio::Speed::Low);
     usart1TxPin.setOutputType(hal::gpio::OutputType::PushPull);
     usart1TxPin.setPull(hal::gpio::Pull::None);
@@ -55,6 +54,7 @@ class USART : public USARTWriter {
     nvic.setPriority(hal::nvic::IRQnType::USART1_Irq, 0);
     nvic.enableInterrupt(hal::nvic::IRQnType::USART1_Irq);
 
+    usart1.enableClock(clocks);
     usart1.setDataWidth(dataWidth);
     usart1.setParity(parity);
     usart1.setStopBits(stopBits);
@@ -170,15 +170,19 @@ class USART : public USARTWriter {
     if (this->usart->isRxNotEmptyFlagSet()) {
       // RXNE flag is cleared by reading of RDR register
       uint8_t b = this->usart->receiveData8();
-      if (this->rxBuffer.full()) {
-        Error_Handler();
-      }
       this->rxBuffer.push(b);
     }
 
-    if (this->usart->isErrorFlagSet()) {
-      while (1)
-        ;
+    if (this->usart->isOverrunErrorFlagSet()) {
+      this->usart->clearOverrunErrorFlag();
+    }
+
+    if (this->usart->isFramingErrorFlagSet()) {
+      this->usart->clearFramingErrorFlag();
+    }
+
+    if (this->usart->isNoiseErrorFlagSet()) {
+      this->usart->clearNoiseErrorFlag();
     }
   }
 };

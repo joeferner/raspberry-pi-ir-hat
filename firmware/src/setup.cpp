@@ -78,9 +78,11 @@ void setup() {
       hal::usart::StopBits::StopBits1);
   irRx.initialize(nvic, clocks, irRxPin, irRxTimer);
   irTx.initialize(clocks, halSystem, nvic);
-  currentSensor.initialize(clocks, currentRefPin, current0Pin, current1Pin);
+  // TODO ADC
+  // currentSensor.initialize(clocks, nvic, currentRefPin, current0Pin, current1Pin);
   debugUsart.write("?READY\n");
-  iwdg.enable();
+  // TODO enable watchdog
+  // iwdg.enable();
 }
 
 static void setupSystemClock() {
@@ -106,9 +108,9 @@ static void setupGPIO() {
 }
 
 static void setupDMA() {
-  clocks.enableDMA1Clock();
-  nvic.setPriority(hal::nvic::IRQnType::DMA1_Ch4_5_DMAMUX1_OVR_Irq, 0);
-  nvic.enableInterrupt(hal::nvic::IRQnType::DMA1_Ch4_5_DMAMUX1_OVR_Irq);
+  // TODO do we need this
+  // nvic.setPriority(hal::nvic::IRQnType::DMA1_Ch4_5_DMAMUX1_OVR_Irq, 0);
+  // nvic.enableInterrupt(hal::nvic::IRQnType::DMA1_Ch4_5_DMAMUX1_OVR_Irq);
 }
 
 static void setupIWDG() {

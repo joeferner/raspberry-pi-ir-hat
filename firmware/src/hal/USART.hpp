@@ -209,11 +209,11 @@ class USART {
     }
   }
 
-  const bool isTransmitEnableAcknowledgeFlagSet() const {
+  bool isTransmitEnableAcknowledgeFlagSet() const {
     return LL_USART_IsActiveFlag_TEACK(USARTPort());
   }
 
-  const bool isReceiveEnableAcknowledgeFlagSet() const {
+  bool isReceiveEnableAcknowledgeFlagSet() const {
     return LL_USART_IsActiveFlag_REACK(USARTPort());
   }
 
@@ -229,11 +229,11 @@ class USART {
     LL_USART_EnableIT_ERROR(USARTPort());
   }
 
-  const bool isTxDataRegisterEmptyFlagSet() const {
+  bool isTxDataRegisterEmptyFlagSet() const {
     return LL_USART_IsActiveFlag_TXE_TXFNF(USARTPort());
   }
 
-  const bool isTransmissionCompleteFlagSet() const {
+  bool isTransmissionCompleteFlagSet() const {
     return LL_USART_IsActiveFlag_TC(USARTPort());
   }
 
@@ -241,12 +241,32 @@ class USART {
     LL_USART_ClearFlag_TC(USARTPort());
   }
 
-  const bool isRxNotEmptyFlagSet() const {
+  bool isRxNotEmptyFlagSet() const {
     return LL_USART_IsActiveFlag_RXNE_RXFNE(USARTPort());
   }
 
-  const bool isErrorFlagSet() const {
+  bool isOverrunErrorFlagSet() const {
+    return LL_USART_IsActiveFlag_ORE(USARTPort());
+  }
+
+  void clearOverrunErrorFlag() {
+    LL_USART_ClearFlag_ORE(USARTPort());
+  }
+
+  bool isFramingErrorFlagSet() const {
+    return LL_USART_IsActiveFlag_FE(USARTPort());
+  }
+
+  void clearFramingErrorFlag() {
+    LL_USART_ClearFlag_FE(USARTPort());
+  }
+
+  bool isNoiseErrorFlagSet() const {
     return LL_USART_IsActiveFlag_NE(USARTPort());
+  }
+
+  void clearNoiseErrorFlag() {
+    LL_USART_ClearFlag_NE(USARTPort());
   }
 
   void disableTxEmptyInterrupt() const {

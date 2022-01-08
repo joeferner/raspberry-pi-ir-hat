@@ -4,6 +4,9 @@
 #include <stdlib.h>
 
 #include "hal/ADC.hpp"
+#include "hal/Clocks.hpp"
+#include "hal/GPIO.hpp"
+#include "hal/NVIC.hpp"
 #include "main.h"
 
 const uint32_t VREF_mV = 3300;

@@ -72,17 +72,18 @@ extern "C" int main() {
 }
 
 static void loop() {
-  char buffer[USART_RX_BUFFER_SIZE];
-  size_t lineLen;
-  uint16_t irRxValue;
-
   iwdg.reloadCounter();
-  if ((lineLen = debugUsart.readLine(buffer, sizeof(buffer)))) {
-    processUsartLine(debugUsart, buffer);
+
+  char usartBuffer[USART_RX_BUFFER_SIZE];
+  size_t lineLen;
+  if ((lineLen = debugUsart.readLine(usartBuffer, sizeof(usartBuffer)))) {
+    processUsartLine(debugUsart, usartBuffer);
   }
-  if ((lineLen = rpiUsart.readLine(buffer, sizeof(buffer)))) {
-    processUsartLine(rpiUsart, buffer);
+  if ((lineLen = rpiUsart.readLine(usartBuffer, sizeof(usartBuffer)))) {
+    processUsartLine(rpiUsart, usartBuffer);
   }
+
+  uint16_t irRxValue;
   while (irRx.read(clocks, &irRxValue)) {
     char buffer[20];
     buffer[0] = '!';
@@ -92,8 +93,10 @@ static void loop() {
 
     rpiUsart.write(buffer);
     debugUsart.write(buffer);
+    iwdg.reloadCounter();
   }
-  currentSensor.loop();
+
+  // currentSensor.loop();
 }
 
 void processUsartLine(peripheral::USARTWriter& usartWriter, const char* data) {
