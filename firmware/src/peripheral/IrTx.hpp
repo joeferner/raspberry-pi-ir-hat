@@ -9,9 +9,6 @@
 #include "hal/Timer.hpp"
 #include "utils/Queue.hpp"
 
-extern peripheral::USART<hal::usart::USARTAddress::USART1Address, USART_TX_BUFFER_SIZE, USART_RX_BUFFER_SIZE>
-    debugUsart;
-
 namespace peripheral {
 class IrTx {
  private:
@@ -65,16 +62,6 @@ class IrTx {
         hal::timer::ChannelN::Channel1N, hal::timer::OutputCompareIdleState::Low);
     this->irTxSignalTimer->setOutputCompareValue(hal::timer::Channel::Channel1, 0);
     this->irTxSignalTimer->disableOutputCompareFast(hal::timer::Channel::Channel1);
-    // TODO do we need this?
-    // TIM_BDTRInitStruct.OSSRState = LL_TIM_OSSR_DISABLE;
-    // TIM_BDTRInitStruct.OSSIState = LL_TIM_OSSI_DISABLE;
-    // TIM_BDTRInitStruct.LockLevel = LL_TIM_LOCKLEVEL_OFF;
-    // TIM_BDTRInitStruct.DeadTime = 0;
-    // TIM_BDTRInitStruct.BreakState = LL_TIM_BREAK_DISABLE;
-    // TIM_BDTRInitStruct.BreakPolarity = LL_TIM_BREAK_POLARITY_HIGH;
-    // TIM_BDTRInitStruct.BreakFilter = LL_TIM_BREAK_FILTER_FDIV1;
-    // TIM_BDTRInitStruct.AutomaticOutput = LL_TIM_AUTOMATICOUTPUT_DISABLE;
-    // LL_TIM_BDTR_Init(TIM16, &TIM_BDTRInitStruct);
 
     this->irTxCarrierTimer->enableClock(clocks);
     this->irTxCarrierTimer->setCounterMode(hal::timer::CounterMode::Up);
@@ -98,16 +85,6 @@ class IrTx {
         hal::timer::ChannelN::Channel1N, hal::timer::OutputCompareIdleState::Low);
     this->irTxCarrierTimer->setOutputCompareValue(hal::timer::Channel::Channel1, 0);
     this->irTxCarrierTimer->disableOutputCompareFast(hal::timer::Channel::Channel1);
-    // TODO do we need this?
-    // TIM_BDTRInitStruct.OSSRState = LL_TIM_OSSR_DISABLE;
-    // TIM_BDTRInitStruct.OSSIState = LL_TIM_OSSI_DISABLE;
-    // TIM_BDTRInitStruct.LockLevel = LL_TIM_LOCKLEVEL_OFF;
-    // TIM_BDTRInitStruct.DeadTime = 0;
-    // TIM_BDTRInitStruct.BreakState = LL_TIM_BREAK_DISABLE;
-    // TIM_BDTRInitStruct.BreakPolarity = LL_TIM_BREAK_POLARITY_HIGH;
-    // TIM_BDTRInitStruct.BreakFilter = LL_TIM_BREAK_FILTER_FDIV1;
-    // TIM_BDTRInitStruct.AutomaticOutput = LL_TIM_AUTOMATICOUTPUT_DISABLE;
-    // LL_TIM_BDTR_Init(TIM17, &TIM_BDTRInitStruct);
 
     nvic.setPriority(hal::nvic::IRQnType::TIM16_Irq, 0);
     nvic.enableInterrupt(hal::nvic::IRQnType::TIM16_Irq);
@@ -189,7 +166,7 @@ class IrTx {
   void nextSignal() {
     if (this->txBuffer.getAvailable() < 2) {
       this->stop();
-      debugUsart.write("?send complete\n");
+      usartOutput.write("?send complete\n");
       return;
     }
 

@@ -140,11 +140,11 @@ class USART : public USARTWriter {
     return 0;
   }
 
-  void write(const char* buffer) {
+  virtual void write(const char* buffer) {
     write((const uint8_t*)buffer, strlen(buffer));
   }
 
-  void write(const uint8_t* buffer, size_t length) {
+  virtual void write(const uint8_t* buffer, size_t length) {
     for (size_t i = 0; i < length; i++) {
       if (this->txBuffer.isFull()) {
         this->usart->enableTxEmptyInterrupt();
