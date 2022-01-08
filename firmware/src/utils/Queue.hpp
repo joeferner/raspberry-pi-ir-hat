@@ -29,11 +29,11 @@ public:
         return result;
     }
 
-    const T* begin() {
+    const QueueIterator begin() {
         return &items[read];
     }
 
-    const T* end() {
+    const QueueIterator end() {
         return &items[write];
     }
 
@@ -48,6 +48,11 @@ public:
     size_t getAvailable() const {
         return available;
     }
+};
+
+template <typename T>
+class QueueIterator {
+
 };
 
 #endif
