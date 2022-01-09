@@ -45,6 +45,21 @@
 			"problemMatcher": [
 				"$gcc"
 			]
+		},
+		{
+			"label": "Build Test",
+			"type": "process",
+			"command": "./bin/test-build.sh",
+			"options": {
+				"cwd": "${workspaceRoot}"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": [
+				"$gcc"
+			]
 		}
 	]
 }

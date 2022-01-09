@@ -44,6 +44,13 @@ public:
         return QueueIterator(this, read);
     }
 
+    const QueueIterator<T, TSize> begin(size_t offset) {
+        if (offset > available) {
+            assert_param(0);
+        }
+        return QueueIterator(this, read + offset);
+    }
+
     const QueueIterator<T, TSize> end() {
         return QueueIterator(this, write);
     }
@@ -58,6 +65,13 @@ public:
 
     size_t getAvailable() const {
         return available;
+    }
+
+    T operator[](int offset) {
+         if (offset > available) {
+            assert_param(0);
+        }
+        return items[(read + offset) % TSize];
     }
 };
 

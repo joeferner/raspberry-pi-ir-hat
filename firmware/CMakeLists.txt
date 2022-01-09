@@ -53,21 +53,11 @@ target_compile_definitions(${EXECUTABLE} PRIVATE
 target_include_directories(${EXECUTABLE} PRIVATE
   src
   src/stm32
+  src/ir
   libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Inc
   libs/STM32CubeG0/Drivers/CMSIS/Device/ST/STM32G0xx/Include
   libs/STM32CubeG0/Drivers/CMSIS/Include
   libs/etl/include
-)
-
-target_compile_options(${EXECUTABLE} PRIVATE
-  -mcpu=cortex-m0plus
-  -mthumb
-  -Wall
-  -fdata-sections
-  -ffunction-sections
-  -fno-exceptions
-  $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
-  $<$<CONFIG:Debug>:-Og -g -gdwarf-2>
 )
 
 target_link_options(${EXECUTABLE} PRIVATE
@@ -82,6 +72,17 @@ target_link_options(${EXECUTABLE} PRIVATE
   -Wl,--print-memory-usage,--gc-sections
 )
 
+target_compile_options(${EXECUTABLE} PRIVATE
+  -mcpu=cortex-m0plus
+  -mthumb
+  -Wall
+  -fdata-sections
+  -ffunction-sections
+  -fno-exceptions
+  $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
+  $<$<CONFIG:Debug>:-Og -g -gdwarf-2>
+)
+
 # Print executable size
 add_custom_command(TARGET ${EXECUTABLE}
   POST_BUILD
@@ -92,5 +93,3 @@ add_custom_command(TARGET ${EXECUTABLE}
   POST_BUILD
   COMMAND arm-none-eabi-objcopy -O ihex ${EXECUTABLE} ${PROJECT_NAME}.hex
   COMMAND arm-none-eabi-objcopy -O binary ${EXECUTABLE} ${PROJECT_NAME}.bin)
-
-include(cmake/stm32.cmake)
