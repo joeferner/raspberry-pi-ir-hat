@@ -4,7 +4,7 @@
 
 #include "test.hpp"
 
-TEST(DenonIrDecoderTest, DecodePowerOn) {
+TEST(DenonDecoderTest, DecodePowerOn) {
   ir::DenonDecoder decoder;
   ir::DecoderState state;
 
@@ -22,7 +22,7 @@ TEST(DenonIrDecoderTest, DecodePowerOn) {
   EXPECT_EQ(false, results.repeat);
 }
 
-TEST(DenonIrDecoderTest, DecodePowerOff) {
+TEST(DenonDecoderTest, DecodePowerOff) {
   ir::DenonDecoder decoder;
   ir::DecoderState state;
 

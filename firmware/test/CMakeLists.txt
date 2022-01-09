@@ -24,6 +24,7 @@ enable_testing()
 add_executable(
   ${EXECUTABLE}
   ../src/ir/Denon_test.cpp
+  ../src/ir/NEC_test.cpp
   ../src/test/test.cpp
 )
 

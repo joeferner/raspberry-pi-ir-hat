@@ -36,6 +36,8 @@ class DecoderState {
   Queue<uint32_t, 128> buffer;
   uint32_t repeatCount;
   uint32_t lastDecodedCommand;
+  uint32_t lastDecodedAddress;
+  Protocol lastDecodedProtocol;
 };
 
 class DecoderResults {
