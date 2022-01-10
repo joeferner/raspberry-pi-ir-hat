@@ -34,6 +34,7 @@ set(EXECUTABLE ${PROJECT_NAME}.out)
 add_executable(${EXECUTABLE} ${SRC_FILES})
 
 target_compile_definitions(${EXECUTABLE} PRIVATE
+  -DUSE_FULL_ASSERT=$<$<CONFIG:Debug>:1>
   -DUSE_FULL_LL_DRIVER
   -DSTM32G031xx
   -DHSE_VALUE=8000000
@@ -47,7 +48,6 @@ target_compile_definitions(${EXECUTABLE} PRIVATE
   -DPREFETCH_ENABLE=0
   -DINSTRUCTION_CACHE_ENABLE=1
   -DDATA_CACHE_ENABLE=1
-  -DUSE_FULL_ASSERT=1
 )
 
 target_include_directories(${EXECUTABLE} PRIVATE
@@ -81,6 +81,7 @@ target_compile_options(${EXECUTABLE} PRIVATE
   -fno-exceptions
   $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
   $<$<CONFIG:Debug>:-Og -g -gdwarf-2>
+  $<$<CONFIG:Release>:-Os -g0>
 )
 
 # Print executable size

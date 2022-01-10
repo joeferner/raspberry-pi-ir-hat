@@ -1,6 +1,10 @@
 #ifndef _PERIPHERAL_USART_HPP_
 #define _PERIPHERAL_USART_HPP_
 
+#include <stdlib.h>
+
+#include <cstdarg>
+
 #include "hal/Clocks.hpp"
 #include "hal/GPIO.hpp"
 #include "hal/NVIC.hpp"
@@ -12,6 +16,8 @@ class USARTWriter {
  public:
   virtual void write(const char* buffer) = 0;
   virtual void write(const uint8_t* buffer, size_t length) = 0;
+  virtual void writef(const char* format, ...) = 0;
+  virtual void vwritef(const char* format, va_list args) = 0;
 };
 
 template <hal::usart::USARTAddress TAddress, size_t TX_BUFFER_SIZE, size_t RX_BUFFER_SIZE>
@@ -153,6 +159,37 @@ class USART : public USARTWriter {
       this->txBuffer.push(buffer[i]);
     }
     this->usart->enableTxEmptyInterrupt();
+  }
+
+  virtual void writef(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    vwritef(format, args);
+    va_end(args);
+  }
+
+  virtual void vwritef(const char* format, va_list args) {
+    char temp[20];
+    while (*format != '\0') {
+      if (*format == '%') {
+        format++;
+        if (*format != '\0') {
+          assert_param(0);
+          return;
+        }
+        if (*format == 'd') {
+          int i = va_arg(args, int);
+          itoa(i, temp, 10);
+          write(temp);
+        }
+      } else {
+        if (this->txBuffer.isFull()) {
+          this->usart->enableTxEmptyInterrupt();
+        }
+        this->txBuffer.push(*format);
+      }
+      format++;
+    }
   }
 
   void handleInterrupt() {

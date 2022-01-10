@@ -3,6 +3,7 @@
 #include <memory.h>
 #include <stdlib.h>
 
+#include "BothUSARTWriter.hpp"
 #include "hal/ADC.hpp"
 #include "hal/Bus.hpp"
 #include "hal/Clocks.hpp"
@@ -66,7 +67,13 @@ ir::Decoder irDecoder;
 
 static void loop();
 
-void processUsartLine(peripheral::USARTWriter& usartWriter, const char* buffer);
+static void processUsartLine(peripheral::USARTWriter& usartWriter, const char* buffer);
+static void processUsartWatchdog(peripheral::USARTWriter& usartWriter);
+static void processUsartSend(peripheral::USARTWriter& usartWriter);
+static void processUsartIrReset(peripheral::USARTWriter& usartWriter, const char* args);
+static void processUsartIrSend(peripheral::USARTWriter& usartWriter, const char* args);
+static void processUsartGetCurrent(peripheral::USARTWriter& usartWriter, const char* args);
+static void processUsartInvalidCommand(peripheral::USARTWriter& usartWriter, const char* args);
 
 extern "C" int main() {
   setup();
@@ -91,6 +98,14 @@ static void loop() {
   while (irRx.read(clocks, &irRxValue)) {
     ir::DecoderResults results;
     if (irDecoder.push(irRxValue, &results)) {
+      usartOutput.writef(
+          "?s%d,%d,%d,%d,%d,%d",
+          (int)results.protocol,
+          results.address,
+          results.command,
+          results.repeat ? 1 : 0,
+          results.autoRepeat ? 1 : 0,
+          results.parityFailed ? 1 : 0);
     }
     lastIrSignalTime = clocks.getTickCount();
   }
@@ -104,56 +119,19 @@ static void loop() {
   iwdg.reloadCounter();
 }
 
-void processUsartLine(peripheral::USARTWriter& usartWriter, const char* data) {
+static void processUsartLine(peripheral::USARTWriter& usartWriter, const char* data) {
   if (strcmp(data, "+iwdg") == 0) {
-    usartWriter.write("+OK\n");
-    while (1)
-      ;
+    processUsartWatchdog(usartWriter);
   } else if (strcmp(data, "+send") == 0) {
-    irTx.send();
-    usartWriter.write("+OK\n");
+    processUsartSend(usartWriter);
   } else if (strncmp(data, "+f", 2) == 0) {
-    uint32_t carrierFrequency = atoi(data + 2);
-    irTx.reset(carrierFrequency);
-    usartWriter.write("+OK\n");
+    processUsartIrReset(usartWriter, data + 2);
   } else if (strncmp(data, "+s", 2) == 0) {
-    const char* pon = data + 2;
-    const char* p = strchr(pon, ',');
-    if (p == NULL) {
-      usartWriter.write("-ERR missing comma\n");
-      return;
-    }
-    char temp[10];
-    // TODO verify length and does zero terminate
-    strncpy(temp, pon, p - pon);
-    uint32_t t_on = atoi(temp);
-    uint32_t t_off = atoi(p + 1);
-    irTx.write(t_on, t_off);
-    if (irTx.getNumberOfSamplesInBuffer() > IR_TX_BUFFER_LEN_BEFORE_SEND) {
-      irTx.send();
-    }
-    usartWriter.write("+OK\n");
+    processUsartIrSend(usartWriter, data + 2);
   } else if (strncmp(data, "+c", 2) == 0) {
-    uint16_t d;
-    if (data[2] == '0') {
-      d = currentSensor.get(peripheral::CurrentSensorInput::Current0);
-    } else if (data[2] == '1') {
-      d = currentSensor.get(peripheral::CurrentSensorInput::Current1);
-    } else if (data[2] == 'r') {
-      d = currentSensor.get(peripheral::CurrentSensorInput::Reference);
-    } else {
-      usartWriter.write("-ERR invalid channel\n");
-      return;
-    }
-    char buffer[50];
-    strcpy(buffer, "+OK ");
-    itoa(d, buffer + strlen(buffer), 10);
-    strcat(buffer, "\n");
-    usartWriter.write(buffer);
+    processUsartGetCurrent(usartWriter, data + 2);
   } else {
-    usartWriter.write("-ERR \"");
-    usartWriter.write(data);
-    usartWriter.write("\"\n");
+    processUsartInvalidCommand(usartWriter, data);
   }
 }
 
@@ -161,4 +139,65 @@ void assert_failed(uint8_t* file, uint32_t line) {
   __disable_irq();
   while (1) {
   }
+}
+
+static void processUsartWatchdog(peripheral::USARTWriter& usartWriter) {
+  usartWriter.write("+OK\n");
+  while (1)
+    ;
+}
+
+static void processUsartSend(peripheral::USARTWriter& usartWriter) {
+  irTx.send();
+  usartWriter.write("+OK\n");
+}
+
+static void processUsartIrReset(peripheral::USARTWriter& usartWriter, const char* args) {
+  uint32_t carrierFrequency = atoi(args);
+  irTx.reset(carrierFrequency);
+  usartWriter.write("+OK\n");
+}
+
+static void processUsartIrSend(peripheral::USARTWriter& usartWriter, const char* args) {
+  const char* pon = args;
+  const char* p = strchr(pon, ',');
+  if (p == NULL) {
+    usartWriter.write("-ERR missing comma\n");
+    return;
+  }
+  char temp[10];
+  // TODO verify length and does zero terminate
+  strncpy(temp, pon, p - pon);
+  uint32_t t_on = atoi(temp);
+  uint32_t t_off = atoi(p + 1);
+  irTx.write(t_on, t_off);
+  if (irTx.getNumberOfSamplesInBuffer() > IR_TX_BUFFER_LEN_BEFORE_SEND) {
+    irTx.send();
+  }
+  usartWriter.write("+OK\n");
+}
+
+static void processUsartGetCurrent(peripheral::USARTWriter& usartWriter, const char* args) {
+  uint16_t d;
+  if (args[0] == '0') {
+    d = currentSensor.get(peripheral::CurrentSensorInput::Current0);
+  } else if (args[0] == '1') {
+    d = currentSensor.get(peripheral::CurrentSensorInput::Current1);
+  } else if (args[0] == 'r') {
+    d = currentSensor.get(peripheral::CurrentSensorInput::Reference);
+  } else {
+    usartWriter.write("-ERR invalid channel\n");
+    return;
+  }
+  char buffer[50];
+  strcpy(buffer, "+OK ");
+  itoa(d, buffer + strlen(buffer), 10);
+  strcat(buffer, "\n");
+  usartWriter.write(buffer);
+}
+
+static void processUsartInvalidCommand(peripheral::USARTWriter& usartWriter, const char* args) {
+  usartWriter.write("-ERR \"");
+  usartWriter.write(args);
+  usartWriter.write("\"\n");
 }
