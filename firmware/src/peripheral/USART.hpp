@@ -190,6 +190,7 @@ class USART : public USARTWriter {
       }
       format++;
     }
+    this->usart->enableTxEmptyInterrupt();
   }
 
   void handleInterrupt() {
