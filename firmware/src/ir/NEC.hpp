@@ -1,8 +1,8 @@
 #ifndef _NEC_HPP_
 #define _NEC_HPP_
 
-#include "Decoder.hpp"
 #include "LongUnion.h"
+#include "ProtocolDecoder.hpp"
 
 namespace ir {
 
@@ -13,7 +13,7 @@ namespace ir {
  * for Apple see https://en.wikipedia.org/wiki/Apple_Remote
  * ONKYO like NEC but 16 independent command bits
  */
-class NECDecoder : public Decoder {
+class NECDecoder : public ProtocolDecoder {
  private:
   // LSB first, 1 start bit + 16 bit address + 8 bit command + 8 bit inverted command + 1 stop bit.
   static const uint32_t NEC_ADDRESS_BITS = 16;  // 16 bit address or 8 bit address and 8 bit inverted address

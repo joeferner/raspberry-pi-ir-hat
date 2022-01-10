@@ -8,11 +8,15 @@
 #include "ir/Decoder.hpp"
 
 void readWaveform(ir::DecoderState& state, const char* filename) {
+  char test_cpp[1000];
   char fullFilename[1000];
-  strcpy(fullFilename, __FILE__);
-  char* p = strrchr(fullFilename, '/');
+  strcpy(test_cpp, __FILE__);
+  char* p = strrchr(test_cpp, '/');
   *p = '\0';
-  sprintf(fullFilename, "%s/waveforms/%s", fullFilename, filename);
+  if (snprintf(fullFilename, sizeof(fullFilename), "%s/waveforms/%s", test_cpp, filename) >=
+      (int)sizeof(fullFilename)) {
+    return;
+  }
 
   std::ifstream file(fullFilename);
   if (file.is_open()) {

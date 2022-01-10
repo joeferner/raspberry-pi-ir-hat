@@ -1,6 +1,10 @@
 #ifndef _QUEUE_HPP_
 #define _QUEUE_HPP_
 
+#ifdef TEST
+#include "test.hpp"
+#endif
+
 template <typename T, size_t TSize>
 class QueueIterator;
 
@@ -16,6 +20,14 @@ private:
 
 public:
     Queue() : read(0), write(0), available(0) {}
+
+    void clear() {
+        __disable_irq();
+        read = 0;
+        write = 0;
+        available = 0;
+        __enable_irq();
+    }
 
     void push(T v) {
         __disable_irq();
@@ -67,8 +79,8 @@ public:
         return available;
     }
 
-    T operator[](int offset) {
-         if (offset > available) {
+    T operator[](size_t offset) {
+        if (offset > available) {
             assert_param(0);
         }
         return items[(read + offset) % TSize];

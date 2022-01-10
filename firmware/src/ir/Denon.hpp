@@ -1,7 +1,7 @@
 #ifndef _DENON_HPP_
 #define _DENON_HPP_
 
-#include "Decoder.hpp"
+#include "ProtocolDecoder.hpp"
 
 namespace ir {
 
@@ -16,7 +16,7 @@ namespace ir {
  * the timing values from it, it is obvious that Denon have a range of
  * different timings and protocols ...the values here work for my AVR-3801 Amp!
  */
-class DenonDecoder : public Decoder {
+class DenonDecoder : public ProtocolDecoder {
  private:
   // MSB first, no start bit, 5 address + 8 command + 2 frame + 1 stop bit - each frame 2 times
   static const uint32_t DENON_ADDRESS_BITS = 5;

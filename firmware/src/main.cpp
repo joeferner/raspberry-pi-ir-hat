@@ -14,6 +14,7 @@
 #include "hal/System.hpp"
 #include "hal/Timer.hpp"
 #include "hal/USART.hpp"
+#include "ir/Decoder.hpp"
 #include "peripheral/CurrentSensor.hpp"
 #include "peripheral/IrRx.hpp"
 #include "peripheral/IrTx.hpp"
@@ -58,6 +59,9 @@ peripheral::IrRx irRx(&irRxDmaChannel, &irInLedPin);
 peripheral::IrTx irTx(&irOutPin, &irTxCarrierTimer, &irTxSignalTimer);
 peripheral::CurrentSensor currentSensor(&currentSensorAdc);
 
+static uint32_t lastIrSignalTime;
+ir::Decoder irDecoder;
+
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
 
 static void loop();
@@ -85,18 +89,19 @@ static void loop() {
 
   uint16_t irRxValue;
   while (irRx.read(clocks, &irRxValue)) {
-    char buffer[20];
-    buffer[0] = '!';
-    buffer[1] = 's';
-    utoa(irRxValue, buffer + 2, 10);
-    strcat(buffer, "\n");
-
-    rpiUsart.write(buffer);
-    debugUsart.write(buffer);
-    iwdg.reloadCounter();
+    ir::DecoderResults results;
+    if (irDecoder.push(irRxValue, &results)) {
+    }
+    lastIrSignalTime = clocks.getTickCount();
   }
 
-  // currentSensor.loop();
+  if ((clocks.getTickCount() - lastIrSignalTime) > ir::Decoder::MAX_QUITE_TIME_MS) {
+    irDecoder.clear();
+  }
+
+  currentSensor.loop();
+
+  iwdg.reloadCounter();
 }
 
 void processUsartLine(peripheral::USARTWriter& usartWriter, const char* data) {

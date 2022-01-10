@@ -48,6 +48,7 @@ target_compile_definitions(${EXECUTABLE} PRIVATE
 
 target_compile_options(${EXECUTABLE} PRIVATE
   -O0
+  -Wall
 )
 
 target_include_directories(${EXECUTABLE} PRIVATE
