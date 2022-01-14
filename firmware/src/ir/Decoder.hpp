@@ -4,9 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#ifdef TEST
-#include "test.hpp"
-#endif
+#include "test/test.hpp"
 #include "Denon.hpp"
 #include "NEC.hpp"
 #include "ir.hpp"
@@ -17,8 +15,8 @@ namespace ir {
 class Decoder {
  private:
   DecoderState state;
-  DenonDecoder denonDecoder;
-  NECDecoder necDecoder;
+  Denon denonDecoder;
+  NEC necDecoder;
 
  public:
   static const uint32_t MAX_QUITE_TIME_MS = 10;

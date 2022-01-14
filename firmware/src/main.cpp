@@ -16,12 +16,14 @@
 #include "hal/Timer.hpp"
 #include "hal/USART.hpp"
 #include "ir/Decoder.hpp"
+#include "ir/Encoder.hpp"
 #include "peripheral/CurrentSensor.hpp"
 #include "peripheral/IrRx.hpp"
 #include "peripheral/IrTx.hpp"
 #include "peripheral/USART.hpp"
 #include "setup.hpp"
 #include "time.h"
+#include "utils/Args.hpp"
 
 hal::System halSystem;
 hal::Clocks clocks;
@@ -57,11 +59,12 @@ peripheral::USART<hal::usart::USARTAddress::USART1Address, USART_TX_BUFFER_SIZE,
 peripheral::USART<hal::usart::USARTAddress::USART2Address, USART_TX_BUFFER_SIZE, USART_RX_BUFFER_SIZE> rpiUsart(
     &usart2);
 peripheral::IrRx irRx(&irRxDmaChannel, &irInLedPin);
-peripheral::IrTx irTx(&irOutPin, &irTxCarrierTimer, &irTxSignalTimer);
+peripheral::IrTx irTx(&clocks, &irOutPin, &irTxCarrierTimer, &irTxSignalTimer);
 peripheral::CurrentSensor currentSensor(&currentSensorAdc);
 
 static uint32_t lastIrSignalTime;
 ir::Decoder irDecoder;
+ir::Encoder irEncoder;
 
 #define IR_TX_BUFFER_LEN_BEFORE_SEND 10
 
@@ -70,10 +73,10 @@ static void loop();
 static void processUsartLine(peripheral::USARTWriter& usartWriter, const char* buffer);
 static void processUsartWatchdog(peripheral::USARTWriter& usartWriter);
 static void processUsartSend(peripheral::USARTWriter& usartWriter);
-static void processUsartIrReset(peripheral::USARTWriter& usartWriter, const char* args);
-static void processUsartIrSend(peripheral::USARTWriter& usartWriter, const char* args);
-static void processUsartGetCurrent(peripheral::USARTWriter& usartWriter, const char* args);
-static void processUsartInvalidCommand(peripheral::USARTWriter& usartWriter, const char* args);
+static void processUsartIrReset(peripheral::USARTWriter& usartWriter, Args& args);
+static void processUsartIrSend(peripheral::USARTWriter& usartWriter, Args& args);
+static void processUsartGetCurrent(peripheral::USARTWriter& usartWriter, Args& args);
+static void processUsartInvalidCommand(peripheral::USARTWriter& usartWriter, Args& args);
 
 extern "C" int main() {
   setup();
@@ -99,7 +102,7 @@ static void loop() {
     ir::DecoderResults results;
     if (irDecoder.push(irRxValue, &results)) {
       usartOutput.writef(
-          "?s%d,%d,%d,%d,%d,%d",
+          "?s%d,%d,%d,%d,%d,%d\n",
           (int)results.protocol,
           results.address,
           results.command,
@@ -120,18 +123,19 @@ static void loop() {
 }
 
 static void processUsartLine(peripheral::USARTWriter& usartWriter, const char* data) {
-  if (strcmp(data, "+iwdg") == 0) {
+  Args args(data);
+  if (args.read("+iwdg")) {
     processUsartWatchdog(usartWriter);
-  } else if (strcmp(data, "+send") == 0) {
+  } else if (args.read("+send")) {
     processUsartSend(usartWriter);
-  } else if (strncmp(data, "+f", 2) == 0) {
-    processUsartIrReset(usartWriter, data + 2);
-  } else if (strncmp(data, "+s", 2) == 0) {
-    processUsartIrSend(usartWriter, data + 2);
-  } else if (strncmp(data, "+c", 2) == 0) {
-    processUsartGetCurrent(usartWriter, data + 2);
+  } else if (args.read("+f")) {
+    processUsartIrReset(usartWriter, args);
+  } else if (args.read("+s")) {
+    processUsartIrSend(usartWriter, args);
+  } else if (args.read("+c")) {
+    processUsartGetCurrent(usartWriter, args);
   } else {
-    processUsartInvalidCommand(usartWriter, data);
+    processUsartInvalidCommand(usartWriter, args);
   }
 }
 
@@ -152,41 +156,58 @@ static void processUsartSend(peripheral::USARTWriter& usartWriter) {
   usartWriter.write("+OK\n");
 }
 
-static void processUsartIrReset(peripheral::USARTWriter& usartWriter, const char* args) {
-  uint32_t carrierFrequency = atoi(args);
+static void processUsartIrReset(peripheral::USARTWriter& usartWriter, Args& args) {
+  uint32_t carrierFrequency;
+  if (!args.read(&carrierFrequency)) {
+    processUsartInvalidCommand(usartWriter, args);
+    return;
+  }
   irTx.reset(carrierFrequency);
   usartWriter.write("+OK\n");
 }
 
-static void processUsartIrSend(peripheral::USARTWriter& usartWriter, const char* args) {
-  const char* pon = args;
-  const char* p = strchr(pon, ',');
-  if (p == NULL) {
-    usartWriter.write("-ERR missing comma\n");
+static void processUsartIrSend(peripheral::USARTWriter& usartWriter, Args& args) {
+  uint32_t protocol;
+  if (!args.read(&protocol) || !args.readComma()) {
+    processUsartInvalidCommand(usartWriter, args);
     return;
   }
-  char temp[10];
-  // TODO verify length and does zero terminate
-  strncpy(temp, pon, p - pon);
-  uint32_t t_on = atoi(temp);
-  uint32_t t_off = atoi(p + 1);
-  irTx.write(t_on, t_off);
-  if (irTx.getNumberOfSamplesInBuffer() > IR_TX_BUFFER_LEN_BEFORE_SEND) {
-    irTx.send();
+
+  uint32_t address;
+  if (!args.read(&address) || !args.readComma()) {
+    processUsartInvalidCommand(usartWriter, args);
+    return;
+  }
+
+  uint32_t command;
+  if (!args.read(&command)) {
+    processUsartInvalidCommand(usartWriter, args);
+    return;
+  }
+
+  uint32_t numberOfRepeats = 0;
+  if (args.readComma() && args.read(&numberOfRepeats)) {
+    // number of repeats provided
+  }
+
+  if (!irEncoder.send(irTx, (ir::Protocol)protocol, address, command, numberOfRepeats)) {
+    usartWriter.write("-ERR failed to send\n");
+    return;
   }
   usartWriter.write("+OK\n");
 }
 
-static void processUsartGetCurrent(peripheral::USARTWriter& usartWriter, const char* args) {
+static void processUsartGetCurrent(peripheral::USARTWriter& usartWriter, Args& args) {
   uint16_t d;
-  if (args[0] == '0') {
+  char c = args.readChar();
+  if (c == '0') {
     d = currentSensor.get(peripheral::CurrentSensorInput::Current0);
-  } else if (args[0] == '1') {
+  } else if (c == '1') {
     d = currentSensor.get(peripheral::CurrentSensorInput::Current1);
-  } else if (args[0] == 'r') {
+  } else if (c == 'r') {
     d = currentSensor.get(peripheral::CurrentSensorInput::Reference);
   } else {
-    usartWriter.write("-ERR invalid channel\n");
+    processUsartInvalidCommand(usartWriter, args);
     return;
   }
   char buffer[50];
@@ -196,8 +217,8 @@ static void processUsartGetCurrent(peripheral::USARTWriter& usartWriter, const c
   usartWriter.write(buffer);
 }
 
-static void processUsartInvalidCommand(peripheral::USARTWriter& usartWriter, const char* args) {
+static void processUsartInvalidCommand(peripheral::USARTWriter& usartWriter, Args& args) {
   usartWriter.write("-ERR \"");
-  usartWriter.write(args);
+  usartWriter.write(args.getWholeBuffer());
   usartWriter.write("\"\n");
 }

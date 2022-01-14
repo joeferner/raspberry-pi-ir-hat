@@ -13,8 +13,10 @@ namespace ir {
  * for Apple see https://en.wikipedia.org/wiki/Apple_Remote
  * ONKYO like NEC but 16 independent command bits
  */
-class NECDecoder : public ProtocolDecoder {
- private:
+class NEC : public ProtocolDecoder, public ProtocolEncoder {
+private:
+  static const uint32_t NEC_KHZ = 38;
+
   // LSB first, 1 start bit + 16 bit address + 8 bit command + 8 bit inverted command + 1 stop bit.
   static const uint32_t NEC_ADDRESS_BITS = 16;  // 16 bit address or 8 bit address and 8 bit inverted address
   static const uint32_t NEC_COMMAND_BITS = 16;  // Command and inverted command
@@ -35,13 +37,13 @@ class NECDecoder : public ProtocolDecoder {
                                                        // NEC_UNIT // 2.5 because we assume more zeros than ones
   static const uint32_t NEC_REPEAT_DURATION = (NEC_HEADER_MARK + NEC_REPEAT_HEADER_SPACE + NEC_BIT_MARK);  // 12 ms
   static const uint32_t NEC_REPEAT_PERIOD =
-      110000;  // Commands are repeated every 110 ms (measured from start to start) for as long as the key on the remote
-               // control is held down.
+    110000;  // Commands are repeated every 110 ms (measured from start to start) for as long as the key on the remote
+             // control is held down.
   static const uint32_t NEC_REPEAT_SPACE = (NEC_REPEAT_PERIOD - NEC_AVERAGE_DURATION);  // 48 ms
 
   static const uint32_t APPLE_ADDRESS = 0x87EE;
 
- public:
+public:
   virtual bool decode(DecoderState& state, DecoderResults* results) {
     // Check we have the right amount of data (68). The +4 is for initial gap, start bit mark and space + stop bit mark.
     if (state.buffer.getAvailable() != ((2 * NEC_BITS) + 4) && (state.buffer.getAvailable() != 4)) {
@@ -73,7 +75,7 @@ class NECDecoder : public ProtocolDecoder {
 
     uint32_t tDecodedData;
     if (!decodePulseDistanceData(
-            state, NEC_BITS, 3, NEC_BIT_MARK, NEC_ONE_SPACE, NEC_ZERO_SPACE, Endian::LSB, &tDecodedData)) {
+      state, NEC_BITS, 3, NEC_BIT_MARK, NEC_ONE_SPACE, NEC_ZERO_SPACE, Endian::LSB, &tDecodedData)) {
       return false;
     }
 
@@ -115,6 +117,110 @@ class NECDecoder : public ProtocolDecoder {
     results->numberOfBits = NEC_BITS;
 
     return true;
+  }
+
+  virtual bool encode(
+    peripheral::IrTx& irTx,
+    Protocol protocol,
+    uint32_t aCommand,
+    uint32_t aAddress,
+    uint32_t aNumberOfRepeats) const {
+    switch (protocol) {
+    case Protocol::NEC:
+      return sendNEC(irTx, aCommand, aAddress, aNumberOfRepeats, false);
+    case Protocol::Apple:
+      // TODO apple
+      return false;
+    case Protocol::Onkyo:
+      // TODO apple
+      return false;
+
+    default:
+      return false;
+    }
+  }
+
+private:
+  /*
+   * Repeat commands should be sent in a 110 ms raster.
+   * There is NO delay after the last sent repeat!
+   * https://www.sbprojects.net/knowledge/ir/nec.php
+   * @param aIsRepeat if true, send only one repeat frame without leading and trailing space
+   */
+  bool sendNEC(
+    peripheral::IrTx& irTx,
+    uint32_t aCommand,
+    uint32_t aAddress,
+    uint32_t aNumberOfRepeats,
+    bool aIsRepeat
+  ) const {
+    LongUnion tRawData;
+
+    // Address 16 bit LSB first
+    if ((aAddress & 0xFF00) == 0) {
+      // assume 8 bit address -> send 8 address bits and then 8 inverted address bits LSB first
+      tRawData.UByte.LowByte = aAddress;
+      tRawData.UByte.MidLowByte = ~tRawData.UByte.LowByte;
+    } else {
+      tRawData.UWord.LowWord = aAddress;
+    }
+
+    // send 8 command bits and then 8 inverted command bits LSB first
+    tRawData.UByte.MidHighByte = aCommand;
+    tRawData.UByte.HighByte = ~aCommand;
+
+    return sendNECRaw(irTx, tRawData.ULong, aNumberOfRepeats, aIsRepeat);
+  }
+
+  bool sendNECRaw(
+    peripheral::IrTx& irTx,
+    uint32_t aRawData,
+    uint_fast8_t aNumberOfRepeats,
+    bool aIsRepeat
+  )const {
+    if (aIsRepeat) {
+      sendNECRepeat(irTx);
+      return true;
+    }
+    // Set IR carrier frequency
+    irTx.reset(NEC_KHZ * 1000);
+
+    // Header
+    irTx.write(NEC_HEADER_MARK, NEC_HEADER_SPACE);
+
+    // LSB first + stop bit
+    sendPulseDistanceWidthData(
+      irTx,
+      NEC_BIT_MARK,
+      NEC_ONE_SPACE,
+      NEC_BIT_MARK,
+      NEC_ZERO_SPACE,
+      aRawData,
+      NEC_BITS,
+      Endian::LSB,
+      StopBit::True
+    );
+    irTx.send();
+
+    for (uint32_t i = 0; i < aNumberOfRepeats; ++i) {
+      // send repeat in a 110 ms raster
+      if (i == 0) {
+        irTx.delayMicros(NEC_REPEAT_SPACE);
+      } else {
+        irTx.delayMicros(NEC_REPEAT_PERIOD - NEC_REPEAT_DURATION);
+      }
+      // send repeat
+      sendNECRepeat(irTx);
+    }
+
+    return true;
+  }
+
+  void sendNECRepeat(peripheral::IrTx& irTx)const {
+    irTx.reset(NEC_KHZ);
+    irTx.write(NEC_HEADER_MARK, NEC_REPEAT_HEADER_SPACE);
+    irTx.write(NEC_BIT_MARK, 100);
+    irTx.send();
   }
 };
 

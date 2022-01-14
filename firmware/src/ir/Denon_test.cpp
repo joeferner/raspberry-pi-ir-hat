@@ -2,10 +2,10 @@
 
 #include <gtest/gtest.h>
 
-#include "test.hpp"
+#include "test/test.hpp"
 
 TEST(DenonDecoderTest, DecodePowerOn) {
-  ir::DenonDecoder decoder;
+  ir::Denon decoder;
   ir::DecoderState state;
 
   readWaveform(state, "denon/power-on.csv");
@@ -23,7 +23,7 @@ TEST(DenonDecoderTest, DecodePowerOn) {
 }
 
 TEST(DenonDecoderTest, DecodePowerOff) {
-  ir::DenonDecoder decoder;
+  ir::Denon decoder;
   ir::DecoderState state;
 
   readWaveform(state, "denon/power-off.csv");

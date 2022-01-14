@@ -1,9 +1,7 @@
 #ifndef _QUEUE_HPP_
 #define _QUEUE_HPP_
 
-#ifdef TEST
-#include "test.hpp"
-#endif
+#include "test/test.hpp"
 
 template <typename T, size_t TSize>
 class QueueIterator;

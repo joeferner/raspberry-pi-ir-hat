@@ -77,7 +77,7 @@ void setup() {
       hal::usart::Parity::None,
       hal::usart::StopBits::StopBits1);
   irRx.initialize(nvic, clocks, irRxPin, irRxTimer);
-  irTx.initialize(clocks, halSystem, nvic);
+  irTx.initialize(halSystem, nvic);
   currentSensor.initialize(clocks, nvic, currentRefPin, current0Pin, current1Pin);
   debugUsart.write("?READY\n");
   // TODO enable watchdog

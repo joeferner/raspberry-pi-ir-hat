@@ -27,6 +27,9 @@ set(SRC_FILES
   src/hal/NVIC.cpp
   src/hal/RCC.cpp
   src/hal/System.cpp
+  src/peripheral/IrTx.cpp
+  src/peripheral/CurrentSensor.cpp
+  src/ir/ProtocolEncoder.cpp
 )
 
 set(EXECUTABLE ${PROJECT_NAME}.out)
@@ -53,7 +56,6 @@ target_compile_definitions(${EXECUTABLE} PRIVATE
 target_include_directories(${EXECUTABLE} PRIVATE
   src
   src/stm32
-  src/ir
   libs/STM32CubeG0/Drivers/STM32G0xx_HAL_Driver/Inc
   libs/STM32CubeG0/Drivers/CMSIS/Device/ST/STM32G0xx/Include
   libs/STM32CubeG0/Drivers/CMSIS/Include

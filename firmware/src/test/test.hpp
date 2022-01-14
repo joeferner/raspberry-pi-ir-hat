@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+#ifdef TEST
 void assert_failed(uint8_t* file, uint32_t line);
 
 #define __disable_irq() \
@@ -16,5 +17,8 @@ class DecoderState;
 }
 
 void readWaveform(ir::DecoderState& state, const char* filename);
+#else
+#include "main.h"
+#endif
 
 #endif

@@ -1,6 +1,6 @@
 
-#ifndef _USART_OUTPUT_HPP_
-#define _USART_OUTPUT_HPP_
+#ifndef _USART_BOTH_USART_WRITER_HPP_
+#define _USART_BOTH_USART_WRITER_HPP_
 
 #include "peripheral/USART.hpp"
 

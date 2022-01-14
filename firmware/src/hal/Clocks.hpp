@@ -5,10 +5,10 @@
 
 namespace hal {
 class Clocks {
- private:
+private:
   volatile uint32_t tickCount;
 
- public:
+public:
   Clocks() : tickCount(0) {
   }
 
@@ -23,6 +23,17 @@ class Clocks {
 
   void incrementTick() {
     this->tickCount++;
+  }
+
+  void delayMicros(uint32_t microseconds) {
+    // TODO how do we delay microseconds?
+    delayMs(microseconds / 1000);
+  }
+
+  void delayMs(uint32_t milliseconds) {
+    // TODO this assumes 1ms tick
+    uint32_t start = this->tickCount;
+    while ((this->tickCount - start) < milliseconds);
   }
 
   void setSystemCoreClock(uint32_t hclkFrequency) {
