@@ -27,7 +27,7 @@ enum class CurrentSensorInput
 };
 
 class CurrentSensor {
-private:
+ private:
   hal::ADCHal<hal::adc::ADCAddress::ADC1Address>* adc;
 
   uint16_t currentReference_mV;
@@ -40,16 +40,16 @@ private:
   volatile bool endOfConversion;
   volatile bool endOfSequence;
 
-public:
+ public:
   CurrentSensor(hal::ADCHal<hal::adc::ADCAddress::ADC1Address>* adc) : adc(adc) {
   }
 
   void initialize(
-    hal::Clocks& clocks,
-    hal::NVICHal& nvic,
-    hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin0>& currentRefPin,
-    hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin4>& current0Pin,
-    hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin5>& current1Pin);
+      hal::Clocks& clocks,
+      hal::NVICHal& nvic,
+      hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin0>& currentRefPin,
+      hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin4>& current0Pin,
+      hal::GPIO<hal::gpio::GPIOAddress::GPIOAAddress, hal::gpio::GPIOPin::Pin5>& current1Pin);
 
   void loop();
 
@@ -57,7 +57,7 @@ public:
 
   const uint16_t get(CurrentSensorInput input) const;
 
-private:
+ private:
   void handleEndOfConversion();
 
   void handleEndOfSequence();

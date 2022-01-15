@@ -5,7 +5,7 @@
 #include "test/test.hpp"
 
 TEST(NECDecoderTest, DecodePioneerNum1) {
-  ir::NECDecoder decoder;
+  ir::NEC decoder;
   ir::DecoderState state;
 
   readWaveform(state, "pioneer/num1.csv");
@@ -23,7 +23,7 @@ TEST(NECDecoderTest, DecodePioneerNum1) {
 }
 
 TEST(NECDecoderTest, DecodePioneerNum2) {
-  ir::NECDecoder decoder;
+  ir::NEC decoder;
   ir::DecoderState state;
 
   readWaveform(state, "pioneer/num2.csv");
@@ -41,7 +41,7 @@ TEST(NECDecoderTest, DecodePioneerNum2) {
 }
 
 TEST(NECDecoderTest, DecodePioneerPower) {
-  ir::NECDecoder decoder;
+  ir::NEC decoder;
   ir::DecoderState state;
 
   readWaveform(state, "pioneer/power.csv");

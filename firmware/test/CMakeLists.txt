@@ -23,7 +23,13 @@ enable_testing()
 
 add_executable(
   ${EXECUTABLE}
+  ../src/ir/Decoder.cpp
+  ../src/ir/Encoder.cpp
+  ../src/ir/ProtocolDecoder.cpp
+  ../src/ir/ProtocolEncoder.cpp
+  ../src/ir/Denon.cpp
   ../src/ir/Denon_test.cpp
+  ../src/ir/NEC.cpp
   ../src/ir/NEC_test.cpp
   ../src/test/test.cpp
 )

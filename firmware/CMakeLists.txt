@@ -23,13 +23,21 @@ set(SRC_FILES
   src/BothUSARTWriter.cpp
   src/setup.cpp
   src/main_it.cpp
+  src/utils/Args.cpp
   src/hal/Bus.cpp
   src/hal/NVIC.cpp
   src/hal/RCC.cpp
   src/hal/System.cpp
   src/peripheral/IrTx.cpp
+  src/peripheral/IrRx.cpp
   src/peripheral/CurrentSensor.cpp
+  src/peripheral/USART.cpp
+  src/ir/Encoder.cpp
+  src/ir/Decoder.cpp
   src/ir/ProtocolEncoder.cpp
+  src/ir/ProtocolDecoder.cpp
+  src/ir/Denon.cpp
+  src/ir/NEC.cpp
 )
 
 set(EXECUTABLE ${PROJECT_NAME}.out)
