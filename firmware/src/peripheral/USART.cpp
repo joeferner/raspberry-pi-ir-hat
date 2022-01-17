@@ -152,7 +152,7 @@ void USART<TAddress, TX_BUFFER_SIZE, RX_BUFFER_SIZE>::vwritef(const char* format
   while (*format != '\0') {
     if (*format == '%') {
       format++;
-      if (*format != '\0') {
+      if (*format == '\0') {
         assert_param(0);
         return;
       }

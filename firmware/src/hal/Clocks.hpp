@@ -15,6 +15,7 @@ class Clocks {
   void init1msTick(uint32_t hclkFrequency) {
     LL_Init1msTick(hclkFrequency);
     SystemCoreClockUpdate();
+    LL_SYSTICK_EnableIT();
   }
 
   const uint32_t getTickCount() const {

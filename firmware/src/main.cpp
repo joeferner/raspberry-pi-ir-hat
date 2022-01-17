@@ -117,9 +117,7 @@ static void loop() {
     irDecoder.clear();
   }
 
-  currentSensor.loop();
-
-  iwdg.reloadCounter();
+  // currentSensor.loop();
 }
 
 static void processUsartLine(peripheral::USARTWriter& usartWriter, const char* data) {
