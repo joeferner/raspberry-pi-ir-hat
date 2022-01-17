@@ -7,6 +7,7 @@ bool Args::read(const char* str) {
         if (*str != *newP) {
             return false;
         }
+        str++;
         newP++;
     }
     this->p = newP;
@@ -30,9 +31,11 @@ bool Args::read(uint32_t* value) {
     while (*newP >= '0' && *newP <= '9' && pTemp != pTempEnd) {
         *pTemp++ = *newP++;
     }
+    *pTemp = '\0';
 
     if (pTemp > temp) {
         *value = atoi(temp);
+        this->p = newP;
         return true;
     }
 

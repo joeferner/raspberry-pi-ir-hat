@@ -78,7 +78,7 @@ bool NEC::decode(DecoderState& state, DecoderResults* results) {
 }
 
 bool NEC::encode(
-    peripheral::IrTx& irTx, Protocol protocol, uint32_t aCommand, uint32_t aAddress, uint32_t aNumberOfRepeats) const {
+    peripheral::IrTx& irTx, Protocol protocol, uint32_t aAddress, uint32_t aCommand, uint32_t aNumberOfRepeats) const {
   switch (protocol) {
     case Protocol::NEC:
       return sendNEC(irTx, aCommand, aAddress, aNumberOfRepeats, false);

@@ -62,7 +62,7 @@ bool Denon::decode(DecoderState& state, DecoderResults* results) {
 }
 
 bool Denon::encode(
-    peripheral::IrTx& irTx, Protocol protocol, uint32_t aCommand, uint32_t aAddress, uint32_t aNumberOfRepeats) const {
+    peripheral::IrTx& irTx, Protocol protocol, uint32_t aAddress, uint32_t aCommand, uint32_t aNumberOfRepeats) const {
   irTx.reset(DENON_KHZ * 1000);
 
   // Shift command and add frame marker
@@ -86,6 +86,7 @@ bool Denon::encode(
         DENON_BITS,
         Endian::MSB,
         StopBit::True);
+    irTx.sendAndWait();
 
     // Inverted autorepeat frame
     irTx.delayMicros(DENON_AUTO_REPEAT_SPACE);
@@ -99,6 +100,7 @@ bool Denon::encode(
         DENON_BITS,
         Endian::MSB,
         StopBit::True);
+    irTx.sendAndWait();
 
     tNumberOfCommands--;
     // skip last delay!

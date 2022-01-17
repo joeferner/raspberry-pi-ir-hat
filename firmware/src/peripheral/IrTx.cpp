@@ -119,6 +119,11 @@ void IrTx::send() {
     }
 }
 
+void IrTx::sendAndWait() {
+    this->send();
+    while(this->sending);
+}
+
 void IrTx::handleInterrupt() {
     if (this->irTxSignalTimer->isUpdateFlagSet()) {
         this->irTxSignalTimer->clearUpdateFlag();

@@ -49,7 +49,7 @@ class NEC : public ProtocolDecoder, public ProtocolEncoder {
   virtual bool decode(DecoderState& state, DecoderResults* results);
 
   virtual bool encode(
-      peripheral::IrTx& irTx, Protocol protocol, uint32_t aCommand, uint32_t aAddress, uint32_t aNumberOfRepeats) const;
+      peripheral::IrTx& irTx, Protocol protocol, uint32_t aAddress, uint32_t aCommand, uint32_t aNumberOfRepeats) const;
 
  private:
   /*
