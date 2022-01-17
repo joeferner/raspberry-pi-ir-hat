@@ -128,7 +128,7 @@ bool NEC::sendNECRaw(peripheral::IrTx& irTx, uint32_t aRawData, uint_fast8_t aNu
   // LSB first + stop bit
   sendPulseDistanceWidthData(
       irTx, NEC_BIT_MARK, NEC_ONE_SPACE, NEC_BIT_MARK, NEC_ZERO_SPACE, aRawData, NEC_BITS, Endian::LSB, StopBit::True);
-  irTx.send();
+  irTx.sendAndWait();
 
   for (uint32_t i = 0; i < aNumberOfRepeats; ++i) {
     // send repeat in a 110 ms raster
