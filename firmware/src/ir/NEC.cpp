@@ -131,6 +131,8 @@ bool NEC::sendNECRaw(peripheral::IrTx& irTx, uint32_t aRawData, uint_fast8_t aNu
   irTx.sendAndWait();
 
   for (uint32_t i = 0; i < aNumberOfRepeats; ++i) {
+    irTx.reloadWatchdogCounter();
+
     // send repeat in a 110 ms raster
     if (i == 0) {
       irTx.delayMicros(NEC_REPEAT_SPACE);

@@ -43,7 +43,6 @@ static const uint32_t HCLK_FREQUENCY = 16000000;
 
 static void setupSystemClock();
 static void setupGPIO();
-static void setupDMA();
 static void setupIWDG();
 
 void setup() {
@@ -51,7 +50,6 @@ void setup() {
   bus.enablePwrClock();
   setupSystemClock();
   setupGPIO();
-  setupDMA();
   setupIWDG();
 
   debugUsart.initialize(
@@ -79,9 +77,7 @@ void setup() {
   irRx.initialize(nvic, clocks, irRxPin, irRxTimer);
   irTx.initialize(halSystem, nvic);
   currentSensor.initialize(clocks, nvic, currentRefPin, current0Pin, current1Pin);
-  debugUsart.write("?READY\n");
-  // TODO enable watchdog
-  // iwdg.enable();
+  iwdg.enable();
 }
 
 static void setupSystemClock() {
@@ -104,12 +100,6 @@ static void setupGPIO() {
 
   resetPin.setPull(hal::gpio::Pull::None);
   resetPin.setMode(hal::gpio::Mode::Input);
-}
-
-static void setupDMA() {
-  // TODO do we need this
-  // nvic.setPriority(hal::nvic::IRQnType::DMA1_Ch4_5_DMAMUX1_OVR_Irq, 0);
-  // nvic.enableInterrupt(hal::nvic::IRQnType::DMA1_Ch4_5_DMAMUX1_OVR_Irq);
 }
 
 static void setupIWDG() {

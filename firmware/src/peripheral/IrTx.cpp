@@ -131,7 +131,7 @@ void IrTx::handleInterrupt() {
     }
 }
 
-const uint32_t IrTx::getNumberOfSamplesInBuffer() const {
+uint32_t IrTx::getNumberOfSamplesInBuffer() const {
     return this->txBuffer.getAvailable();
 }
 
@@ -167,6 +167,10 @@ void IrTx::nextSignal() {
 
     this->irTxSignalTimer->setAutoReload(total_t);
     this->irTxSignalTimer->setOutputCompareValue(hal::timer::Channel::Channel1, on_t);
+}
+
+void IrTx::reloadWatchdogCounter() const {
+    this->iwdg->reloadCounter();
 }
 
 }

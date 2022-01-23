@@ -55,7 +55,7 @@ class USART : public USARTWriter {
       hal::usart::Parity parity,
       hal::usart::StopBits stopBits) const;
 
-  const size_t readLine(char* buffer, size_t bufferLen);
+  const bool readLine(char* buffer, size_t bufferLen);
 
   virtual void write(const char* buffer);
 

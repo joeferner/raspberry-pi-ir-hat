@@ -75,6 +75,8 @@ bool Denon::encode(
 
   uint_fast8_t tNumberOfCommands = aNumberOfRepeats + 1;
   while (tNumberOfCommands > 0) {
+    irTx.reloadWatchdogCounter();
+
     // Data
     sendPulseDistanceWidthData(
         irTx,

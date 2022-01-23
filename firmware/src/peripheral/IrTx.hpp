@@ -5,6 +5,7 @@
 #include "USART.hpp"
 #include "hal/DMA.hpp"
 #include "hal/GPIO.hpp"
+#include "hal/IWDG.hpp"
 #include "hal/NVIC.hpp"
 #include "hal/System.hpp"
 #include "hal/Timer.hpp"
@@ -20,6 +21,7 @@ class IrTx {
   const uint32_t signalPrescaler = 10;
 
   hal::Clocks* clocks;
+  hal::IWDGHal* iwdg;
   hal::GPIO<hal::gpio::GPIOAddress::GPIOBAddress, hal::gpio::GPIOPin::Pin9>* irOutPin;
   hal::Timer<hal::timer::TimerAddress::TIM17Address>* irTxCarrierTimer;
   hal::Timer<hal::timer::TimerAddress::TIM16Address>* irTxSignalTimer;
@@ -29,10 +31,15 @@ class IrTx {
  public:
   IrTx(
       hal::Clocks* clocks,
+      hal::IWDGHal* iwdg,
       hal::GPIO<hal::gpio::GPIOAddress::GPIOBAddress, hal::gpio::GPIOPin::Pin9>* irOutPin,
       hal::Timer<hal::timer::TimerAddress::TIM17Address>* irTxCarrierTimer,
       hal::Timer<hal::timer::TimerAddress::TIM16Address>* irTxSignalTimer)
-      : clocks(clocks), irOutPin(irOutPin), irTxCarrierTimer(irTxCarrierTimer), irTxSignalTimer(irTxSignalTimer) {
+      : clocks(clocks),
+        iwdg(iwdg),
+        irOutPin(irOutPin),
+        irTxCarrierTimer(irTxCarrierTimer),
+        irTxSignalTimer(irTxSignalTimer) {
   }
 
   void initialize(hal::System& system, hal::NVICHal& nvic);
@@ -49,7 +56,9 @@ class IrTx {
 
   void handleInterrupt();
 
-  const uint32_t getNumberOfSamplesInBuffer() const;
+  uint32_t getNumberOfSamplesInBuffer() const;
+
+  void reloadWatchdogCounter() const;
 
  private:
   void enableGpio(bool enable) const;

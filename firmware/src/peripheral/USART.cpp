@@ -100,7 +100,7 @@ void USART<TAddress, TX_BUFFER_SIZE, RX_BUFFER_SIZE>::initialize(
 }
 
 template <hal::usart::USARTAddress TAddress, size_t TX_BUFFER_SIZE, size_t RX_BUFFER_SIZE>
-const size_t USART<TAddress, TX_BUFFER_SIZE, RX_BUFFER_SIZE>::readLine(char* buffer, size_t bufferLen) {
+const bool USART<TAddress, TX_BUFFER_SIZE, RX_BUFFER_SIZE>::readLine(char* buffer, size_t bufferLen) {
   size_t bufferOffset = 0;
   for (auto it = this->rxBuffer.begin(); it != this->rxBuffer.end(); it++) {
     buffer[bufferOffset] = *it;
@@ -111,14 +111,14 @@ const size_t USART<TAddress, TX_BUFFER_SIZE, RX_BUFFER_SIZE>::readLine(char* buf
         }
       }
       buffer[bufferOffset] = '\0';
-      return bufferOffset;
+      return true;
     }
     bufferOffset++;
   }
   if (this->rxBuffer.isFull()) {
     this->rxBuffer.pop();
   }
-  return 0;
+  return false;
 }
 
 template <hal::usart::USARTAddress TAddress, size_t TX_BUFFER_SIZE, size_t RX_BUFFER_SIZE>
@@ -160,6 +160,9 @@ void USART<TAddress, TX_BUFFER_SIZE, RX_BUFFER_SIZE>::vwritef(const char* format
         int i = va_arg(args, int);
         itoa(i, temp, 10);
         write(temp);
+      } else if (*format == 's') {
+        const char* p = va_arg(args, const char*);
+        write(p);
       }
     } else {
       if (this->txBuffer.isFull()) {

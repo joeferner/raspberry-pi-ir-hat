@@ -59,7 +59,7 @@ peripheral::USART<hal::usart::USARTAddress::USART1Address, USART_TX_BUFFER_SIZE,
 peripheral::USART<hal::usart::USARTAddress::USART2Address, USART_TX_BUFFER_SIZE, USART_RX_BUFFER_SIZE> rpiUsart(
     &usart2);
 peripheral::IrRx irRx(&irRxDmaChannel, &irInLedPin);
-peripheral::IrTx irTx(&clocks, &irOutPin, &irTxCarrierTimer, &irTxSignalTimer);
+peripheral::IrTx irTx(&clocks, &iwdg, &irOutPin, &irTxCarrierTimer, &irTxSignalTimer);
 peripheral::CurrentSensor currentSensor(&currentSensorAdc);
 
 static uint32_t lastIrSignalTime;
@@ -74,8 +74,6 @@ static void loop();
 
 static void processUsartLine(peripheral::USARTWriter& usartWriter, const char* buffer);
 static void processUsartWatchdog(peripheral::USARTWriter& usartWriter);
-static void processUsartSend(peripheral::USARTWriter& usartWriter);
-static void processUsartIrReset(peripheral::USARTWriter& usartWriter, Args& args);
 static void processUsartIrSend(peripheral::USARTWriter& usartWriter, Args& args);
 static void processUsartGetCurrent(peripheral::USARTWriter& usartWriter, Args& args);
 static void processUsartInvalidCommand(peripheral::USARTWriter& usartWriter, Args& args);
@@ -84,6 +82,8 @@ extern "C" int main() {
   setup();
   lastIrSignalTime = 0;
   lastIrStartOfSignal = 0;
+
+  usartOutput.writef("?READY\n");
 
   while (1) {
     loop();
@@ -94,11 +94,10 @@ static void loop() {
   iwdg.reloadCounter();
 
   char usartBuffer[USART_RX_BUFFER_SIZE];
-  size_t lineLen;
-  if ((lineLen = debugUsart.readLine(usartBuffer, sizeof(usartBuffer)))) {
+  if (debugUsart.readLine(usartBuffer, sizeof(usartBuffer))) {
     processUsartLine(debugUsart, usartBuffer);
   }
-  if ((lineLen = rpiUsart.readLine(usartBuffer, sizeof(usartBuffer)))) {
+  if (rpiUsart.readLine(usartBuffer, sizeof(usartBuffer))) {
     processUsartLine(rpiUsart, usartBuffer);
   }
 
@@ -133,6 +132,7 @@ static void loop() {
     lastIrSignalTime = 0;
   }
 
+  // TODO enable current sensor
   // currentSensor.loop();
 }
 
@@ -140,10 +140,6 @@ static void processUsartLine(peripheral::USARTWriter& usartWriter, const char* d
   Args args(data);
   if (args.read("+iwdg")) {
     processUsartWatchdog(usartWriter);
-  } else if (args.read("+send")) {
-    processUsartSend(usartWriter);
-  } else if (args.read("+f")) {
-    processUsartIrReset(usartWriter, args);
   } else if (args.read("+s")) {
     processUsartIrSend(usartWriter, args);
   } else if (args.read("+c")) {
@@ -163,21 +159,6 @@ static void processUsartWatchdog(peripheral::USARTWriter& usartWriter) {
   usartWriter.write("+OK\n");
   while (1)
     ;
-}
-
-static void processUsartSend(peripheral::USARTWriter& usartWriter) {
-  irTx.send();
-  usartWriter.write("+OK\n");
-}
-
-static void processUsartIrReset(peripheral::USARTWriter& usartWriter, Args& args) {
-  uint32_t carrierFrequency;
-  if (!args.read(&carrierFrequency)) {
-    processUsartInvalidCommand(usartWriter, args);
-    return;
-  }
-  irTx.reset(carrierFrequency);
-  usartWriter.write("+OK\n");
 }
 
 static void processUsartIrSend(peripheral::USARTWriter& usartWriter, Args& args) {
@@ -224,15 +205,14 @@ static void processUsartGetCurrent(peripheral::USARTWriter& usartWriter, Args& a
     processUsartInvalidCommand(usartWriter, args);
     return;
   }
-  char buffer[50];
-  strcpy(buffer, "+OK ");
-  itoa(d, buffer + strlen(buffer), 10);
-  strcat(buffer, "\n");
-  usartWriter.write(buffer);
+  usartWriter.writef("+OK %d\n", d);
 }
 
 static void processUsartInvalidCommand(peripheral::USARTWriter& usartWriter, Args& args) {
-  usartWriter.write("-ERR \"");
-  usartWriter.write(args.getWholeBuffer());
-  usartWriter.write("\"\n");
+  const char* buffer = args.getWholeBuffer();
+  if (buffer[0] == '\0') {
+    usartWriter.write("\n");
+    return;
+  }
+  usartWriter.writef("-ERR \"%s\"\n", buffer);
 }
