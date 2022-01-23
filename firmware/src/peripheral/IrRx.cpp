@@ -81,10 +81,9 @@ bool IrRx::read(const hal::Clocks& clocks, uint16_t* result) {
 
   *result = value - this->lastValue;
   uint32_t currentTick = clocks.getTickCount();
-  bool timeout = (currentTick - this->lastTick) > IR_RX_TIMEOUT_MS;
   this->lastValue = value;
   this->lastTick = currentTick;
-  return !timeout;
+  return true;
 }
 
 size_t IrRx::getDmaPosition() const {

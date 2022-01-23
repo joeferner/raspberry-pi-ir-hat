@@ -19,7 +19,7 @@ class Decoder {
   NEC necDecoder;
 
  public:
-  static const uint32_t MAX_QUITE_TIME_MS = 10;
+  static const uint32_t MAX_QUITE_TIME_MS = 200;
 
   bool push(uint16_t t, DecoderResults* results);
 

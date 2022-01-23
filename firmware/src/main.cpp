@@ -63,6 +63,8 @@ peripheral::IrTx irTx(&clocks, &irOutPin, &irTxCarrierTimer, &irTxSignalTimer);
 peripheral::CurrentSensor currentSensor(&currentSensorAdc);
 
 static uint32_t lastIrSignalTime;
+static uint32_t lastIrStartOfSignal;
+static uint32_t lastIrEndOfSignal;
 ir::Decoder irDecoder;
 ir::Encoder irEncoder;
 
@@ -80,6 +82,9 @@ static void processUsartInvalidCommand(peripheral::USARTWriter& usartWriter, Arg
 
 extern "C" int main() {
   setup();
+  lastIrSignalTime = 0;
+  lastIrStartOfSignal = 0;
+
   while (1) {
     loop();
   }
@@ -99,22 +104,33 @@ static void loop() {
 
   uint16_t irRxValue;
   while (irRx.read(clocks, &irRxValue)) {
+    if (lastIrStartOfSignal == 0) {
+      lastIrStartOfSignal = clocks.getTickCount();
+    }
+
     ir::DecoderResults results;
     if (irDecoder.push(irRxValue, &results)) {
+      uint32_t delta = (lastIrEndOfSignal == 0) ? 0 : (lastIrStartOfSignal - lastIrEndOfSignal);
+      lastIrStartOfSignal = 0;
       usartOutput.writef(
-          "?s%d,%d,%d,%d,%d,%d\n",
+          "?s%d,%d,%d,%d,%d,%d,%d\n",
+          delta,
           (int)results.protocol,
           results.address,
           results.command,
           results.repeat ? 1 : 0,
           results.autoRepeat ? 1 : 0,
           results.parityFailed ? 1 : 0);
+      lastIrEndOfSignal = clocks.getTickCount();
     }
     lastIrSignalTime = clocks.getTickCount();
   }
 
-  if ((clocks.getTickCount() - lastIrSignalTime) > ir::Decoder::MAX_QUITE_TIME_MS) {
+  if (lastIrSignalTime != 0 && (clocks.getTickCount() - lastIrSignalTime) > ir::Decoder::MAX_QUITE_TIME_MS) {
     irDecoder.clear();
+    lastIrStartOfSignal = 0;
+    lastIrEndOfSignal = 0;
+    lastIrSignalTime = 0;
   }
 
   // currentSensor.loop();

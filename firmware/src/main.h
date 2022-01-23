@@ -34,7 +34,6 @@ const size_t USART_RX_BUFFER_SIZE = 128;
 const size_t IR_TX_BUFFER_SAMPLES = 128;
 
 const size_t IR_RX_BUFFER_SAMPLES = 128;
-const size_t IR_RX_TIMEOUT_MS = 1000;
 
 #ifdef __cplusplus
 }
