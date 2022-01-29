@@ -112,7 +112,7 @@ static void loop() {
       uint32_t delta = (lastIrEndOfSignal == 0) ? 0 : (lastIrStartOfSignal - lastIrEndOfSignal);
       lastIrStartOfSignal = 0;
       usartOutput.writef(
-          "?s%d,%d,%d,%d,%d,%d,%d\n",
+          "!s%d,%d,%d,%d,%d,%d,%d\n",
           (int)results.protocol,
           results.address,
           results.command,

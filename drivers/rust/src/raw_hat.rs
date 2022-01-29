@@ -127,7 +127,7 @@ impl RawHat {
                                 let line: String =
                                     buffer.iter().collect::<String>().trim().to_string();
                                 debug!("received {}", line);
-                                if line.starts_with("?s") {
+                                if line.starts_with("!s") {
                                     parse_signal_line(line, &mut callback);
                                 } else if line.starts_with("?READY") {
                                     callback(RawHatMessage::Ready);
@@ -233,7 +233,7 @@ impl Drop for RawHat {
 }
 
 fn parse_signal_line(line: String, callback: &mut Box<dyn FnMut(RawHatMessage) + Send>) {
-    match line.strip_prefix("?s") {
+    match line.strip_prefix("!s") {
         Option::Some(val_str) => {
             let parts = val_str.split(',').collect::<Vec<&str>>();
             if parts.len() != 7 {

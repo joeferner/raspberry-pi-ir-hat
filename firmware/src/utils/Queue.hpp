@@ -28,6 +28,9 @@ public:
     }
 
     void push(T v) {
+        if (isFull()) {
+            pop();            
+        }
         __disable_irq();
         items[write] = v;
         write = (write + 1) % TSize;
@@ -66,7 +69,7 @@ public:
     }
 
     bool isFull() const {
-        return available == TSize;
+        return available == (TSize - 1);
     }
 
     bool isEmpty() const {

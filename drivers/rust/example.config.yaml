@@ -1,5 +1,5 @@
 remotes:
-  test:
+  pioneer:
     buttons:
       power:
         debounce: 1000
@@ -7,3 +7,21 @@ remotes:
           - protocol: NEC
             address: 170
             command: 28
+  denon:
+    buttons:
+      power:
+        debounce: 1000
+        ir_signals:
+          - protocol: Denon
+            address: 8
+            command: 135
+      volume_up:
+        ir_signals:
+          - protocol: Denon
+            address: 8
+            command: 79
+      volume_down:
+        ir_signals:
+          - protocol: Denon
+            address: 8
+            command: 143
