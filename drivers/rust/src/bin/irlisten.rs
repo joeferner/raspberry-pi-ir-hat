@@ -30,29 +30,10 @@ fn main() -> Result<(), String> {
                 .help("Path to serial port")
                 .takes_value(true),
         )
-        .arg(
-            Arg::with_name("tolerance")
-                .short("t")
-                .long("tolerance")
-                .default_value("0.15")
-                .help("Signal matching tolerance")
-                .takes_value(true),
-        )
         .get_matches();
 
     let filename = args.value_of("file").unwrap();
     let port = args.value_of("port").unwrap();
-    let tolerance = args
-        .value_of("tolerance")
-        .unwrap()
-        .parse::<f32>()
-        .map_err(|err| {
-            format!(
-                "invalid tolerance: {} ({})",
-                args.value_of("tolerance").unwrap(),
-                err
-            )
-        })?;
 
     let config =
         Config::read(filename, false).map_err(|err| format!("failed to read config {}", err))?;
@@ -60,7 +41,6 @@ fn main() -> Result<(), String> {
     let mut hat = Hat::new(
         config,
         port,
-        tolerance,
         Box::new(|message| {
             println!("{:#?}", message);
         }),

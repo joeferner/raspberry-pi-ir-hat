@@ -58,7 +58,6 @@ fn main() -> Result<(), String> {
     let mut hat = Hat::new(
         config,
         port,
-        0.15,
         Box::new(|message| {
             println!("{:#?}", message);
         }),

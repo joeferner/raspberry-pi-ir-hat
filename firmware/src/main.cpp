@@ -113,13 +113,13 @@ static void loop() {
       lastIrStartOfSignal = 0;
       usartOutput.writef(
           "?s%d,%d,%d,%d,%d,%d,%d\n",
-          delta,
           (int)results.protocol,
           results.address,
           results.command,
           results.repeat ? 1 : 0,
           results.autoRepeat ? 1 : 0,
-          results.parityFailed ? 1 : 0);
+          results.parityFailed ? 1 : 0,
+          delta);
       lastIrEndOfSignal = clocks.getTickCount();
     }
     lastIrSignalTime = clocks.getTickCount();

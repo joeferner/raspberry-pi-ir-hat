@@ -1,4 +1,5 @@
 use log::debug;
+use num;
 use rppal::gpio;
 use rppal::gpio::OutputPin;
 use serialport::SerialPort;
@@ -15,6 +16,8 @@ use std::time::Duration;
 #[cfg(target_arch = "arm")]
 use rppal::gpio::Gpio;
 
+use crate::Protocol;
+
 #[cfg(target_arch = "arm")]
 const GPIO_RESET: u8 = 17;
 
@@ -22,10 +25,21 @@ const GPIO_RESET: u8 = 17;
 pub enum RawHatMessage {
     Ready,
     UnknownLine(String),
-    Signal(u32),
+    Signal(RawHatSignal),
     OkResponse(Option<String>),
     ErrResponse(String),
     Error(String),
+}
+
+#[derive(Debug)]
+pub struct RawHatSignal {
+    pub protocol: Protocol,
+    pub address: u32,
+    pub command: u32,
+    pub repeat: bool,
+    pub auto_repeat: bool,
+    pub parity_failed: bool,
+    pub delta: Duration,
 }
 
 #[derive(Copy, Clone)]
@@ -113,7 +127,7 @@ impl RawHat {
                                 let line: String =
                                     buffer.iter().collect::<String>().trim().to_string();
                                 debug!("received {}", line);
-                                if line.starts_with("!s") {
+                                if line.starts_with("?s") {
                                     parse_signal_line(line, &mut callback);
                                 } else if line.starts_with("?READY") {
                                     callback(RawHatMessage::Ready);
@@ -219,14 +233,121 @@ impl Drop for RawHat {
 }
 
 fn parse_signal_line(line: String, callback: &mut Box<dyn FnMut(RawHatMessage) + Send>) {
-    match line.strip_prefix("!s") {
-        Option::Some(val_str) => match val_str.parse::<u32>() {
-            Result::Ok(val) => callback(RawHatMessage::Signal(val)),
-            Result::Err(err) => callback(RawHatMessage::Error(format!(
-                "failed to parse line: {} => {}",
-                line, err
-            ))),
-        },
+    match line.strip_prefix("?s") {
+        Option::Some(val_str) => {
+            let parts = val_str.split(',').collect::<Vec<&str>>();
+            if parts.len() != 7 {
+                callback(RawHatMessage::Error(format!(
+                    "failed to parse signal line: {} => expected 7 parts found {}",
+                    line,
+                    parts.len()
+                )));
+            } else {
+                let protocol_str = parts.get(0).unwrap();
+                let address_str = parts.get(1).unwrap();
+                let command_str = parts.get(2).unwrap();
+                let repeat_str = parts.get(3).unwrap();
+                let auto_repeat_str = parts.get(4).unwrap();
+                let parity_failed_str = parts.get(5).unwrap();
+                let delta_str = parts.get(6).unwrap();
+
+                let protocol = match protocol_str.parse::<u8>() {
+                    Result::Ok(val) => match num::FromPrimitive::from_u8(val) {
+                        Option::Some(p) => p,
+                        Option::None => {
+                            callback(RawHatMessage::Error(format!(
+                                "failed to parse signal line: {} => invalid protocol {}",
+                                line, protocol_str
+                            )));
+                            return;
+                        }
+                    },
+                    Result::Err(err) => {
+                        callback(RawHatMessage::Error(format!(
+                            "failed to parse signal line: {} => invalid protocol {}: {}",
+                            line, protocol_str, err
+                        )));
+                        return;
+                    }
+                };
+
+                let address = match address_str.parse::<u32>() {
+                    Result::Ok(val) => val,
+                    Result::Err(err) => {
+                        callback(RawHatMessage::Error(format!(
+                            "failed to parse signal line: {} => invalid address {}: {}",
+                            line, address_str, err
+                        )));
+                        return;
+                    }
+                };
+
+                let command = match command_str.parse::<u32>() {
+                    Result::Ok(val) => val,
+                    Result::Err(err) => {
+                        callback(RawHatMessage::Error(format!(
+                            "failed to parse signal line: {} => invalid command {}: {}",
+                            line, command_str, err
+                        )));
+                        return;
+                    }
+                };
+
+                let repeat = match repeat_str.parse::<u32>() {
+                    Result::Ok(val) => val != 0,
+                    Result::Err(err) => {
+                        callback(RawHatMessage::Error(format!(
+                            "failed to parse signal line: {} => invalid repeat {}: {}",
+                            line, repeat_str, err
+                        )));
+                        return;
+                    }
+                };
+
+                let auto_repeat = match auto_repeat_str.parse::<u32>() {
+                    Result::Ok(val) => val != 0,
+                    Result::Err(err) => {
+                        callback(RawHatMessage::Error(format!(
+                            "failed to parse signal line: {} => invalid auto repeat {}: {}",
+                            line, auto_repeat_str, err
+                        )));
+                        return;
+                    }
+                };
+
+                let parity_failed = match parity_failed_str.parse::<u32>() {
+                    Result::Ok(val) => val != 0,
+                    Result::Err(err) => {
+                        callback(RawHatMessage::Error(format!(
+                            "failed to parse signal line: {} => invalid parity failed {}: {}",
+                            line, parity_failed_str, err
+                        )));
+                        return;
+                    }
+                };
+
+                let delta = match delta_str.parse::<u64>() {
+                    Result::Ok(val) => Duration::from_millis(val),
+                    Result::Err(err) => {
+                        callback(RawHatMessage::Error(format!(
+                            "failed to parse signal line: {} => invalid delta {}: {}",
+                            line, delta_str, err
+                        )));
+                        return;
+                    }
+                };
+
+                callback(RawHatMessage::Signal(RawHatSignal {
+                    protocol,
+                    address,
+                    command,
+                    repeat,
+                    auto_repeat,
+                    parity_failed,
+                    delta,
+                }));
+            }
+        }
         Option::None => {
             callback(RawHatMessage::UnknownLine(line));
         }

@@ -7,22 +7,30 @@ use std::io::BufReader;
 use std::path::Path;
 use std::time::Duration;
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+use crate::Protocol;
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct Config {
     remotes: HashMap<String, ConfigRemote>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ConfigRemote {
     buttons: HashMap<String, ConfigButton>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ConfigButton {
-    /// comma separated list of signals
-    signal: String,
-    /// Number of milliseconds between consecutive presses of this button
-    debounce: Option<Duration>,
+    ir_signals: Vec<ConfigIrSignal>,
+    /// debounces button press if less than duration
+    debounce: Option<u64>,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Copy)]
+pub struct ConfigIrSignal {
+    protocol: Protocol,
+    address: u32,
+    command: u32,
 }
 
 #[derive(Debug)]
@@ -110,67 +118,18 @@ impl Config {
     fn validate_config_yaml(config: &Config) -> Result<(), ConfigError> {
         for (remote_name, remote) in &config.remotes {
             for (button_name, button) in &remote.buttons {
-                for s in button.signal.split(",") {
-                    match s.trim().parse::<u32>() {
-                        Result::Err(err) => {
-                            return Result::Err(ConfigError::YamlParseGenericError(format!(
-                                "{}:{} signal parse error: {}",
-                                remote_name, button_name, err
-                            )))
-                        }
-                        Result::Ok(_) => {}
+                for ir_signal in &button.ir_signals {
+                    let p = ir_signal.protocol;
+                    if p == Protocol::Unknown {
+                        return Result::Err(ConfigError::YamlParseGenericError(format!(
+                            "{}:{} invalid protocol: {}",
+                            remote_name, button_name, p as u8
+                        )));
                     }
                 }
             }
         }
         return Result::Ok(());
-    }
-
-    /// # Arguments
-    ///
-    /// * `remote_name` - name of the remote to set button on
-    /// * `button_name` - name of the button to set
-    /// * `signal` - comma separated list of signals
-    /// * `debounce` - Number of milliseconds between consecutive presses of this button
-    pub fn set_button(
-        &mut self,
-        remote_name: &str,
-        button_name: &str,
-        signal: &str,
-        debounce: Option<Duration>,
-    ) {
-        let remote = self
-            .remotes
-            .entry(remote_name.to_string())
-            .or_insert_with(|| ConfigRemote {
-                buttons: HashMap::new(),
-            });
-        remote.buttons.insert(
-            button_name.to_string(),
-            ConfigButton {
-                signal: signal.to_string(),
-                debounce,
-            },
-        );
-    }
-
-    pub fn write(&self, filename: &str) -> Result<(), ConfigError> {
-        let file = match File::create(filename) {
-            Ok(f) => f,
-            Err(err) => {
-                return Result::Err(ConfigError::WriteError(
-                    format!("could not open file for writing: {}", filename),
-                    err,
-                ));
-            }
-        };
-        return match serde_yaml::to_writer(file, &self) {
-            Result::Ok(_) => Result::Ok(()),
-            Result::Err(err) => Result::Err(ConfigError::WriteYamlError(
-                format!("could not write file: {}", filename),
-                err,
-            )),
-        };
     }
 
     pub fn get_remote_names(&self) -> Vec<String> {
@@ -211,17 +170,29 @@ impl ConfigRemote {
 }
 
 impl ConfigButton {
-    pub fn get_signals(&self) -> Vec<u32> {
-        return self
-            .signal
-            .split(",")
-            .map(|s| {
-                s.trim()
-                    .parse::<u32>()
-                    .map_err(|err| format!("failed to parse {}: {}", s, err))
-                    .unwrap()
-            })
-            .collect();
+    pub fn get_ir_signals(&self) -> &Vec<ConfigIrSignal> {
+        return &self.ir_signals;
+    }
+
+    pub fn get_debounce(&self) -> Option<Duration> {
+        return match self.debounce {
+            Option::None => Option::None,
+            Option::Some(v) => Option::Some(Duration::from_millis(v)),
+        };
+    }
+}
+
+impl ConfigIrSignal {
+    pub fn get_protocol(&self) -> Protocol {
+        return self.protocol;
+    }
+
+    pub fn get_address(&self) -> u32 {
+        return self.address;
+    }
+
+    pub fn get_command(&self) -> u32 {
+        return self.command;
     }
 }
 

@@ -15,12 +15,6 @@ echo '!s123' > /dev/pts/7
 
 the `serialport` dependency requires the libudev headers. To install them `sudo apt-get install libudev-dev`
 
-# Learning
-
-```
-./target/debug/irlearn --file ~/pi-ir.yaml --remote tv --button power
-```
-
 # Listen
 
 ```

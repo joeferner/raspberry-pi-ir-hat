@@ -1,4 +1,3 @@
-use crate::aho_corasick::AhoCorasick;
 use crate::ButtonPress;
 use crate::Config;
 use crate::CurrentChannel;
@@ -8,6 +7,7 @@ use std::error::Error;
 use std::fmt;
 use std::sync::mpsc;
 use std::time::Duration;
+use std::time::SystemTime;
 use std::time::SystemTimeError;
 
 #[derive(Debug)]
@@ -64,11 +64,15 @@ impl Hat {
     pub fn new(
         config: Config,
         port_path: &str,
-        tolerance: f32,
         callback: Box<dyn FnMut(HatMessage) + Send>,
     ) -> Hat {
         let mut local_callback = callback;
-        let mut aho_corasick = AhoCorasick::new(&config, tolerance);
+
+        let mut last_time = SystemTime::now();
+        let mut last_remote_name: String = "".to_string();
+        let mut last_button_name: String = "".to_string();
+
+        let local_config = config.clone();
         let (sender, receiver) = mpsc::channel();
         return Hat {
             config,
@@ -82,12 +86,34 @@ impl Hat {
                         local_callback(HatMessage::Error(format!("Unknown line: {}", line)));
                     }
                     RawHatMessage::Signal(signal) => {
-                        let result = aho_corasick.append_find(signal);
-                        if let Some(result) = result {
-                            local_callback(HatMessage::ButtonPress(ButtonPress {
-                                remote_name: result.remote_name.to_string(),
-                                button_name: result.button_name.to_string(),
-                            }));
+                        for remote_name in local_config.get_remote_names() {
+                            let remote = local_config.get_remote(&remote_name).unwrap();
+                            for button_name in remote.get_button_names() {
+                                let button =
+                                    local_config.get_button(&remote_name, &button_name).unwrap();
+                                for button_signal in button.get_ir_signals() {
+                                    if button_signal.get_protocol() == signal.protocol
+                                        && button_signal.get_address() == signal.address
+                                        && button_signal.get_command() == signal.command
+                                    {
+                                        let now = SystemTime::now();
+                                        let time_since_last = now
+                                            .duration_since(last_time)
+                                            .unwrap_or(Duration::from_millis(1));
+                                        last_time = now;
+                                        last_remote_name = remote_name.to_string();
+                                        last_button_name = button_name.to_string();
+                                        if button.get_debounce().is_none()
+                                            || time_since_last > button.get_debounce().unwrap()
+                                        {
+                                            local_callback(HatMessage::ButtonPress(ButtonPress {
+                                                remote_name: remote_name.to_string(),
+                                                button_name: button_name.to_string(),
+                                            }));
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     RawHatMessage::OkResponse(message) => {
@@ -130,50 +156,18 @@ impl Hat {
     }
 
     pub fn transmit(&mut self, remote_name: &str, button_name: &str) -> Result<(), HatError> {
-        let button = self
+        let _button = self
             .config
             .get_button(remote_name, button_name)
             .ok_or_else(|| HatError::InvalidButton {
                 remote_name: remote_name.to_string(),
                 button_name: button_name.to_string(),
             })?;
-        let signals: Vec<u32> = button.get_signals();
+        // TODO
+        // let signals: Vec<u32> = button.get_signals();
 
-        return self.send_signals(38000, &signals);
-    }
-
-    fn send_signals(&mut self, frequency: u32, signals: &Vec<u32>) -> Result<(), HatError> {
-        self.send_carrier_frequency(frequency)?;
-        for s in signals.chunks(2) {
-            let signal_on = s[0];
-            let signal_off = match s.len() {
-                2 => s[1],
-                _ => 1,
-            };
-            self.send_signal(signal_on, signal_off)?;
-        }
-        return self.send_signal_complete();
-    }
-
-    fn send_carrier_frequency(&mut self, frequency: u32) -> Result<(), HatError> {
-        self.raw_hat
-            .send_carrier_frequency(frequency)
-            .map_err(|err| HatError::RawHatError(err))?;
-        return self.wait_for_response().map(|_| ());
-    }
-
-    fn send_signal(&mut self, signal_on: u32, signal_off: u32) -> Result<(), HatError> {
-        self.raw_hat
-            .send_signal(signal_on, signal_off)
-            .map_err(|err| HatError::RawHatError(err))?;
-        return self.wait_for_response().map(|_| ());
-    }
-
-    fn send_signal_complete(&mut self) -> Result<(), HatError> {
-        self.raw_hat
-            .send_signal_complete()
-            .map_err(|err| HatError::RawHatError(err))?;
-        return self.wait_for_response().map(|_| ());
+        // return self.send_signals(38000, &signals);
+        return Result::Err(HatError::ErrResponse("TODO".to_string()));
     }
 
     pub fn get_current(&mut self, channel: CurrentChannel) -> Result<Current, HatError> {

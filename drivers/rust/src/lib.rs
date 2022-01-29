@@ -10,10 +10,8 @@ pub use hat::{Current, Hat, HatError, HatMessage};
 pub mod button_press;
 pub use button_press::ButtonPress;
 
-mod aho_corasick;
-
-mod signal;
-pub use signal::Signal;
+mod protocol;
+pub use protocol::Protocol;
 
 pub mod socat;
 pub use socat::socat;

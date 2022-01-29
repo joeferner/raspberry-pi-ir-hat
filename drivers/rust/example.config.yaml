@@ -1,7 +1,9 @@
 remotes:
-    test:
-        buttons:
-            volumeUp:
-                signal: "100,200,300"
-            volumeDown:
-                signal: "100,200,400"
+  test:
+    buttons:
+      power:
+        debounce: 1000
+        ir_signals:
+          - protocol: NEC
+            address: 170
+            command: 28

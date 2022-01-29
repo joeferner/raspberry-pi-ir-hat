@@ -4,7 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        {
+            {
             "type": "lldb",
             "request": "launch",
             "name": "Debug unit tests in library 'raspberry_pi_ir_hat'",
@@ -18,54 +18,6 @@
                 "filter": {
                     "name": "raspberry_pi_ir_hat",
                     "kind": "lib"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug executable 'irlearn'",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--bin=irlearn",
-                    "--package=raspberry-pi-ir-hat"
-                ],
-                "filter": {
-                    "name": "irlearn",
-                    "kind": "bin"
-                }
-            },
-            "args": [
-                "--file",
-                "example.config.json",
-                "--tolerance",
-                "0.1",
-                "--port",
-                "/dev/pts/4",
-                "--remote",
-                "testRemote",
-                "--button",
-                "testButton"
-            ],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'irlearn'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=irlearn",
-                    "--package=raspberry-pi-ir-hat"
-                ],
-                "filter": {
-                    "name": "irlearn",
-                    "kind": "bin"
                 }
             },
             "args": [],
@@ -134,11 +86,9 @@
             },
             "args": [
                 "--file",
-                "example.config.json",
-                "--tolerance",
-                "0.1",
+                "example.config.yaml",
                 "--port",
-                "/dev/pts/4"
+                "/dev/ttyUSB0"
             ],
             "cwd": "${workspaceFolder}"
         },

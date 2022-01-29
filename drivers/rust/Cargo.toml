@@ -8,10 +8,6 @@ name = "raspberry_pi_ir_hat"
 path = "src/lib.rs"
 
 [[bin]]
-name = "irlearn"
-path = "src/bin/irlearn.rs"
-
-[[bin]]
 name = "irplay"
 path = "src/bin/irplay.rs"
 
@@ -28,3 +24,6 @@ itertools = "0.10.1"
 rppal = "0.13.0"
 log = "0.4.14"
 simple_logger = "1.13.0"
+num = "0.4.0"
+num-derive = "0.3.3"
+num-traits = "0.2.14"
