@@ -55,17 +55,22 @@ fn main() -> Result<(), String> {
     let config =
         Config::read(filename, false).map_err(|err| format!("failed to read config {}", err))?;
 
-    let mut hat = Hat::new(
+    let hat = Hat::new(
         config,
         port,
         Box::new(|message| {
             println!("{:#?}", message);
         }),
     );
-    hat.open()
-        .map_err(|err| format!("failed to open hat {}", err))?;
-    hat.transmit(remote, button)
-        .map_err(|err| format!("failed to transmit {}", err))?;
+    {
+        let mut my_hat = hat.lock().unwrap();
+        my_hat
+            .open()
+            .map_err(|err| format!("failed to open hat {}", err))?;
+        my_hat
+            .transmit(remote, button)
+            .map_err(|err| format!("failed to transmit {}", err))?;
+    }
     return Result::Ok(());
 }
 
@@ -122,15 +127,17 @@ remotes:
             sp.write("+OK\n".as_bytes()).unwrap();
         });
 
-        let mut hat = Hat::new(
+        let hat = Hat::new(
             config,
             &port,
-            0.15,
             Box::new(move |message| {
                 println!("{:?}", message);
             }),
         );
-        hat.open().unwrap();
-        hat.transmit("remote1", "button1").unwrap();
+        {
+            let mut my_hat = hat.lock().unwrap();
+            my_hat.open().unwrap();
+            my_hat.transmit("remote1", "button1").unwrap();
+        }
     }
 }

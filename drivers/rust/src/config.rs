@@ -17,12 +17,16 @@ pub struct Config {
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ConfigRemote {
     buttons: HashMap<String, ConfigButton>,
+    /// interval between repeated signals (milliseconds)
+    interval: Option<u64>,
+    /// number of times signal is repeated for each button press
+    repeat: Option<u32>
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ConfigButton {
     ir_signals: Vec<ConfigIrSignal>,
-    /// debounces button press if less than duration
+    /// debounces button press if less than duration (milliseconds)
     debounce: Option<u64>,
 }
 

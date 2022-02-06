@@ -38,15 +38,19 @@ fn main() -> Result<(), String> {
     let config =
         Config::read(filename, false).map_err(|err| format!("failed to read config {}", err))?;
 
-    let mut hat = Hat::new(
+    let hat = Hat::new(
         config,
         port,
         Box::new(|message| {
             println!("{:#?}", message);
         }),
     );
-    hat.open()
-        .map_err(|err| format!("failed to open hat {}", err))?;
+    {
+        let mut my_hat = hat.lock().unwrap();
+        my_hat
+            .open()
+            .map_err(|err| format!("failed to open hat {}", err))?;
+    }
     println!("press ctrl+c to exit");
     loop {
         thread::sleep(time::Duration::from_secs(1));
@@ -92,15 +96,17 @@ remotes:
 
         let messages = Arc::new(Mutex::new(Vec::new()));
         let hat_messages = messages.clone();
-        let mut hat = Hat::new(
+        let hat = Hat::new(
             config,
             &port,
-            0.15,
             Box::new(move |message| {
                 hat_messages.lock().unwrap().push(message);
             }),
         );
-        hat.open().unwrap();
+        {
+            let mut my_hat = hat.lock().unwrap();
+            my_hat.open().unwrap();
+        }
 
         let mut message_index = 0;
         'outer: for _ in 0..100 {

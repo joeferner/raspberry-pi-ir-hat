@@ -1,5 +1,7 @@
 remotes:
   pioneer:
+    interval: 25
+    repeat: 2
     buttons:
       power:
         debounce: 1000
@@ -8,6 +10,8 @@ remotes:
             address: 170
             command: 28
   denon:
+    interval: 25
+    repeat: 2
     buttons:
       power:
         debounce: 1000
