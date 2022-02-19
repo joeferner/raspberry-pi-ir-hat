@@ -25,7 +25,7 @@ pub struct Hat {
     raw_hat: Option<RawHat>,
     timeout: Duration,
 
-    last_recieve_time: SystemTime,
+    last_receive_time: SystemTime,
     last_remote_name: Option<String>,
     last_button_name: Option<String>,
 }
@@ -83,7 +83,7 @@ impl Hat {
             timeout: Duration::from_secs(1),
             raw_hat: Option::None,
 
-            last_recieve_time: SystemTime::now(),
+            last_receive_time: SystemTime::now(),
             last_remote_name: Option::None,
             last_button_name: Option::None,
         }));
@@ -160,7 +160,7 @@ impl Hat {
                     {
                         let now = SystemTime::now();
                         let time_since_last = now
-                            .duration_since(self.last_recieve_time)
+                            .duration_since(self.last_receive_time)
                             .unwrap_or(Duration::from_millis(1));
 
                         if button.get_debounce().is_none()
@@ -172,7 +172,7 @@ impl Hat {
                             }));
                         }
 
-                        self.last_recieve_time = now;
+                        self.last_receive_time = now;
                         self.last_remote_name = Option::Some(remote_name.to_string());
                         self.last_button_name = Option::Some(button_name.to_string());
                     }
