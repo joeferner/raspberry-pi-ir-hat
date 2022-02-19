@@ -38,19 +38,14 @@ fn main() -> Result<(), String> {
     let config =
         Config::read(filename, false).map_err(|err| format!("failed to read config {}", err))?;
 
-    let hat = Hat::new(
-        config,
-        port,
-        Box::new(|message| {
-            println!("{:#?}", message);
-        }),
-    );
-    {
-        let mut my_hat = hat.lock().unwrap();
-        my_hat
-            .open()
-            .map_err(|err| format!("failed to open hat {}", err))?;
-    }
+    let mut hat = Hat::new(config, port);
+    let rx = hat
+        .open()
+        .map_err(|err| format!("failed to open hat {}", err))?;
+    thread::spawn(move || loop {
+        let msg = rx.recv().unwrap();
+        println!("{:#?}", msg);
+    });
     println!("press ctrl+c to exit");
     loop {
         thread::sleep(time::Duration::from_secs(1));
