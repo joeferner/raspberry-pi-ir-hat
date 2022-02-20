@@ -9,8 +9,6 @@ use std::fmt;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::thread;
-use std::thread::JoinHandle;
 use std::time::Duration;
 use std::time::SystemTime;
 use std::time::SystemTimeError;
@@ -26,16 +24,15 @@ pub struct Hat {
     response_queue_receiver: Option<mpsc::Receiver<RawHatMessage>>,
     raw_hat: RawHat,
     timeout: Duration,
-    read_thread: Option<JoinHandle<()>>,
 }
 
-struct HatRecvState {
+struct HatReceiveListener {
     config: Arc<Mutex<Config>>,
     last_receive_time: SystemTime,
     last_remote_name: Option<String>,
     last_button_name: Option<String>,
-    tx: mpsc::Sender<HatMessage>,
     response_queue_sender: mpsc::Sender<RawHatMessage>,
+    callback: Arc<Mutex<Box<dyn FnMut(HatMessage) + Send>>>,
 }
 
 pub struct Current {
@@ -84,133 +81,36 @@ impl Hat {
             response_queue_receiver: Option::None,
             timeout: Duration::from_secs(1),
             raw_hat: RawHat::new(port_path),
-            read_thread: Option::None,
         };
-    }
-
-    fn handle_message(msg: RawHatMessage, hat_recv_state: &mut HatRecvState) {
-        match msg {
-            RawHatMessage::Ready => {}
-            RawHatMessage::UnknownLine(line) => {
-                hat_recv_state
-                    .tx
-                    .send(HatMessage::Error(format!("Unknown line: {}", line)))
-                    .unwrap();
-            }
-            RawHatMessage::Signal(signal) => {
-                Hat::handle_signal_message(signal, hat_recv_state);
-            }
-            RawHatMessage::OkResponse(message) => {
-                hat_recv_state
-                    .response_queue_sender
-                    .send(RawHatMessage::OkResponse(message))
-                    .unwrap_or_else(|err| {
-                        hat_recv_state
-                            .tx
-                            .send(HatMessage::Error(format!(
-                                "failed to queue response {}",
-                                err
-                            )))
-                            .unwrap()
-                    });
-            }
-            RawHatMessage::ErrResponse(err) => {
-                hat_recv_state
-                    .response_queue_sender
-                    .send(RawHatMessage::ErrResponse(err))
-                    .unwrap_or_else(|err| {
-                        hat_recv_state
-                            .tx
-                            .send(HatMessage::Error(format!(
-                                "failed to queue response {}",
-                                err
-                            )))
-                            .unwrap()
-                    });
-            }
-            RawHatMessage::Error(err) => {
-                hat_recv_state.tx.send(HatMessage::Error(err)).unwrap();
-            }
-        }
-    }
-
-    fn handle_signal_message(signal: RawHatSignal, hat_recv_state: &mut HatRecvState) {
-        let config = hat_recv_state.config.lock().unwrap();
-        for remote_name in config.get_remote_names() {
-            let remote = config.get_remote(&remote_name).unwrap();
-            for button_name in remote.get_button_names() {
-                let button = config.get_button(&remote_name, &button_name).unwrap();
-                for button_signal in button.get_ir_signals() {
-                    if button_signal.get_protocol() == signal.protocol
-                        && button_signal.get_address() == signal.address
-                        && button_signal.get_command() == signal.command
-                    {
-                        let now = SystemTime::now();
-                        let time_since_last = now
-                            .duration_since(hat_recv_state.last_receive_time)
-                            .unwrap_or(Duration::from_millis(1));
-
-                        if button.get_debounce().is_none()
-                            || time_since_last > button.get_debounce().unwrap()
-                        {
-                            hat_recv_state
-                                .tx
-                                .send(HatMessage::ButtonPress(ButtonPress {
-                                    remote_name: remote_name.to_string(),
-                                    button_name: button_name.to_string(),
-                                }))
-                                .unwrap();
-                        }
-
-                        hat_recv_state.last_receive_time = now;
-                        hat_recv_state.last_remote_name = Option::Some(remote_name.to_string());
-                        hat_recv_state.last_button_name = Option::Some(button_name.to_string());
-                    }
-                }
-            }
-        }
     }
 
     pub fn get_config(&self) -> Arc<Mutex<Config>> {
         return self.config.clone();
     }
 
-    pub fn open(&mut self) -> Result<mpsc::Receiver<HatMessage>, HatError> {
-        let (tx, rx): (mpsc::Sender<HatMessage>, mpsc::Receiver<HatMessage>) = mpsc::channel();
+    pub fn open(&mut self, callback: Box<dyn FnMut(HatMessage) + Send>) -> Result<(), HatError> {
         let (response_queue_sender, response_queue_receiver): (
             mpsc::Sender<RawHatMessage>,
             mpsc::Receiver<RawHatMessage>,
         ) = mpsc::channel();
-
-        let raw_hat_rx = self
-            .raw_hat
-            .open()
-            .map_err(|err| HatError::RawHatError(err))?;
-
         let config = self.config.clone();
         self.response_queue_receiver = Option::Some(response_queue_receiver);
-        self.read_thread = Option::Some(thread::spawn(move || {
-            let mut hat_recv_state = HatRecvState {
-                config,
-                last_receive_time: SystemTime::now(),
-                last_remote_name: Option::None,
-                last_button_name: Option::None,
-                tx,
-                response_queue_sender,
-            };
 
-            loop {
-                let msg_result = raw_hat_rx.recv();
-                match msg_result {
-                    Result::Ok(msg) => Hat::handle_message(msg, &mut hat_recv_state),
-                    Result::Err(err) => hat_recv_state
-                        .tx
-                        .send(HatMessage::Error(err.to_string()))
-                        .unwrap(),
-                }
-            }
-        }));
-        return Result::Ok(rx);
+        let mut hat_receive_listener = HatReceiveListener {
+            config,
+            last_receive_time: SystemTime::now() - Duration::from_secs(600),
+            last_remote_name: Option::None,
+            last_button_name: Option::None,
+            response_queue_sender,
+            callback: Arc::new(Mutex::new(callback)),
+        };
+        self.raw_hat
+            .open(Box::new(move |msg| {
+                hat_receive_listener.handle_message(msg);
+            }))
+            .map_err(|err| HatError::RawHatError(err))?;
+
+        return Result::Ok(());
     }
 
     pub fn transmit(&mut self, remote_name: &str, button_name: &str) -> Result<(), HatError> {
@@ -289,5 +189,81 @@ impl Hat {
             .raw_hat
             .reset()
             .map_err(|err| HatError::RawHatError(err));
+    }
+}
+
+impl HatReceiveListener {
+    fn handle_message(&mut self, msg: RawHatMessage) {
+        match msg {
+            RawHatMessage::Ready => {}
+            RawHatMessage::UnknownLine(line) => {
+                self.on_hat_message(HatMessage::Error(format!("Unknown line: {}", line)));
+            }
+            RawHatMessage::Signal(signal) => {
+                self.handle_signal_message(signal);
+            }
+            RawHatMessage::OkResponse(message) => {
+                self.response_queue_sender
+                    .send(RawHatMessage::OkResponse(message))
+                    .unwrap_or_else(|err| {
+                        self.on_hat_message(HatMessage::Error(format!(
+                            "failed to queue response {}",
+                            err
+                        )));
+                    });
+            }
+            RawHatMessage::ErrResponse(err) => {
+                self.response_queue_sender
+                    .send(RawHatMessage::ErrResponse(err))
+                    .unwrap_or_else(|err| {
+                        self.on_hat_message(HatMessage::Error(format!(
+                            "failed to queue response {}",
+                            err
+                        )))
+                    });
+            }
+            RawHatMessage::Error(err) => {
+                self.on_hat_message(HatMessage::Error(err));
+            }
+        }
+    }
+
+    fn handle_signal_message(&mut self, signal: RawHatSignal) {
+        let config = self.config.lock().unwrap();
+        for remote_name in config.get_remote_names() {
+            let remote = config.get_remote(&remote_name).unwrap();
+            for button_name in remote.get_button_names() {
+                let button = config.get_button(&remote_name, &button_name).unwrap();
+                for button_signal in button.get_ir_signals() {
+                    if button_signal.get_protocol() == signal.protocol
+                        && button_signal.get_address() == signal.address
+                        && button_signal.get_command() == signal.command
+                    {
+                        let now = SystemTime::now();
+                        let time_since_last = now
+                            .duration_since(self.last_receive_time)
+                            .unwrap_or(Duration::from_millis(1));
+
+                        if button.get_debounce().is_none()
+                            || time_since_last > button.get_debounce().unwrap()
+                        {
+                            self.on_hat_message(HatMessage::ButtonPress(ButtonPress {
+                                remote_name: remote_name.to_string(),
+                                button_name: button_name.to_string(),
+                            }));
+                        }
+
+                        self.last_receive_time = now;
+                        self.last_remote_name = Option::Some(remote_name.to_string());
+                        self.last_button_name = Option::Some(button_name.to_string());
+                    }
+                }
+            }
+        }
+    }
+
+    fn on_hat_message(&self, msg: HatMessage) -> () {
+        let mut callback = self.callback.lock().unwrap();
+        callback(msg);
     }
 }

@@ -39,13 +39,10 @@ fn main() -> Result<(), String> {
         Config::read(filename, false).map_err(|err| format!("failed to read config {}", err))?;
 
     let mut hat = Hat::new(config, port);
-    let rx = hat
-        .open()
-        .map_err(|err| format!("failed to open hat {}", err))?;
-    thread::spawn(move || loop {
-        let msg = rx.recv().unwrap();
+    hat.open(Box::new(|msg| {
         println!("{:#?}", msg);
-    });
+    }))
+    .map_err(|err| format!("failed to open hat {}", err))?;
     println!("press ctrl+c to exit");
     loop {
         thread::sleep(time::Duration::from_secs(1));
@@ -60,6 +57,7 @@ mod tests {
     use std::sync::Arc;
     use std::sync::Mutex;
     use std::time::Duration;
+
     #[test]
     fn test_irlisten() {
         let mut socat_result = socat();
@@ -69,39 +67,44 @@ mod tests {
         let config = Config::from_str(
             r#"
 remotes:
-  remote1:
+  denon:
+    interval: 25
+    repeat: 2
     buttons:
-      button1:
-        signal: "100,200,300"
-      button2:
-        signal: "100,300,300"
-      button3:
-        signal: "200,500,600,700"
+      power:
+        debounce: 1000
+        ir_signals:
+          - protocol: Denon
+            address: 8
+            command: 135
+      volume_up:
+        ir_signals:
+          - protocol: Denon
+            address: 8
+            command: 79
+      volume_down:
+        ir_signals:
+          - protocol: Denon
+            address: 8
+            command: 143
 "#,
         )
         .unwrap();
 
-        thread::spawn(move || {
-            sp.write("!s100\n!s200\n!s300\n".as_bytes()).unwrap();
-            thread::sleep(Duration::from_millis(100));
-            sp.write("!s100\n!s200\n!s300\n".as_bytes()).unwrap();
-            thread::sleep(Duration::from_millis(100));
-            sp.write("!s100\n!s300\n!s300\n".as_bytes()).unwrap();
-        });
-
         let messages = Arc::new(Mutex::new(Vec::new()));
         let hat_messages = messages.clone();
-        let hat = Hat::new(
-            config,
-            &port,
-            Box::new(move |message| {
-                hat_messages.lock().unwrap().push(message);
-            }),
-        );
-        {
-            let mut my_hat = hat.lock().unwrap();
-            my_hat.open().unwrap();
-        }
+        let mut hat = Hat::new(config, &port);
+        hat.open(Box::new(move |message| {
+            hat_messages.lock().unwrap().push(message);
+        }))
+        .unwrap();
+
+        thread::spawn(move || {
+            thread::sleep(Duration::from_millis(100));
+            sp.write("!s1,8,135,0,0,0,42\n".as_bytes()).unwrap();
+            thread::sleep(Duration::from_millis(100));
+            sp.write("!s1,8,79,0,0,0,42\n".as_bytes()).unwrap();
+        });
 
         let mut message_index = 0;
         'outer: for _ in 0..100 {
@@ -110,10 +113,10 @@ remotes:
                 let mut msgs = messages.lock().unwrap();
                 while msgs.len() > 0 {
                     let message = msgs.remove(0);
-                    if message_index == 0 || message_index == 1 {
+                    if message_index == 0 {
                         if let ButtonPress(bp) = message {
-                            assert_eq!("remote1", bp.remote_name);
-                            assert_eq!("button1", bp.button_name);
+                            assert_eq!("denon", bp.remote_name);
+                            assert_eq!("power", bp.button_name);
                             message_index = message_index + 1;
                         } else {
                             panic!(
@@ -121,10 +124,10 @@ remotes:
                                 message_index, message
                             );
                         }
-                    } else if message_index == 2 {
+                    } else if message_index == 1 {
                         if let ButtonPress(bp) = message {
-                            assert_eq!("remote1", bp.remote_name);
-                            assert_eq!("button2", bp.button_name);
+                            assert_eq!("denon", bp.remote_name);
+                            assert_eq!("volume_up", bp.button_name);
                             message_index = message_index + 1;
                             break 'outer;
                         } else {
@@ -139,6 +142,6 @@ remotes:
                 }
             }
         }
-        assert_eq!(3, message_index);
+        assert_eq!(2, message_index);
     }
 }

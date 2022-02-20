@@ -1,5 +1,3 @@
-use std::thread;
-
 use clap::App;
 use clap::Arg;
 use log::info;
@@ -58,13 +56,10 @@ fn main() -> Result<(), String> {
         Config::read(filename, false).map_err(|err| format!("failed to read config {}", err))?;
 
     let mut hat = Hat::new(config, port);
-    let rx = hat
-        .open()
-        .map_err(|err| format!("failed to open hat {}", err))?;
-    thread::spawn(move || loop {
-        let msg = rx.recv().unwrap();
+    hat.open(Box::new(|msg| {
         println!("{:#?}", msg);
-    });
+    }))
+    .map_err(|err| format!("failed to open hat {}", err))?;
     hat.transmit(remote, button)
         .map_err(|err| format!("failed to transmit {}", err))?;
 
@@ -124,17 +119,11 @@ remotes:
             sp.write("+OK\n".as_bytes()).unwrap();
         });
 
-        let hat = Hat::new(
-            config,
-            &port,
-            Box::new(move |message| {
-                println!("{:?}", message);
-            }),
-        );
-        {
-            let mut my_hat = hat.lock().unwrap();
-            my_hat.open().unwrap();
-            my_hat.transmit("remote1", "button1").unwrap();
-        }
+        let mut hat = Hat::new(config, &port);
+        hat.open(Box::new(move |message| {
+            println!("{:?}", message);
+        }))
+        .unwrap();
+        hat.transmit("remote1", "button1").unwrap();
     }
 }

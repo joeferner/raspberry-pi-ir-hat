@@ -8,7 +8,7 @@ use std::fmt;
 use std::io::prelude::*;
 use std::option::Option;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{mpsc, Arc};
+use std::sync::Arc;
 use std::thread;
 use std::thread::JoinHandle;
 use std::time::Duration;
@@ -96,11 +96,12 @@ impl RawHat {
         };
     }
 
-    pub fn open(&mut self) -> Result<mpsc::Receiver<RawHatMessage>, RawHatError> {
+    pub fn open(
+        &mut self,
+        callback: Box<dyn FnMut(RawHatMessage) + Send>,
+    ) -> Result<(), RawHatError> {
         self.reset_pin = RawHat::get_reset_pin()?;
 
-        let (tx, rx): (mpsc::Sender<RawHatMessage>, mpsc::Receiver<RawHatMessage>) =
-            mpsc::channel();
         let port = serialport::new(self.port_path.clone(), 57600)
             .timeout(Duration::from_secs(1))
             .open()
@@ -111,6 +112,7 @@ impl RawHat {
         self.port = Option::Some(port);
         self.should_stop.store(false, Ordering::Relaxed);
         let thread_should_stop = self.should_stop.clone();
+        let mut my_callback = callback;
         self.read_thread = Option::Some(thread::spawn(move || {
             let mut buffer = Vec::new();
             loop {
@@ -127,15 +129,15 @@ impl RawHat {
                                     buffer.iter().collect::<String>().trim().to_string();
                                 debug!("received {}", line);
                                 if line.starts_with("!s") {
-                                    parse_signal_line(line, &tx);
+                                    parse_signal_line(line, &mut my_callback);
                                 } else if line.starts_with("?READY") {
-                                    tx.send(RawHatMessage::Ready).unwrap();
+                                    my_callback(RawHatMessage::Ready);
                                 } else if line.starts_with("+OK") {
-                                    parse_ok_line(line, &tx);
+                                    parse_ok_line(line, &mut my_callback);
                                 } else if line.starts_with("-ERR") {
-                                    parse_err_line(line, &tx);
+                                    parse_err_line(line, &mut my_callback);
                                 } else {
-                                    tx.send(RawHatMessage::UnknownLine(line)).unwrap();
+                                    my_callback(RawHatMessage::UnknownLine(line));
                                 }
                                 buffer.clear();
                             }
@@ -144,14 +146,14 @@ impl RawHat {
                     }
                     Err(err) => {
                         if err.kind() != std::io::ErrorKind::TimedOut {
-                            tx.send(RawHatMessage::Error(format!("{}", err))).unwrap();
+                            my_callback(RawHatMessage::Error(format!("{}", err)));
                         }
                     }
                 }
             }
         }));
 
-        return Result::Ok(rx);
+        return Result::Ok(());
     }
 
     pub fn send_carrier_frequency(&mut self, frequency: u32) -> Result<(), RawHatError> {
@@ -231,17 +233,16 @@ impl Drop for RawHat {
     }
 }
 
-fn parse_signal_line(line: String, tx: &mpsc::Sender<RawHatMessage>) {
+fn parse_signal_line(line: String, callback: &mut Box<dyn FnMut(RawHatMessage) + Send>) {
     match line.strip_prefix("!s") {
         Option::Some(val_str) => {
             let parts = val_str.split(',').collect::<Vec<&str>>();
             if parts.len() != 7 {
-                tx.send(RawHatMessage::Error(format!(
+                callback(RawHatMessage::Error(format!(
                     "failed to parse signal line: {} => expected 7 parts found {}",
                     line,
                     parts.len()
-                )))
-                .unwrap();
+                )));
             } else {
                 let protocol_str = parts.get(0).unwrap();
                 let address_str = parts.get(1).unwrap();
@@ -255,20 +256,18 @@ fn parse_signal_line(line: String, tx: &mpsc::Sender<RawHatMessage>) {
                     Result::Ok(val) => match num::FromPrimitive::from_u8(val) {
                         Option::Some(p) => p,
                         Option::None => {
-                            tx.send(RawHatMessage::Error(format!(
+                            callback(RawHatMessage::Error(format!(
                                 "failed to parse signal line: {} => invalid protocol {}",
                                 line, protocol_str
-                            )))
-                            .unwrap();
+                            )));
                             return;
                         }
                     },
                     Result::Err(err) => {
-                        tx.send(RawHatMessage::Error(format!(
+                        callback(RawHatMessage::Error(format!(
                             "failed to parse signal line: {} => invalid protocol {}: {}",
                             line, protocol_str, err
-                        )))
-                        .unwrap();
+                        )));
                         return;
                     }
                 };
@@ -276,11 +275,10 @@ fn parse_signal_line(line: String, tx: &mpsc::Sender<RawHatMessage>) {
                 let address = match address_str.parse::<u32>() {
                     Result::Ok(val) => val,
                     Result::Err(err) => {
-                        tx.send(RawHatMessage::Error(format!(
+                        callback(RawHatMessage::Error(format!(
                             "failed to parse signal line: {} => invalid address {}: {}",
                             line, address_str, err
-                        )))
-                        .unwrap();
+                        )));
                         return;
                     }
                 };
@@ -288,11 +286,10 @@ fn parse_signal_line(line: String, tx: &mpsc::Sender<RawHatMessage>) {
                 let command = match command_str.parse::<u32>() {
                     Result::Ok(val) => val,
                     Result::Err(err) => {
-                        tx.send(RawHatMessage::Error(format!(
+                        callback(RawHatMessage::Error(format!(
                             "failed to parse signal line: {} => invalid command {}: {}",
                             line, command_str, err
-                        )))
-                        .unwrap();
+                        )));
                         return;
                     }
                 };
@@ -300,11 +297,10 @@ fn parse_signal_line(line: String, tx: &mpsc::Sender<RawHatMessage>) {
                 let repeat = match repeat_str.parse::<u32>() {
                     Result::Ok(val) => val != 0,
                     Result::Err(err) => {
-                        tx.send(RawHatMessage::Error(format!(
+                        callback(RawHatMessage::Error(format!(
                             "failed to parse signal line: {} => invalid repeat {}: {}",
                             line, repeat_str, err
-                        )))
-                        .unwrap();
+                        )));
                         return;
                     }
                 };
@@ -312,11 +308,10 @@ fn parse_signal_line(line: String, tx: &mpsc::Sender<RawHatMessage>) {
                 let auto_repeat = match auto_repeat_str.parse::<u32>() {
                     Result::Ok(val) => val != 0,
                     Result::Err(err) => {
-                        tx.send(RawHatMessage::Error(format!(
+                        callback(RawHatMessage::Error(format!(
                             "failed to parse signal line: {} => invalid auto repeat {}: {}",
                             line, auto_repeat_str, err
-                        )))
-                        .unwrap();
+                        )));
                         return;
                     }
                 };
@@ -324,11 +319,10 @@ fn parse_signal_line(line: String, tx: &mpsc::Sender<RawHatMessage>) {
                 let parity_failed = match parity_failed_str.parse::<u32>() {
                     Result::Ok(val) => val != 0,
                     Result::Err(err) => {
-                        tx.send(RawHatMessage::Error(format!(
+                        callback(RawHatMessage::Error(format!(
                             "failed to parse signal line: {} => invalid parity failed {}: {}",
                             line, parity_failed_str, err
-                        )))
-                        .unwrap();
+                        )));
                         return;
                     }
                 };
@@ -336,16 +330,15 @@ fn parse_signal_line(line: String, tx: &mpsc::Sender<RawHatMessage>) {
                 let delta = match delta_str.parse::<u64>() {
                     Result::Ok(val) => Duration::from_millis(val),
                     Result::Err(err) => {
-                        tx.send(RawHatMessage::Error(format!(
+                        callback(RawHatMessage::Error(format!(
                             "failed to parse signal line: {} => invalid delta {}: {}",
                             line, delta_str, err
-                        )))
-                        .unwrap();
+                        )));
                         return;
                     }
                 };
 
-                tx.send(RawHatMessage::Signal(RawHatSignal {
+                callback(RawHatMessage::Signal(RawHatSignal {
                     protocol,
                     address,
                     command,
@@ -353,42 +346,39 @@ fn parse_signal_line(line: String, tx: &mpsc::Sender<RawHatMessage>) {
                     auto_repeat,
                     parity_failed,
                     delta,
-                }))
-                .unwrap();
+                }));
             }
         }
         Option::None => {
-            tx.send(RawHatMessage::UnknownLine(line)).unwrap();
+            callback(RawHatMessage::UnknownLine(line));
         }
     }
 }
 
-fn parse_ok_line(line: String, tx: &mpsc::Sender<RawHatMessage>) {
+fn parse_ok_line(line: String, callback: &mut Box<dyn FnMut(RawHatMessage) + Send>) {
     match line.strip_prefix("+OK") {
         Option::Some(val_str) => {
             let val_str = val_str.trim();
             if val_str.len() > 0 {
-                tx.send(RawHatMessage::OkResponse(Option::Some(val_str.to_string())))
-                    .unwrap();
+                callback(RawHatMessage::OkResponse(Option::Some(val_str.to_string())));
             } else {
-                tx.send(RawHatMessage::OkResponse(Option::None)).unwrap();
+                callback(RawHatMessage::OkResponse(Option::None));
             }
         }
         Option::None => {
-            tx.send(RawHatMessage::UnknownLine(line)).unwrap();
+            callback(RawHatMessage::UnknownLine(line));
         }
     }
 }
 
-fn parse_err_line(line: String, tx: &mpsc::Sender<RawHatMessage>) {
+fn parse_err_line(line: String, callback: &mut Box<dyn FnMut(RawHatMessage) + Send>) {
     match line.strip_prefix("-ERR") {
         Option::Some(val_str) => {
             let val_str = val_str.trim();
-            tx.send(RawHatMessage::ErrResponse(val_str.to_string()))
-                .unwrap();
+            callback(RawHatMessage::ErrResponse(val_str.to_string()));
         }
         Option::None => {
-            tx.send(RawHatMessage::UnknownLine(line)).unwrap();
+            callback(RawHatMessage::UnknownLine(line));
         }
     }
 }
