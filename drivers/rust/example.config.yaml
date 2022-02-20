@@ -4,6 +4,7 @@ remotes:
     repeat: 2
     buttons:
       power:
+        single_shot: true
         debounce: 1000
         ir_signals:
           - protocol: NEC
@@ -14,17 +15,20 @@ remotes:
     repeat: 2
     buttons:
       power:
+        single_shot: true 
         debounce: 1000
         ir_signals:
           - protocol: Denon
             address: 8
             command: 135
       volume_up:
+        debounce: 250
         ir_signals:
           - protocol: Denon
             address: 8
             command: 79
       volume_down:
+        debounce: 250
         ir_signals:
           - protocol: Denon
             address: 8

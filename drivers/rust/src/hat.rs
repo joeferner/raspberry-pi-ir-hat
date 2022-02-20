@@ -29,6 +29,7 @@ pub struct Hat {
 struct HatReceiveListener {
     config: Arc<Mutex<Config>>,
     last_receive_time: SystemTime,
+    last_callback: SystemTime,
     last_remote_name: Option<String>,
     last_button_name: Option<String>,
     response_queue_sender: mpsc::Sender<RawHatMessage>,
@@ -99,6 +100,7 @@ impl Hat {
         let mut hat_receive_listener = HatReceiveListener {
             config,
             last_receive_time: SystemTime::now() - Duration::from_secs(600),
+            last_callback: SystemTime::now() - Duration::from_secs(600),
             last_remote_name: Option::None,
             last_button_name: Option::None,
             response_queue_sender,
@@ -240,9 +242,13 @@ impl HatReceiveListener {
                         && button_signal.get_command() == signal.command
                     {
                         let now = SystemTime::now();
-                        let time_since_last = now
-                            .duration_since(self.last_receive_time)
-                            .unwrap_or(Duration::from_millis(1));
+                        let time_since_last = if button.get_single_shot() {
+                            now.duration_since(self.last_receive_time)
+                                .unwrap_or(Duration::from_millis(1))
+                        } else {
+                            now.duration_since(self.last_callback)
+                                .unwrap_or(Duration::from_millis(1))
+                        };
 
                         if button.get_debounce().is_none()
                             || time_since_last > button.get_debounce().unwrap()
@@ -251,6 +257,7 @@ impl HatReceiveListener {
                                 remote_name: remote_name.to_string(),
                                 button_name: button_name.to_string(),
                             }));
+                            self.last_callback = now;
                         }
 
                         self.last_receive_time = now;

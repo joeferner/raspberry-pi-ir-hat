@@ -28,6 +28,8 @@ pub struct ConfigButton {
     ir_signals: Vec<ConfigIrSignal>,
     /// debounces button press if less than duration (milliseconds)
     debounce: Option<u64>,
+    /// only callback once until debounce passed, other wise callback at most every debounce
+    single_shot: Option<bool>
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Copy)]
@@ -182,6 +184,13 @@ impl ConfigButton {
         return match self.debounce {
             Option::None => Option::None,
             Option::Some(v) => Option::Some(Duration::from_millis(v)),
+        };
+    }
+
+    pub fn get_single_shot(&self) -> bool {
+        return match self.single_shot {
+            Option::None => false,
+            Option::Some(v) => v,
         };
     }
 }
