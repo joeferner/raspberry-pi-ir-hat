@@ -11,7 +11,7 @@ fn main() -> Result<(), String> {
     let args = App::new("Raspberry Pi IrHat - irplay")
         .version("1.0.0")
         .author("Joe Ferner <joe@fernsroth.com>")
-        .about("Listen for remote button presses")
+        .about("Transmit a remote button presses")
         .arg(
             Arg::with_name("file")
                 .short("f")
@@ -56,10 +56,12 @@ fn main() -> Result<(), String> {
         Config::read(filename, false).map_err(|err| format!("failed to read config {}", err))?;
 
     let mut hat = Hat::new(config, port);
+
     hat.open(Box::new(|msg| {
         println!("{:#?}", msg);
     }))
     .map_err(|err| format!("failed to open hat {}", err))?;
+
     hat.transmit(remote, button)
         .map_err(|err| format!("failed to transmit {}", err))?;
 

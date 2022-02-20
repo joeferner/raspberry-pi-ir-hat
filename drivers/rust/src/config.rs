@@ -20,7 +20,7 @@ pub struct ConfigRemote {
     /// interval between repeated signals (milliseconds)
     interval: Option<u64>,
     /// number of times signal is repeated for each button press
-    repeat: Option<u32>
+    repeat: Option<u32>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
@@ -29,14 +29,15 @@ pub struct ConfigButton {
     /// debounces button press if less than duration (milliseconds)
     debounce: Option<u64>,
     /// only callback once until debounce passed, other wise callback at most every debounce
-    single_shot: Option<bool>
+    single_shot: Option<bool>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Copy)]
 pub struct ConfigIrSignal {
-    protocol: Protocol,
-    address: u32,
-    command: u32,
+    pub protocol: Protocol,
+    pub address: u32,
+    pub command: u32,
+    pub number_of_repeats: Option<u32>,
 }
 
 #[derive(Debug)]

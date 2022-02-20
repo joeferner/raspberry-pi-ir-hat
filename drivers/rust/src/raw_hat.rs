@@ -1,4 +1,4 @@
-use log::debug;
+use log::{debug, info};
 use num;
 use rppal::gpio;
 use rppal::gpio::OutputPin;
@@ -102,6 +102,8 @@ impl RawHat {
     ) -> Result<(), RawHatError> {
         self.reset_pin = RawHat::get_reset_pin()?;
 
+        info!("opening raw hat {}", self.port_path);
+
         let port = serialport::new(self.port_path.clone(), 57600)
             .timeout(Duration::from_secs(1))
             .open()
@@ -153,21 +155,23 @@ impl RawHat {
             }
         }));
 
+        info!("raw hat opened");
         return Result::Ok(());
     }
 
-    pub fn send_carrier_frequency(&mut self, frequency: u32) -> Result<(), RawHatError> {
-        let s = format!("+f{}\n", frequency);
+    pub fn send_signal(
+        &mut self,
+        protocol: Protocol,
+        address: u32,
+        command: u32,
+        number_of_repeats: Option<u32>,
+    ) -> Result<(), RawHatError> {
+        let mut s = format!("+s{},{},{}", protocol.to_u8(), address, command);
+        if let Option::Some(number_of_repeats) = number_of_repeats {
+            s += format!(",{}", number_of_repeats).as_str();
+        }
+        s += "\n";
         return self.send(&s);
-    }
-
-    pub fn send_signal(&mut self, signal_on: u32, signal_off: u32) -> Result<(), RawHatError> {
-        let s = format!("+s{},{}\n", signal_on, signal_off);
-        return self.send(&s);
-    }
-
-    pub fn send_signal_complete(&mut self) -> Result<(), RawHatError> {
-        return self.send("+send\n");
     }
 
     pub fn send_get_current(&mut self, channel: CurrentChannel) -> Result<(), RawHatError> {

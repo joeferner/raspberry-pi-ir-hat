@@ -1,5 +1,4 @@
 #include "IrTx.hpp"
-#include "BothUSARTWriter.hpp"
 
 namespace peripheral {
 
@@ -154,7 +153,6 @@ void IrTx::stop() {
 void IrTx::nextSignal() {
     if (this->txBuffer.getAvailable() < 2) {
         this->stop();
-        usartOutput.write("?send complete\n");
         return;
     }
 

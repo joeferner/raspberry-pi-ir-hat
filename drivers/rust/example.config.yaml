@@ -10,6 +10,7 @@ remotes:
           - protocol: NEC
             address: 170
             command: 28
+            number_of_repeats: 2
   denon:
     interval: 25
     repeat: 2
@@ -21,15 +22,18 @@ remotes:
           - protocol: Denon
             address: 8
             command: 135
+            number_of_repeats: 2
       volume_up:
         debounce: 250
         ir_signals:
           - protocol: Denon
             address: 8
             command: 79
+            number_of_repeats: 2
       volume_down:
         debounce: 250
         ir_signals:
           - protocol: Denon
             address: 8
             command: 143
+            number_of_repeats: 2

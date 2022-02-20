@@ -40,13 +40,13 @@
             },
             "args": [
                 "--file",
-                "example.config.json",
+                "example.config.yaml",
                 "--port",
-                "/dev/pts/4",
+                "/dev/ttyUSB0",
                 "--remote",
-                "testRemote",
+                "denon",
                 "--button",
-                "testButton"
+                "power"
             ],
             "cwd": "${workspaceFolder}"
         },

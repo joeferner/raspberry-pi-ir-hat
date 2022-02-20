@@ -4,6 +4,7 @@ use crate::Config;
 use crate::CurrentChannel;
 use crate::RawHatError;
 use crate::{RawHat, RawHatMessage};
+use log::info;
 use std::error::Error;
 use std::fmt;
 use std::sync::mpsc;
@@ -90,6 +91,7 @@ impl Hat {
     }
 
     pub fn open(&mut self, callback: Box<dyn FnMut(HatMessage) + Send>) -> Result<(), HatError> {
+        info!("opening hat");
         let (response_queue_sender, response_queue_receiver): (
             mpsc::Sender<RawHatMessage>,
             mpsc::Receiver<RawHatMessage>,
@@ -112,24 +114,28 @@ impl Hat {
             }))
             .map_err(|err| HatError::RawHatError(err))?;
 
+        info!("hat opened");
         return Result::Ok(());
     }
 
     pub fn transmit(&mut self, remote_name: &str, button_name: &str) -> Result<(), HatError> {
-        let config = self.config.lock().unwrap();
-
-        let _button =
+        let config = self.config.clone();
+        let config = config.lock().unwrap();
+        let button =
             config
                 .get_button(remote_name, button_name)
                 .ok_or_else(|| HatError::InvalidButton {
                     remote_name: remote_name.to_string(),
                     button_name: button_name.to_string(),
                 })?;
-        // TODO
-        // let signals: Vec<u32> = button.get_signals();
 
-        // return self.send_signals(38000, &signals);
-        return Result::Err(HatError::ErrResponse("TODO".to_string()));
+        for s in button.get_ir_signals() {
+            self.raw_hat
+                .send_signal(s.protocol, s.address, s.command, s.number_of_repeats)
+                .map_err(|err| HatError::RawHatError(err))?;
+            self.wait_for_response()?;
+        }
+        return Result::Ok(());
     }
 
     pub fn get_current(&mut self, channel: CurrentChannel) -> Result<Current, HatError> {
