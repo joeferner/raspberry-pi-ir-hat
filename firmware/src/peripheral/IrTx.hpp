@@ -26,7 +26,6 @@ class IrTx {
   hal::Timer<hal::timer::TimerAddress::TIM17Address>* irTxCarrierTimer;
   hal::Timer<hal::timer::TimerAddress::TIM16Address>* irTxSignalTimer;
   Queue<uint32_t, IR_TX_BUFFER_SAMPLES> txBuffer;
-  volatile bool sending;
 
  public:
   IrTx(
@@ -50,9 +49,7 @@ class IrTx {
 
   void write(uint32_t t_on, uint32_t t_off);
 
-  void send();
-
-  void sendAndWait();
+  void waitForSendToComplete();
 
   void handleInterrupt();
 
@@ -61,8 +58,6 @@ class IrTx {
   void reloadWatchdogCounter() const;
 
  private:
-  void enableGpio(bool enable) const;
-
   void stop();
 
   void nextSignal();

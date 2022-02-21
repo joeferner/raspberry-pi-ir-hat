@@ -88,7 +88,7 @@ bool Denon::encode(
         DENON_BITS,
         Endian::MSB,
         StopBit::True);
-    irTx.sendAndWait();
+    irTx.waitForSendToComplete();
 
     // Inverted autorepeat frame
     irTx.delayMicros(DENON_AUTO_REPEAT_SPACE);
@@ -102,7 +102,7 @@ bool Denon::encode(
         DENON_BITS,
         Endian::MSB,
         StopBit::True);
-    irTx.sendAndWait();
+    irTx.waitForSendToComplete();
 
     tNumberOfCommands--;
     // skip last delay!
@@ -112,7 +112,6 @@ bool Denon::encode(
     }
   }
 
-  irTx.send();
   return true;
 }
 

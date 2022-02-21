@@ -1,4 +1,5 @@
 #include "IrTx.hpp"
+#include "BothUSARTWriter.hpp"
 
 namespace peripheral {
 
@@ -28,18 +29,16 @@ void IrTx::initialize(hal::System& system, hal::NVICHal& nvic) {
         hal::timer::ChannelN::Channel1, hal::timer::OutputComparePolarity::High);
     this->irTxSignalTimer->setOutputComparePolarity(
         hal::timer::ChannelN::Channel1N, hal::timer::OutputComparePolarity::High);
-    // TODO set this to high?
     this->irTxSignalTimer->setOutputCompareIdleState(
-        hal::timer::ChannelN::Channel1, hal::timer::OutputCompareIdleState::Low);
+        hal::timer::ChannelN::Channel1, hal::timer::OutputCompareIdleState::High);
     this->irTxSignalTimer->setOutputCompareIdleState(
-        hal::timer::ChannelN::Channel1N, hal::timer::OutputCompareIdleState::Low);
+        hal::timer::ChannelN::Channel1N, hal::timer::OutputCompareIdleState::High);
     this->irTxSignalTimer->setOutputCompareValue(hal::timer::Channel::Channel1, 0);
     this->irTxSignalTimer->disableOutputCompareFast(hal::timer::Channel::Channel1);
 
     this->irTxCarrierTimer->enableClock(*this->clocks);
     this->irTxCarrierTimer->setCounterMode(hal::timer::CounterMode::Up);
     this->irTxCarrierTimer->setClockDivision(hal::timer::ClockDivision::DIV_1);
-    this->irTxCarrierTimer->setAutoReload(65535);
     this->irTxCarrierTimer->setPrescaler(0);
     this->irTxCarrierTimer->setRepetitionCounter(0);
     this->irTxCarrierTimer->disableAutoReloadPreload();
@@ -51,25 +50,16 @@ void IrTx::initialize(hal::System& system, hal::NVICHal& nvic) {
         hal::timer::ChannelN::Channel1, hal::timer::OutputComparePolarity::High);
     this->irTxCarrierTimer->setOutputComparePolarity(
         hal::timer::ChannelN::Channel1N, hal::timer::OutputComparePolarity::High);
-    // TODO set this to high?
     this->irTxCarrierTimer->setOutputCompareIdleState(
-        hal::timer::ChannelN::Channel1, hal::timer::OutputCompareIdleState::Low);
+        hal::timer::ChannelN::Channel1, hal::timer::OutputCompareIdleState::High);
     this->irTxCarrierTimer->setOutputCompareIdleState(
-        hal::timer::ChannelN::Channel1N, hal::timer::OutputCompareIdleState::Low);
-    this->irTxCarrierTimer->setOutputCompareValue(hal::timer::Channel::Channel1, 0);
+        hal::timer::ChannelN::Channel1N, hal::timer::OutputCompareIdleState::High);
     this->irTxCarrierTimer->disableOutputCompareFast(hal::timer::Channel::Channel1);
 
     nvic.setPriority(hal::nvic::IRQnType::TIM16_Irq, 0);
     nvic.enableInterrupt(hal::nvic::IRQnType::TIM16_Irq);
 
-    this->enableGpio(false);
-
-    this->sending = false;
-
-    // Not sure why we need this but the first transmit is always wrong
     this->reset(38000);
-    this->write(1000, 1000);
-    this->send();
 }
 
 void IrTx::reset(uint32_t carrierFrequency) {
@@ -80,16 +70,20 @@ void IrTx::reset(uint32_t carrierFrequency) {
     uint32_t autoReload = this->irTxCarrierTimer->setAutoReload(SystemCoreClock, carrierPrescaler, carrierFrequency);
     this->irTxCarrierTimer->setOutputCompareValue(hal::timer::Channel::Channel1, autoReload / 4);  // 25% duty cycle
     this->irTxCarrierTimer->enableCaptureCompareChannel(hal::timer::ChannelN::Channel1);
-    this->irTxCarrierTimer->enableAllOutputs();
 
     // init signal timer
     this->irTxSignalTimer->setPrescaler(signalPrescaler);
-    this->irTxSignalTimer->setAutoReload(65000);
     this->irTxSignalTimer->disableOutputComparePreload(hal::timer::Channel::Channel1);
     this->irTxSignalTimer->enableUpdateInterrupt();
     this->irTxSignalTimer->enableCaptureCompareChannel(hal::timer::ChannelN::Channel1);
-    this->irTxSignalTimer->setOutputCompareValue(hal::timer::Channel::Channel1, 30000);
+
+    this->stop();
+
+    this->irTxCarrierTimer->enableAllOutputs();
     this->irTxSignalTimer->enableAllOutputs();
+
+    this->irTxCarrierTimer->enableCounter();
+    this->irTxSignalTimer->enableCounter();
 }
 
 void IrTx::delayMicros(uint32_t microseconds) {
@@ -97,30 +91,19 @@ void IrTx::delayMicros(uint32_t microseconds) {
 }
 
 void IrTx::write(uint32_t t_on, uint32_t t_off) {
+    uint32_t t_on_scaled = this->irTxSignalTimer->calculateDelay(SystemCoreClock, signalPrescaler, t_on);
+    uint32_t t_off_scaled = this->irTxSignalTimer->calculateDelay(SystemCoreClock, signalPrescaler, t_off);
+
     while (this->txBuffer.isFull()) {
-        this->send();
     }
-    this->txBuffer.push(t_on);
+    this->txBuffer.push(t_on_scaled);
     while (this->txBuffer.isFull()) {
-        this->send();
     }
-    this->txBuffer.push(t_off);
+    this->txBuffer.push(t_off_scaled);
 }
 
-void IrTx::send() {
-    if (!this->sending) {
-        this->sending = true;
-
-        this->nextSignal();
-        this->enableGpio(true);
-        this->irTxCarrierTimer->enableCounter();
-        this->irTxSignalTimer->enableCounter();
-    }
-}
-
-void IrTx::sendAndWait() {
-    this->send();
-    while(this->sending);
+void IrTx::waitForSendToComplete() {
+    while (!this->txBuffer.isEmpty());
 }
 
 void IrTx::handleInterrupt() {
@@ -134,20 +117,9 @@ uint32_t IrTx::getNumberOfSamplesInBuffer() const {
     return this->txBuffer.getAvailable();
 }
 
-void IrTx::enableGpio(bool enable) const {
-    this->irOutPin->setMode(enable ? hal::gpio::Mode::Alternate : hal::gpio::Mode::Output);
-    if (enable) {
-        this->irOutPin->setOutputPin();
-    } else {
-        this->irOutPin->resetOutputPin();
-    }
-}
-
 void IrTx::stop() {
-    this->sending = false;
-    this->irTxCarrierTimer->disableCounter();
-    this->irTxSignalTimer->disableCounter();
-    this->enableGpio(false);
+    this->irTxSignalTimer->setAutoReload(1000);
+    this->irTxSignalTimer->setOutputCompareValue(hal::timer::Channel::Channel1, 0);
 }
 
 void IrTx::nextSignal() {
@@ -158,13 +130,9 @@ void IrTx::nextSignal() {
 
     uint32_t t_on = this->txBuffer.pop();
     uint32_t t_off = this->txBuffer.pop();
-
-    uint32_t on_t = this->irTxSignalTimer->calculateDelay(SystemCoreClock, signalPrescaler, t_on);
-    uint32_t off_t = this->irTxSignalTimer->calculateDelay(SystemCoreClock, signalPrescaler, t_off);
-    uint32_t total_t = on_t + off_t;
-
+    uint32_t total_t = t_on + t_off;
     this->irTxSignalTimer->setAutoReload(total_t);
-    this->irTxSignalTimer->setOutputCompareValue(hal::timer::Channel::Channel1, on_t);
+    this->irTxSignalTimer->setOutputCompareValue(hal::timer::Channel::Channel1, t_on);
 }
 
 void IrTx::reloadWatchdogCounter() const {

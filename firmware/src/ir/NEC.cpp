@@ -128,7 +128,7 @@ bool NEC::sendNECRaw(peripheral::IrTx& irTx, uint32_t aRawData, uint_fast8_t aNu
   // LSB first + stop bit
   sendPulseDistanceWidthData(
       irTx, NEC_BIT_MARK, NEC_ONE_SPACE, NEC_BIT_MARK, NEC_ZERO_SPACE, aRawData, NEC_BITS, Endian::LSB, StopBit::True);
-  irTx.sendAndWait();
+  irTx.waitForSendToComplete();
 
   for (uint32_t i = 0; i < aNumberOfRepeats; ++i) {
     irTx.reloadWatchdogCounter();
@@ -150,7 +150,6 @@ void NEC::sendNECRepeat(peripheral::IrTx& irTx) const {
   irTx.reset(NEC_KHZ);
   irTx.write(NEC_HEADER_MARK, NEC_REPEAT_HEADER_SPACE);
   irTx.write(NEC_BIT_MARK, 100);
-  irTx.send();
 }
 
 }  // namespace ir

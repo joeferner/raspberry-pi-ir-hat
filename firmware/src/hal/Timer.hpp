@@ -332,6 +332,10 @@ class Timer {
     LL_TIM_EnableCounter(TIMAddress());
   }
 
+  bool isEnabled() {
+    return LL_TIM_IsEnabledCounter(TIMAddress());
+  }
+
   void disableCounter() {
     LL_TIM_DisableCounter(TIMAddress());
   }
