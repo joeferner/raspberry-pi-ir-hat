@@ -237,6 +237,7 @@ impl HatReceiveListener {
     }
 
     fn handle_signal_message(&mut self, signal: RawHatSignal) {
+        let now = SystemTime::now();
         let config = self.config.lock().unwrap();
         for remote_name in config.get_remote_names() {
             let remote = config.get_remote(&remote_name).unwrap();
@@ -247,7 +248,17 @@ impl HatReceiveListener {
                         && button_signal.get_address() == signal.address
                         && button_signal.get_command() == signal.command
                     {
-                        let now = SystemTime::now();
+                        if let Option::Some(last_remote_name) = &self.last_remote_name {
+                            if let Option::Some(last_button_name) = &self.last_button_name {
+                                if remote_name.ne(last_remote_name)
+                                    || button_name.ne(last_button_name)
+                                {
+                                    self.last_receive_time = now - Duration::from_secs(600);
+                                    self.last_callback = now - Duration::from_secs(600);
+                                }
+                            }
+                        }
+
                         let time_since_last = if button.get_single_shot() {
                             now.duration_since(self.last_receive_time)
                                 .unwrap_or(Duration::from_millis(1))

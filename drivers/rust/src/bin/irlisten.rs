@@ -72,17 +72,19 @@ remotes:
     repeat: 2
     buttons:
       power:
-        debounce: 1000
+        debounce: 100
         ir_signals:
           - protocol: Denon
             address: 8
             command: 135
       volume_up:
+        debounce: 10
         ir_signals:
           - protocol: Denon
             address: 8
             command: 79
       volume_down:
+        debounce: 10
         ir_signals:
           - protocol: Denon
             address: 8
@@ -100,16 +102,20 @@ remotes:
         .unwrap();
 
         thread::spawn(move || {
-            thread::sleep(Duration::from_millis(100));
+            thread::sleep(Duration::from_millis(10));
             sp.write("!s1,8,135,0,0,0,42\n".as_bytes()).unwrap();
-            thread::sleep(Duration::from_millis(100));
+            thread::sleep(Duration::from_millis(10));
+            sp.write("!s1,8,135,0,0,0,42\n".as_bytes()).unwrap();
+            thread::sleep(Duration::from_millis(10));
             sp.write("!s1,8,79,0,0,0,42\n".as_bytes()).unwrap();
+            thread::sleep(Duration::from_millis(15));
+            sp.write("!s1,8,143,0,0,0,42\n".as_bytes()).unwrap();
         });
 
         let mut message_index = 0;
         'outer: for _ in 0..100 {
-            thread::sleep(Duration::from_millis(100));
             {
+                thread::sleep(Duration::from_millis(10));
                 let mut msgs = messages.lock().unwrap();
                 while msgs.len() > 0 {
                     let message = msgs.remove(0);
@@ -129,6 +135,17 @@ remotes:
                             assert_eq!("denon", bp.remote_name);
                             assert_eq!("volume_up", bp.button_name);
                             message_index = message_index + 1;
+                        } else {
+                            panic!(
+                                "unexpected message at offset {}: {:?}",
+                                message_index, message
+                            );
+                        }
+                    } else if message_index == 2 {
+                        if let ButtonPress(bp) = message {
+                            assert_eq!("denon", bp.remote_name);
+                            assert_eq!("volume_down", bp.button_name);
+                            message_index = message_index + 1;
                             break 'outer;
                         } else {
                             panic!(
@@ -142,6 +159,6 @@ remotes:
                 }
             }
         }
-        assert_eq!(2, message_index);
+        assert_eq!(3, message_index);
     }
 }
