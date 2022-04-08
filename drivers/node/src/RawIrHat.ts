@@ -11,6 +11,9 @@ import { sleep } from "./utils";
 
 const debug = Debug("irhat:RawIrHat");
 
+const RESET_PIN = 17;
+const RESET_DURATION_MS = 500;
+
 export interface RawIrHat {
   open(): Promise<void>;
   close(): Promise<void>;
@@ -34,8 +37,8 @@ export class RawIrHatImpl implements RawIrHat {
       this.resetDuration = (options as IocRawIrHatOptions).resetDuration;
     } else {
       this.serialPort = new IrHatSerialPortImpl(options);
-      this.resetGpio = new IrHatGpioImpl();
-      this.resetDuration = 500;
+      this.resetGpio = new IrHatGpioImpl(RESET_PIN);
+      this.resetDuration = RESET_DURATION_MS;
     }
   }
 
@@ -53,12 +56,13 @@ export class RawIrHatImpl implements RawIrHat {
     await this.reset();
   }
 
-  close(): Promise<void> {
+  async close(): Promise<void> {
     if (!this.isOpen()) {
       throw new Error("raw hat is not open");
     }
     debug("closing RawIrHat");
     this.serialPortRxSubscription?.unsubscribe();
+    await this.resetGpio.close();
     return this.serialPort.close();
   }
 

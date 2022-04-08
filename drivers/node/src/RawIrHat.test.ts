@@ -78,6 +78,10 @@ class MockIrHatGpio implements IrHatGpio {
     this.values.push(value);
     return Promise.resolve();
   }
+
+  close(): Promise<void> {
+    return Promise.resolve();
+  }
 }
 
 class MockIrHatSerialPort implements IrHatSerialPort {

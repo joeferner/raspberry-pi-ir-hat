@@ -26,7 +26,9 @@
   },
   "homepage": "https://github.com/joeferner/raspberry-pi-ir-hat#readme",
   "dependencies": {
+    "async-mutex": "^0.3.2",
     "debug": "^4.3.4",
+    "onoff": "^6.0.3",
     "rxjs": "^7.5.5",
     "serialport": "^10.4.0"
   },

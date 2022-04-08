@@ -9,6 +9,7 @@ import {
 } from "./RawIrHat";
 import Debug from "debug";
 import { sleep } from "./utils";
+import { Mutex } from "async-mutex";
 
 const debug = Debug("irhat:IrHat");
 
@@ -16,6 +17,7 @@ export class IrHat {
   private rxSubject = new Subject<IrHatMessage>();
   private rawIrHat: RawIrHat;
   private rawIrHatRxSubscription?: Subscription;
+  private sendSignalMutex = new Mutex();
 
   constructor(options: IrHatOptions | IocIrHatOptions) {
     if (isIocIrHatOptions(options)) {
@@ -69,21 +71,22 @@ export class IrHat {
       messageQueue.push(msg);
     });
     try {
-      // TODO do lock
-      await sendFn();
-      const endTime = Date.now() + optionsWithDefaults.timeout;
-      while (Date.now() < endTime) {
-        while (messageQueue.length > 0) {
-          const message = messageQueue.splice(0, 1)[0];
-          if (message.type === "ok") {
-            return;
-          } else if (message.type === "error") {
-            throw new Error(message.error);
+      await this.sendSignalMutex.runExclusive(async () => {
+        await sendFn();
+        const endTime = Date.now() + optionsWithDefaults.timeout;
+        while (Date.now() < endTime) {
+          while (messageQueue.length > 0) {
+            const message = messageQueue.splice(0, 1)[0];
+            if (message.type === "ok") {
+              return;
+            } else if (message.type === "error") {
+              throw new Error(message.error);
+            }
           }
+          await sleep(1);
         }
-        await sleep(1);
-      }
-      throw new Error("timeout");
+        throw new Error("timeout");
+      });
     } finally {
       subscription.unsubscribe();
     }
