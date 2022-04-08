@@ -1,11 +1,13 @@
 import { Observable, Subject, Subscription } from "rxjs";
 import {
   RawIrHat,
+  RawIrHatMessage,
   RawIrHatMessageSignal,
   RawIrHatOptions,
   RawIrHatSignal,
 } from "./RawIrHat";
 import Debug from "debug";
+import { sleep } from "./utils";
 
 const debug = Debug("irhat:IrHat");
 
@@ -51,11 +53,32 @@ export class IrHat {
   }
 
   private async sendAndWaitForResponse(
-    sendFn: () => Promise<void>
+    sendFn: () => Promise<void>,
+    options?: { timeout: number }
   ): Promise<void> {
-    // TODO begin listening for response
-    await sendFn();
-    // TODO wait for response
+    options = { timeout: 5000, ...options };
+    const messageQueue: RawIrHatMessage[] = [];
+    const subscription = this.rawIrHat.rx.subscribe((msg) =>
+      messageQueue.push(msg)
+    );
+    try {
+      // TODO do lock
+      await sendFn();
+      const endTime = Date.now() + options.timeout;
+      while (Date.now() < endTime) {
+        while (messageQueue.length > 0) {
+          const message = messageQueue.splice(0, 1)[0];
+          if (message.type === "ok") {
+            break;
+          } else if (message.type === "error") {
+            throw new Error(message.error);
+          }
+        }
+        sleep(1);
+      }
+    } finally {
+      subscription.unsubscribe();
+    }
   }
 
   get rx(): Observable<IrHatMessage> {
