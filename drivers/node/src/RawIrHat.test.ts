@@ -1,6 +1,8 @@
 import "jest";
 import { Observable, Subject } from "rxjs";
 import { Protocol } from ".";
+import { IrHat } from "./IrHat";
+import { IrHatGpio, IrHatGpioImpl } from "./IrHatGpio";
 import { IrHatSerialPort } from "./IrHatSerialPort";
 import {
   RawIrHatImpl,
@@ -11,19 +13,26 @@ import { sleep } from "./utils";
 
 describe("RawIrHat", () => {
   let mockSerialPort: MockIrHatSerialPort;
+  let mockResetGpio: MockIrHatGpio;
   let rawIrHat: RawIrHatImpl;
   let rawIrHatMessages: RawIrHatMessage[];
 
   beforeEach(() => {
     mockSerialPort = new MockIrHatSerialPort();
+    mockResetGpio = new MockIrHatGpio();
     rawIrHatMessages = [];
-    rawIrHat = new RawIrHatImpl({ serialPort: mockSerialPort });
+    rawIrHat = new RawIrHatImpl({
+      serialPort: mockSerialPort,
+      resetGpio: mockResetGpio,
+      resetDuration: 10,
+    });
     rawIrHat.rx.subscribe((d) => rawIrHatMessages.push(d));
   });
 
   describe("after open", () => {
     beforeEach(async () => {
       await rawIrHat.open();
+      expect(mockResetGpio.values).toStrictEqual([0, 1]);
     });
     afterEach(async () => {
       await rawIrHat.close();
@@ -53,8 +62,23 @@ describe("RawIrHat", () => {
       };
       expect(rawIrHatMessages).toStrictEqual([msg]);
     });
+
+    it("reset", async () => {
+      mockResetGpio.values = [];
+      await rawIrHat.reset();
+      expect(mockResetGpio.values).toStrictEqual([0, 1]);
+    });
   });
 });
+
+class MockIrHatGpio implements IrHatGpio {
+  values: number[] = [];
+
+  write(value: number): Promise<void> {
+    this.values.push(value);
+    return Promise.resolve();
+  }
+}
 
 class MockIrHatSerialPort implements IrHatSerialPort {
   rxSubject = new Subject<string>();

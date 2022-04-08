@@ -17,9 +17,9 @@ export class IrHat {
   private rawIrHat: RawIrHat;
   private rawIrHatRxSubscription?: Subscription;
 
-  constructor(options: IrHatOptions | RawIrHatIrHatOptions) {
-    if (isRawIrHatIrHatOptions(options)) {
-      this.rawIrHat = (options as RawIrHatIrHatOptions).rawIrHat;
+  constructor(options: IrHatOptions | IocIrHatOptions) {
+    if (isIocIrHatOptions(options)) {
+      this.rawIrHat = (options as IocIrHatOptions).rawIrHat;
     } else {
       this.rawIrHat = new RawIrHatImpl(options);
     }
@@ -52,6 +52,11 @@ export class IrHat {
     return this.sendAndWaitForResponse(() => {
       return this.rawIrHat.sendSignal(signal);
     }, options);
+  }
+
+  reset(): Promise<void> {
+    debug("reset");
+    return this.rawIrHat.reset();
   }
 
   private async sendAndWaitForResponse(
@@ -89,13 +94,13 @@ export class IrHat {
   }
 }
 
-function isRawIrHatIrHatOptions(
-  x: IrHatOptions | RawIrHatIrHatOptions
-): x is RawIrHatIrHatOptions {
-  return !!(x as RawIrHatIrHatOptions).rawIrHat;
+function isIocIrHatOptions(
+  x: IrHatOptions | IocIrHatOptions
+): x is IocIrHatOptions {
+  return !!(x as IocIrHatOptions).rawIrHat;
 }
 
-export interface RawIrHatIrHatOptions {
+export interface IocIrHatOptions {
   rawIrHat: RawIrHat;
 }
 

@@ -3,11 +3,12 @@ export {
   IrHatSerialPortImpl,
   IrHatSerialPortOptions,
 } from "./IrHatSerialPort";
+export { IrHatGpio, IrHatGpioImpl } from "./IrHatGpio";
 export {
   RawIrHatImpl,
   RawIrHat,
   RawIrHatOptions,
-  SerialPortRawIrHatOptions,
+  IocRawIrHatOptions as SerialPortRawIrHatOptions,
   RawIrHatMessageUnknownLine,
   RawIrHatMessageReady,
   RawIrHatMessageOk,
@@ -22,7 +23,7 @@ export {
   IrHatMessage,
   IrHatMessageSignal,
   IrHatOptions,
-  RawIrHatIrHatOptions,
+  IocIrHatOptions as RawIrHatIrHatOptions,
   IrHatSignal,
   SendSignalOptions,
 } from "./IrHat";

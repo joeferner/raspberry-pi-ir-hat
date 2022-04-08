@@ -71,11 +71,17 @@ describe("RawIrHat", () => {
       await sleep(1);
       expect(messages).toStrictEqual([signal]);
     });
+
+    it("reset", async () => {
+      await irHat.reset();
+      expect(mockRawIrHat.resetCalled).toBe(true);
+    });
   });
 });
 
 class MockRawIrHat implements RawIrHat {
   private _open = false;
+  resetCalled = false;
   readonly rxSubject = new Subject<RawIrHatMessage>();
   readonly sentSignals: RawIrHatSignal[] = [];
 
@@ -105,7 +111,7 @@ class MockRawIrHat implements RawIrHat {
   }
 
   reset(): Promise<void> {
-    this._open = false;
+    this.resetCalled = true;
     return Promise.resolve();
   }
 

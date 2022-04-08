@@ -6,6 +6,8 @@ import {
 } from "./IrHatSerialPort";
 import { Protocol } from "./Protocol";
 import Debug from "debug";
+import { IrHatGpio, IrHatGpioImpl } from "./IrHatGpio";
+import { sleep } from "./utils";
 
 const debug = Debug("irhat:RawIrHat");
 
@@ -21,13 +23,19 @@ export class RawIrHatImpl implements RawIrHat {
   private rxSubject = new Subject<RawIrHatMessage>();
   private serialPortRxSubscription?: Subscription;
   private serialPort: IrHatSerialPort;
+  private resetGpio: IrHatGpio;
   private buffer = "";
+  private resetDuration: number;
 
-  constructor(options: SerialPortRawIrHatOptions | RawIrHatOptions) {
-    if (isSerialPortRawIrHatOptions(options)) {
-      this.serialPort = (options as SerialPortRawIrHatOptions).serialPort;
+  constructor(options: IocRawIrHatOptions | RawIrHatOptions) {
+    if (isIocRawIrHatOptions(options)) {
+      this.serialPort = (options as IocRawIrHatOptions).serialPort;
+      this.resetGpio = (options as IocRawIrHatOptions).resetGpio;
+      this.resetDuration = (options as IocRawIrHatOptions).resetDuration;
     } else {
       this.serialPort = new IrHatSerialPortImpl(options);
+      this.resetGpio = new IrHatGpioImpl();
+      this.resetDuration = 500;
     }
   }
 
@@ -42,6 +50,7 @@ export class RawIrHatImpl implements RawIrHat {
       this.buffer += next;
       this.processBuffer();
     });
+    await this.reset();
   }
 
   close(): Promise<void> {
@@ -71,9 +80,11 @@ export class RawIrHatImpl implements RawIrHat {
     return this.serialPort.isOpen() && !!this.serialPortRxSubscription;
   }
 
-  reset(): Promise<void> {
-    // TODO toggle reset pin
-    throw new Error("TODO");
+  async reset(): Promise<void> {
+    debug("reset");
+    await this.resetGpio.write(0);
+    await sleep(this.resetDuration);
+    await this.resetGpio.write(1);
   }
 
   private processBuffer(): void {
@@ -193,14 +204,16 @@ export class RawIrHatImpl implements RawIrHat {
   }
 }
 
-function isSerialPortRawIrHatOptions(
-  x: SerialPortRawIrHatOptions | RawIrHatOptions
-): x is SerialPortRawIrHatOptions {
-  return !!(x as SerialPortRawIrHatOptions).serialPort;
+function isIocRawIrHatOptions(
+  x: IocRawIrHatOptions | RawIrHatOptions
+): x is IocRawIrHatOptions {
+  return !!(x as IocRawIrHatOptions).serialPort;
 }
 
-export interface SerialPortRawIrHatOptions {
+export interface IocRawIrHatOptions {
   serialPort: IrHatSerialPort;
+  resetGpio: IrHatGpio;
+  resetDuration: number;
 }
 
 export interface RawIrHatOptions extends IrHatSerialPortOptions {}
