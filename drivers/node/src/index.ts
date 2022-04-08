@@ -24,4 +24,5 @@ export {
   IrHatOptions,
   RawIrHatIrHatOptions,
   IrHatSignal,
+  SendSignalOptions,
 } from "./IrHat";
