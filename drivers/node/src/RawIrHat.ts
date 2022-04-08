@@ -9,7 +9,15 @@ import Debug from "debug";
 
 const debug = Debug("irhat:RawIrHat");
 
-export class RawIrHat {
+export interface RawIrHat {
+  open(): Promise<void>;
+  close(): Promise<void>;
+  sendSignal(signal: RawIrHatSignal): Promise<void>;
+  isOpen(): boolean;
+  reset(): Promise<void>;
+  get rx(): Observable<RawIrHatMessage>;
+}
+export class RawIrHatImpl implements RawIrHat {
   private rxSubject = new Subject<RawIrHatMessage>();
   private serialPortRxSubscription?: Subscription;
   private serialPort: IrHatSerialPort;

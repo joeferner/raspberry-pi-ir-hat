@@ -4,6 +4,7 @@ export {
   IrHatSerialPortOptions,
 } from "./IrHatSerialPort";
 export {
+  RawIrHatImpl,
   RawIrHat,
   RawIrHatOptions,
   SerialPortRawIrHatOptions,
@@ -22,5 +23,5 @@ export {
   IrHatMessageSignal,
   IrHatOptions,
   RawIrHatIrHatOptions,
-  IrHatSignal
+  IrHatSignal,
 } from "./IrHat";

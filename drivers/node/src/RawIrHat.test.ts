@@ -2,24 +2,31 @@ import "jest";
 import { Observable, Subject } from "rxjs";
 import { Protocol } from ".";
 import { IrHatSerialPort } from "./IrHatSerialPort";
-import { RawIrHat, RawIrHatMessage, RawIrHatMessageSignal } from "./RawIrHat";
+import {
+  RawIrHatImpl,
+  RawIrHatMessage,
+  RawIrHatMessageSignal,
+} from "./RawIrHat";
 import { sleep } from "./utils";
 
 describe("RawIrHat", () => {
   let mockSerialPort: MockIrHatSerialPort;
-  let rawIrHat: RawIrHat;
+  let rawIrHat: RawIrHatImpl;
   let rawIrHatMessages: RawIrHatMessage[];
 
   beforeEach(() => {
     mockSerialPort = new MockIrHatSerialPort();
     rawIrHatMessages = [];
-    rawIrHat = new RawIrHat({ serialPort: mockSerialPort });
+    rawIrHat = new RawIrHatImpl({ serialPort: mockSerialPort });
     rawIrHat.rx.subscribe((d) => rawIrHatMessages.push(d));
   });
 
   describe("after open", () => {
     beforeEach(async () => {
       await rawIrHat.open();
+    });
+    afterEach(async () => {
+      await rawIrHat.close();
     });
 
     it("send signal", async () => {

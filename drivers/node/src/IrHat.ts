@@ -1,6 +1,7 @@
 import { Observable, Subject, Subscription } from "rxjs";
 import {
   RawIrHat,
+  RawIrHatImpl,
   RawIrHatMessage,
   RawIrHatMessageSignal,
   RawIrHatOptions,
@@ -20,7 +21,7 @@ export class IrHat {
     if (isRawIrHatIrHatOptions(options)) {
       this.rawIrHat = (options as RawIrHatIrHatOptions).rawIrHat;
     } else {
-      this.rawIrHat = new RawIrHat(options);
+      this.rawIrHat = new RawIrHatImpl(options);
     }
   }
 
@@ -46,36 +47,38 @@ export class IrHat {
     return this.rawIrHat.close();
   }
 
-  sendSignal(signal: IrHatSignal): Promise<void> {
+  sendSignal(signal: IrHatSignal, options?: SendSignalOptions): Promise<void> {
+    debug("sendSignal %o", signal);
     return this.sendAndWaitForResponse(() => {
       return this.rawIrHat.sendSignal(signal);
-    });
+    }, options);
   }
 
   private async sendAndWaitForResponse(
     sendFn: () => Promise<void>,
-    options?: { timeout: number }
+    options?: SendAndWaitOptions
   ): Promise<void> {
-    options = { timeout: 5000, ...options };
+    const optionsWithDefaults = { timeout: 5000, ...options };
     const messageQueue: RawIrHatMessage[] = [];
-    const subscription = this.rawIrHat.rx.subscribe((msg) =>
-      messageQueue.push(msg)
-    );
+    const subscription = this.rawIrHat.rx.subscribe((msg) => {
+      messageQueue.push(msg);
+    });
     try {
       // TODO do lock
       await sendFn();
-      const endTime = Date.now() + options.timeout;
+      const endTime = Date.now() + optionsWithDefaults.timeout;
       while (Date.now() < endTime) {
         while (messageQueue.length > 0) {
           const message = messageQueue.splice(0, 1)[0];
           if (message.type === "ok") {
-            break;
+            return;
           } else if (message.type === "error") {
             throw new Error(message.error);
           }
         }
-        sleep(1);
+        await sleep(1);
       }
+      throw new Error("timeout");
     } finally {
       subscription.unsubscribe();
     }
@@ -103,3 +106,9 @@ export interface IrHatMessageSignal extends RawIrHatMessageSignal {}
 export type IrHatMessage = IrHatMessageSignal;
 
 export interface IrHatSignal extends RawIrHatSignal {}
+
+interface SendAndWaitOptions {
+  timeout?: number;
+}
+
+export interface SendSignalOptions extends SendAndWaitOptions {}
