@@ -1,0 +1,42 @@
+{
+  "name": "raspberry-pi-ir-hat",
+  "version": "1.0.0",
+  "description": "Raspberry PI IR Hat Node.js Driver",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "prepublish": "npm run build",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/joeferner/raspberry-pi-ir-hat.git"
+  },
+  "keywords": [
+    "raspberry",
+    "pi",
+    "ir"
+  ],
+  "author": "Joe Ferner <joe@fernsroth.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/joeferner/raspberry-pi-ir-hat/issues"
+  },
+  "homepage": "https://github.com/joeferner/raspberry-pi-ir-hat#readme",
+  "dependencies": {
+    "async-mutex": "^0.3.2",
+    "debug": "^4.3.4",
+    "onoff": "^6.0.3",
+    "rxjs": "^7.5.5",
+    "serialport": "^10.4.0"
+  },
+  "devDependencies": {
+    "@types/debug": "^4.1.7",
+    "@types/jest": "^27.4.1",
+    "jest": "^27.5.1",
+    "ts-jest": "^27.1.4",
+    "typescript": "^4.6.3"
+  }
+}
