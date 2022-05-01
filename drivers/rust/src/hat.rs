@@ -10,6 +10,7 @@ use std::fmt;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::thread;
 use std::time::Duration;
 use std::time::SystemTime;
 use std::time::SystemTimeError;
@@ -129,11 +130,16 @@ impl Hat {
                     button_name: button_name.to_string(),
                 })?;
 
-        for s in button.get_ir_signals() {
-            self.raw_hat
-                .send_signal(s.protocol, s.address, s.command, s.number_of_repeats)
-                .map_err(|err| HatError::RawHatError(err))?;
-            self.wait_for_response()?;
+        for _repeat_i in 0..button.get_number_of_repeats() {
+            for (i, s) in button.get_ir_signals().iter().enumerate() {
+                if i > 0 {
+                    thread::sleep(Duration::from_millis(25))
+                }
+                self.raw_hat
+                    .send_signal(s.protocol, s.address, s.command)
+                    .map_err(|err| HatError::RawHatError(err))?;
+                self.wait_for_response()?;
+            }
         }
         return Result::Ok(());
     }

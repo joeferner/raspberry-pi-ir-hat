@@ -164,13 +164,8 @@ impl RawHat {
         protocol: Protocol,
         address: u32,
         command: u32,
-        number_of_repeats: Option<u32>,
     ) -> Result<(), RawHatError> {
-        let mut s = format!("+s{},{},{}", protocol.to_u8(), address, command);
-        if let Option::Some(number_of_repeats) = number_of_repeats {
-            s += format!(",{}", number_of_repeats).as_str();
-        }
-        s += "\n";
+        let s = format!("+s{},{},{}\n", protocol.to_u8(), address, command);
         return self.send(&s);
     }
 

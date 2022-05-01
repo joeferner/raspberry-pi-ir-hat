@@ -30,6 +30,7 @@ pub struct ConfigButton {
     debounce: Option<u64>,
     /// only callback once until debounce passed, other wise callback at most every debounce
     single_shot: Option<bool>,
+    number_of_repeats: Option<u32>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone, Copy)]
@@ -37,7 +38,6 @@ pub struct ConfigIrSignal {
     pub protocol: Protocol,
     pub address: u32,
     pub command: u32,
-    pub number_of_repeats: Option<u32>,
 }
 
 #[derive(Debug)]
@@ -179,6 +179,13 @@ impl ConfigRemote {
 impl ConfigButton {
     pub fn get_ir_signals(&self) -> &Vec<ConfigIrSignal> {
         return &self.ir_signals;
+    }
+
+    pub fn get_number_of_repeats(&self) -> u32 {
+        return match self.number_of_repeats {
+            Option::None => 1,
+            Option::Some(v) => v,
+        };
     }
 
     pub fn get_debounce(&self) -> Option<Duration> {
