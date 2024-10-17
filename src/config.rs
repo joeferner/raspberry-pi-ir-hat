@@ -1,9 +1,9 @@
-use crate::logger::init_logger;
-use anyhow::{anyhow, Context, Result};
-use log::debug;
+use std::{env, str::FromStr};
 
-pub struct Config {
-}
+use crate::logger::init_logger;
+use anyhow::Result;
+
+pub struct Config {}
 
 impl Config {
     pub fn new() -> Result<Config> {
@@ -11,7 +11,6 @@ impl Config {
         let log_level = log::LevelFilter::from_str(&log_level)?;
         init_logger(log_level)?;
 
-        Ok(Config {
-        })
+        Ok(Config {})
     }
 }
