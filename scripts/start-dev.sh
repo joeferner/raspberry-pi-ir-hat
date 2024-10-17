@@ -5,6 +5,7 @@ cd "${DIR}/.."
 
 export RUST_BACKTRACE=1
 export LOG_LEVEL=debug
+export MQTT_HOST=home.local
 sudo chmod a+w $(find /sys/ 2>/dev/null | grep protocols)
 sudo chmod a+w $(find /dev/lirc* 2>/dev/null)
 cargo run

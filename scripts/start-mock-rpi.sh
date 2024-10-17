@@ -5,4 +5,5 @@ cd "${DIR}/.."
 
 export RUST_BACKTRACE=1
 export LOG_LEVEL=debug
+export MQTT_HOST=home.local
 cargo run --features mock-rpi

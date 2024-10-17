@@ -4,6 +4,7 @@ use nix::{
     sys::ioctl::{READ, WRITE},
 };
 use num_derive::FromPrimitive;
+use serde::{Deserialize, Serialize};
 
 pub mod lirc_reader;
 
@@ -42,7 +43,7 @@ pub enum LircProtocol {
 #[cfg(not(feature = "mock-rpi"))]
 pub const SCAN_CODE_SIZE: usize = (64 + 16 + 16 + 32 + 64) / 8;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LircEvent {
     pub timestamp: u64,
     pub flags: u16,
