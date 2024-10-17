@@ -15,14 +15,14 @@ pub struct LircReader {
 
 impl LircReader {
     #[cfg(not(feature = "mock-rpi"))]
-    pub fn new(lirc_device: String) -> Result<Self> {
+    pub fn new(lirc_device: &str) -> Result<Self> {
         use super::{LircIoCtlCommand, LircMode};
         use crate::ioctl;
         use nix::fcntl::{self, OFlag};
         use nix::sys::stat::Mode;
 
         debug!("opening: {}", lirc_device);
-        let fd = fcntl::open(lirc_device.as_str(), OFlag::O_RDONLY, Mode::empty())?;
+        let fd = fcntl::open(lirc_device, OFlag::O_RDONLY, Mode::empty())?;
         ioctl::write_u32(
             fd,
             LircIoCtlCommand::SetReceiveMode as u32,
@@ -32,7 +32,7 @@ impl LircReader {
     }
 
     #[cfg(feature = "mock-rpi")]
-    pub fn new(lirc_device: String) -> Result<Self> {
+    pub fn new(lirc_device: &str) -> Result<Self> {
         debug!("opening: {} (mock)", lirc_device);
         Ok(Self {})
     }
@@ -59,6 +59,9 @@ impl LircReader {
 
     #[cfg(feature = "mock-rpi")]
     pub fn read(&mut self) -> Result<Vec<LircEvent>> {
+        use std::{thread::sleep, time::Duration};
+
+        sleep(Duration::from_secs(1));
         Ok(vec![])
     }
 }
