@@ -1,10 +1,4 @@
 (fp_lib_table
-  (lib (name kicad-library)(type KiCad)(uri ${KIPRJMOD}/kicad-library/modules)(options "")(descr ""))
-  (lib (name Capacitor_SMD)(type KiCad)(uri ${KISYSMOD}/Capacitor_SMD.pretty)(options "")(descr ""))
-  (lib (name LED_SMD)(type KiCad)(uri ${KISYSMOD}/LED_SMD.pretty)(options "")(descr ""))
-  (lib (name Connector_PinSocket_2.54mm)(type KiCad)(uri ${KISYSMOD}/Connector_PinSocket_2.54mm.pretty)(options "")(descr ""))
-  (lib (name Resistor_SMD)(type KiCad)(uri ${KISYSMOD}/Resistor_SMD.pretty)(options "")(descr ""))
-  (lib (name Package_TO_SOT_SMD)(type KiCad)(uri ${KISYSMOD}/Package_TO_SOT_SMD.pretty)(options "")(descr ""))
-  (lib (name Connector_PinHeader_2.54mm)(type KiCad)(uri ${KISYSMOD}/Connector_PinHeader_2.54mm.pretty)(options "")(descr ""))
-  (lib (name MountingHole)(type KiCad)(uri ${KISYSMOD}/MountingHole.pretty)(options "")(descr ""))
+  (version 7)
+  (lib (name "raspberry-pi-hat")(type "KiCad")(uri "${KIPRJMOD}/raspberry-pi-hat.pretty")(options "")(descr ""))
 )

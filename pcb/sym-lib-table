@@ -1,7 +1,4 @@
 (sym_lib_table
-  (lib (name kicad-library)(type Legacy)(uri ${KIPRJMOD}/kicad-library/kicad-library.lib)(options "")(descr ""))
-  (lib (name connector_generic)(type Legacy)(uri ${KICAD_SYMBOL_DIR}/Connector_Generic.lib)(options "")(descr ""))
-  (lib (name power)(type Legacy)(uri ${KICAD_SYMBOL_DIR}/power.lib)(options "")(descr ""))
-  (lib (name device)(type Legacy)(uri ${KICAD_SYMBOL_DIR}/Device.lib)(options "")(descr ""))
-  (lib (name connector)(type Legacy)(uri ${KICAD_SYMBOL_DIR}/Connector.lib)(options "")(descr ""))
+  (version 7)
+  (lib (name "raspberry-pi-hat")(type "KiCad")(uri "${KIPRJMOD}/raspberry-pi-hat.kicad_sym")(options "")(descr ""))
 )
