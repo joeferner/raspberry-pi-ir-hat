@@ -75,7 +75,7 @@ pub enum LircMode {
 #[derive(Debug)]
 pub struct LircDevices {
     pub lirc_rx_device: String,
-    pub _lirc_tx_device: String,
+    pub lirc_tx_device: String,
 }
 
 pub fn find_lirc_devices() -> Result<LircDevices> {
@@ -92,6 +92,6 @@ pub fn find_lirc_devices() -> Result<LircDevices> {
 
     Ok(LircDevices {
         lirc_rx_device,
-        _lirc_tx_device: lirc_tx_device,
+        lirc_tx_device,
     })
 }
