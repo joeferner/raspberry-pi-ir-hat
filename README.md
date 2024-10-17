@@ -1,3 +1,16 @@
+# Environment variables
+
+- `LOG_LEVEL`
+- `MQTT_ID` (default: `pi-ir`)
+- `MQTT_HOST`
+- `MQTT_PORT` (default: 1883)
+- `MQTT_TOPIC_PREFIX` (default: `home/ir`)
+
+# MQTT
+
+- `${MQTT_TOPIC_PREFIX}/receive/raw` - raw IR data (see LircEvent)
+- `${MQTT_TOPIC_PREFIX}/receive/decode` - decoded IR data (see DecodeResult)
+
 # Setup Raspberry Pi
 
 1. Install rpi-imager locally

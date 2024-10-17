@@ -80,8 +80,8 @@ fn start_reader_loop(
 
     let mut remotes = Remotes::new();
     let mut reader = LircReader::new(lirc_rx_device)?;
-    let mqtt_raw_receive_topic = format!("{mqtt_topic_prefix}/raw/receive");
-    let mqtt_decode_receive_topic = format!("{mqtt_topic_prefix}/decode/receive");
+    let mqtt_raw_receive_topic = format!("{mqtt_topic_prefix}/receive/raw");
+    let mqtt_decode_receive_topic = format!("{mqtt_topic_prefix}/receive/decode");
     tokio::spawn(async move {
         loop {
             do_read(
