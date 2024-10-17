@@ -51,6 +51,7 @@ pub struct LircEvent {
     pub scan_code: u64,
 }
 
+#[allow(clippy::enum_clike_unportable_variant)]
 #[derive(FromPrimitive)]
 pub enum LircIoCtlCommand {
     GetFeatures = ioc!(READ, 'i', 0x00000000, 4) as isize,

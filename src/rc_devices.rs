@@ -51,7 +51,7 @@ pub fn get_rc_devices() -> Result<Vec<RcDevice>> {
             Err(err) => Err(err.into()),
         })
         .collect();
-    Ok(ret?)
+    ret
 }
 
 fn parse_inputs(rc_path: &Path) -> Result<Vec<RcDeviceInput>> {
@@ -62,29 +62,27 @@ fn parse_inputs(rc_path: &Path) -> Result<Vec<RcDeviceInput>> {
                 let file_name = d
                     .file_name()
                     .into_string()
-                    .or_else(|s| Err(anyhow!("could not convert: {:?}", s)))?;
+                    .map_err(|e| anyhow!("could not convert: {e:?}"))?;
                 if file_name.starts_with("input") {
                     let parsed_input = parse_input(&d.path())?;
-                    return Ok(Option::Some(parsed_input));
+                    Ok(Option::Some(parsed_input))
                 } else {
-                    return Ok(Option::None);
+                    Ok(Option::None)
                 }
             }
-            Err(err) => {
-                return Err(err.into());
-            }
+            Err(err) => Err(err.into()),
         }
     });
     let inputs: Result<Vec<Option<RcDeviceInput>>> = inputs.collect();
-    return Ok(inputs?.iter().filter_map(|d| d.clone()).collect());
+    Ok(inputs?.iter().filter_map(|d| d.clone()).collect())
 }
 
 fn parse_input(dir: &PathBuf) -> Result<RcDeviceInput> {
-    let events = parse_input_events(&dir)?;
-    return Ok(RcDeviceInput {
+    let events = parse_input_events(dir)?;
+    Ok(RcDeviceInput {
         input_dir: dir.to_path_buf(),
         events,
-    });
+    })
 }
 
 fn parse_input_events(dir: &PathBuf) -> Result<Vec<RcDeviceInputEvent>> {
@@ -95,27 +93,25 @@ fn parse_input_events(dir: &PathBuf) -> Result<Vec<RcDeviceInputEvent>> {
                 let file_name = d
                     .file_name()
                     .into_string()
-                    .or_else(|s| Err(anyhow!("could not convert: {:?}", s)))?;
+                    .map_err(|e| anyhow!("could not convert: {e:?}"))?;
                 if file_name.starts_with("input") {
                     let dev_name = get_uevent_value(&d.path().join("uevent"), "DEVNAME")?;
-                    return Ok(Option::Some(RcDeviceInputEvent {
+                    Ok(Option::Some(RcDeviceInputEvent {
                         event_dir: d.path(),
                         dev_name,
-                    }));
+                    }))
                 } else {
-                    return Ok(Option::None);
+                    Ok(Option::None)
                 }
             }
-            Err(err) => {
-                return Err(err.into());
-            }
+            Err(err) => Err(err.into()),
         }
     });
     let inputs: Result<Vec<Option<RcDeviceInputEvent>>> = inputs.collect();
     return Ok(inputs?.iter().filter_map(|d| d.clone()).collect());
 }
 
-fn get_uevent_value(dir: &PathBuf, name: &str) -> Result<Option<String>> {
+fn get_uevent_value(dir: &Path, name: &str) -> Result<Option<String>> {
     let path = dir.join("uevent");
     let uevent = fs::read_to_string(path)?;
     let uevent_lines = uevent.split("\n");
@@ -126,7 +122,7 @@ fn get_uevent_value(dir: &PathBuf, name: &str) -> Result<Option<String>> {
             }
         }
     }
-    return Ok(Option::None);
+    Ok(Option::None)
 }
 
 fn parse_lircs(dir: &PathBuf) -> Result<Vec<RcDeviceLirc>> {
@@ -137,7 +133,7 @@ fn parse_lircs(dir: &PathBuf) -> Result<Vec<RcDeviceLirc>> {
                 let file_name = d
                     .file_name()
                     .into_string()
-                    .or_else(|s| Err(anyhow!("could not convert: {:?}", s)))?;
+                    .map_err(|e| anyhow!("could not convert: {e:?}"))?;
                 if file_name.starts_with("lirc") {
                     let dev_name = get_uevent_value(&d.path(), "DEVNAME")?;
                     Ok(Option::Some(RcDeviceLirc {
