@@ -3,6 +3,9 @@ set -eou pipefail
 DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "${DIR}/.."
 
+IR_IN_PIN=${IR_IN_PIN:-17}
+IR_OUT_PIN=${IR_OUT_PIN:-18}
+
 function update {
   sudo apt -y update
   sudo apt -y upgrade
@@ -37,6 +40,79 @@ function rust_setup {
   echo "rust setup complete"
 }
 
+function adc_setup {
+  echo "setup ADC..."
+
+  # Update /boot/firmware/config.txt
+  echo "update /boot/firmware/config.txt"
+  sudo sed -i 's|.*dtparam=spi.*|dtparam=spi=on|' /boot/firmware/config.txt
+  if ! grep '^dtparam=spi=on$' /boot/firmware/config.txt; then
+    echo "failed to update spi"
+    exit 1
+  fi
+
+  echo "ADC setup complete"
+}
+
+function ir_setup {
+  echo "setup ir..."
+
+  # Install ir-keytable
+  if dpkg -l | grep -q ir-keytable; then
+    echo "ir-keytable already installed"
+  else
+    echo "installing ir-keytable"
+    sudo apt install -y ir-keytable
+  fi
+
+  # Install evtest
+  if dpkg -l | grep -q evtest; then
+    echo "evtest already installed"
+  else
+    echo "installing evtest"
+    sudo apt install -y evtest
+  fi
+
+  # create /sbin/lirc-allow-write-protocol
+  echo "create /sbin/lirc-allow-write-protocol"
+  cat << EOF | sudo tee /sbin/lirc-allow-write-protocol
+  #!/bin/bash
+
+  chmod a+w /sys/class/rc/rc*/protocols
+EOF
+  sudo chmod u+x /sbin/lirc-allow-write-protocol
+
+  # create /etc/udev/rules.d/50-lirc-protocol.rules
+  echo "/etc/udev/rules.d/50-lirc-protocol.rules"
+  cat << EOF | sudo tee /etc/udev/rules.d/50-lirc-protocol.rules
+  SUBSYSTEM=="lirc", GROUP="lirc", RUN+="/sbin/lirc-allow-write-protocol"
+EOF
+
+  # Update /boot/firmware/config.txt
+  echo "update /boot/firmware/config.txt"
+  if grep 'gpio-ir,' /boot/firmware/config.txt; then
+    sudo sed -i 's|.*gpio-ir,.*|dtoverlay=gpio-ir,gpio_pin='"${IR_IN_PIN}"'|' /boot/firmware/config.txt
+    if ! grep '^dtoverlay=gpio-ir,gpio_pin='"${IR_IN_PIN}"'' /boot/firmware/config.txt; then
+      echo "failed to update gpio-ir in"
+      exit 1
+    fi
+  else
+    echo "dtoverlay=gpio-ir,gpio_pin=\"${IR_IN_PIN}\"" | sudo tee -a /boot/firmware/config.txt
+  fi
+
+  if grep 'gpio-ir-tx,' /boot/firmware/config.txt; then
+    sudo sed -i 's|.*gpio-ir-tx,.*|dtoverlay=gpio-ir-tx,gpio_pin='"${IR_OUT_PIN}"'|' /boot/firmware/config.txt
+    if ! grep '^dtoverlay=gpio-ir-tx,gpio_pin='"${IR_OUT_PIN}"'' /boot/firmware/config.txt; then
+      echo "failed to update gpio-ir out"
+      exit 1
+    fi
+  else
+    echo "dtoverlay=gpio-ir-tx,gpio_pin=\"${IR_OUT_PIN}\"" | sudo tee -a /boot/firmware/config.txt
+  fi
+
+  echo "IR setup complete"
+}
+
 function build {
   echo "build..."
   cargo build
@@ -56,6 +132,8 @@ function service_setup {
 update
 dev_setup
 rust_setup
+adc_setup
+ir_setup
 build
 service_setup
 echo ""
