@@ -1,0 +1,24 @@
+{
+    "cSpell.words": [
+        "Appender",
+        "clike",
+        "DEVNAME",
+        "fcntl",
+        "gpio",
+        "Imon",
+        "libc",
+        "Lirc",
+        "lircs",
+        "Mcir",
+        "Mqtt",
+        "Necx",
+        "Rcmm",
+        "RDONLY",
+        "rppal",
+        "rumqttc",
+        "Sanyo",
+        "uevent",
+        "unistd",
+        "unportable"
+    ]
+}
