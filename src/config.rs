@@ -24,7 +24,7 @@ impl Config {
             .with_context(|| format!("invalid MQTT_PORT: {mqtt_port}"))?;
 
         let mqtt_topic_ir_receive =
-            env::var("MQTT_TOPIC_IR_RECEIVE").unwrap_or("home/pi-ir/receive".to_string());
+            env::var("MQTT_TOPIC_IR_RECEIVE").unwrap_or("home/ir/receive".to_string());
 
         Ok(Config {
             mqtt_id,

@@ -3,24 +3,20 @@ use log::debug;
 
 use super::LircEvent;
 
-#[cfg(not(feature = "mock-rpi"))]
 use super::SCAN_CODE_SIZE;
-#[cfg(not(feature = "mock-rpi"))]
+use super::{LircIoCtlCommand, LircMode};
+use crate::ioctl;
+use nix::fcntl::{self, OFlag};
+use nix::sys::stat::Mode;
+use nix::unistd;
 use std::os::unix::io::RawFd;
 
 pub struct LircReader {
-    #[cfg(not(feature = "mock-rpi"))]
     fd: RawFd,
 }
 
 impl LircReader {
-    #[cfg(not(feature = "mock-rpi"))]
     pub fn new(lirc_device: &str) -> Result<Self> {
-        use super::{LircIoCtlCommand, LircMode};
-        use crate::ioctl;
-        use nix::fcntl::{self, OFlag};
-        use nix::sys::stat::Mode;
-
         debug!("opening: {}", lirc_device);
         let fd = fcntl::open(lirc_device, OFlag::O_RDONLY, Mode::empty())?;
         ioctl::write_u32(
@@ -31,16 +27,7 @@ impl LircReader {
         Ok(LircReader { fd })
     }
 
-    #[cfg(feature = "mock-rpi")]
-    pub fn new(lirc_device: &str) -> Result<Self> {
-        debug!("opening: {} (mock)", lirc_device);
-        Ok(Self {})
-    }
-
-    #[cfg(not(feature = "mock-rpi"))]
     pub fn read(&mut self) -> Result<Vec<LircEvent>> {
-        use nix::unistd;
-
         let mut buf: [u8; SCAN_CODE_SIZE * 64] = [0; SCAN_CODE_SIZE * 64];
         let ret = unistd::read(self.fd, &mut buf)?;
         let mut events = vec![];
@@ -55,13 +42,5 @@ impl LircReader {
             events.push(event);
         }
         Ok(events)
-    }
-
-    #[cfg(feature = "mock-rpi")]
-    pub fn read(&mut self) -> Result<Vec<LircEvent>> {
-        use std::{thread::sleep, time::Duration};
-
-        sleep(Duration::from_secs(1));
-        Ok(vec![])
     }
 }

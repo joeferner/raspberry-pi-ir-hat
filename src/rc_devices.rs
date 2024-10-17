@@ -1,26 +1,29 @@
 use anyhow::{anyhow, Result};
-use log;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct RcDeviceLirc {
     pub lirc_dir: PathBuf,
     pub dev_name: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct RcDeviceInputEvent {
     pub event_dir: PathBuf,
     pub dev_name: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct RcDeviceInput {
     pub input_dir: PathBuf,
     pub events: Vec<RcDeviceInputEvent>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct RcDevice {
     pub rc_path: PathBuf,
@@ -38,19 +41,17 @@ pub fn get_rc_devices() -> Result<Vec<RcDevice>> {
                 let driver = get_uevent_value(&rc_path.path().join("device"), "DRIVER")?;
                 let inputs = parse_inputs(&rc_path.path())?;
                 let lircs = parse_lircs(&rc_path.path())?;
-                return Ok(RcDevice {
+                Ok(RcDevice {
                     rc_path: rc_path.path(),
                     driver,
                     inputs,
                     lircs,
-                });
+                })
             }
-            Err(err) => {
-                return Err(err.into());
-            }
+            Err(err) => Err(err.into()),
         })
         .collect();
-    return Ok(ret?);
+    Ok(ret?)
 }
 
 fn parse_inputs(rc_path: &Path) -> Result<Vec<RcDeviceInput>> {
@@ -139,17 +140,15 @@ fn parse_lircs(dir: &PathBuf) -> Result<Vec<RcDeviceLirc>> {
                     .or_else(|s| Err(anyhow!("could not convert: {:?}", s)))?;
                 if file_name.starts_with("lirc") {
                     let dev_name = get_uevent_value(&d.path(), "DEVNAME")?;
-                    return Ok(Option::Some(RcDeviceLirc {
+                    Ok(Option::Some(RcDeviceLirc {
                         lirc_dir: d.path(),
                         dev_name,
-                    }));
+                    }))
                 } else {
-                    return Ok(Option::None);
+                    Ok(Option::None)
                 }
             }
-            Err(err) => {
-                return Err(err.into());
-            }
+            Err(err) => Err(err.into()),
         }
     });
     let inputs: Result<Vec<Option<RcDeviceLirc>>> = inputs.collect();
@@ -157,7 +156,7 @@ fn parse_lircs(dir: &PathBuf) -> Result<Vec<RcDeviceLirc>> {
 }
 
 pub fn find_rc_device_lirc_dev_dir(
-    devices: &Vec<RcDevice>,
+    devices: &[RcDevice],
     driver: &str,
     lirc_index: usize,
 ) -> Option<String> {
@@ -173,7 +172,7 @@ pub fn find_rc_device_lirc_dev_dir(
                 }
             }
         }
-        return Option::None;
+        Option::None
     });
 }
 
@@ -185,7 +184,7 @@ pub fn enable_all_protocols(devices: &Vec<RcDevice>, driver: &str) -> Result<()>
             }
         }
     }
-    return Ok(());
+    Ok(())
 }
 
 pub fn enable_all_protocols_on_device(device: &RcDevice) -> Result<()> {
@@ -202,5 +201,5 @@ pub fn enable_all_protocols_on_device(device: &RcDevice) -> Result<()> {
             fs::write(protocols_file, format!("+{}", protocol))?;
         }
     }
-    return Ok(());
+    Ok(())
 }

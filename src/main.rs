@@ -25,32 +25,41 @@ async fn main() -> Result<()> {
     let mut mqtt_options = MqttOptions::new(config.mqtt_id, config.mqtt_host, config.mqtt_port);
     mqtt_options.set_keep_alive(Duration::from_secs(5));
 
-    let (client, mut event_loop) = AsyncClient::new(mqtt_options, 10);
+    let (mqtt_client, mut mqtt_event_loop) = AsyncClient::new(mqtt_options, 10);
 
-    start_reader_loop(&remotes.lirc_rx_device, &config.mqtt_topic_ir_receive, client)?;
+    start_reader_loop(
+        &remotes.lirc_rx_device,
+        &config.mqtt_topic_ir_receive,
+        mqtt_client,
+    )?;
 
-    while let Ok(notification) = event_loop.poll().await {
-        debug!("mqtt recv = {:?}", notification);
+    debug!("starting main event loop");
+    loop {
+        match mqtt_event_loop.poll().await {
+            Ok(notification) => debug!("mqtt recv = {:?}", notification),
+            Err(e) => {
+                error!("mqtt event loop poll failed; error = {e}");
+                process::exit(1);
+            }
+        }
     }
-
-    Ok(())
 }
 
 fn start_reader_loop(
     lirc_rx_device: &str,
     mqtt_topic: &str,
-    client: rumqttc::AsyncClient,
+    mqtt_client: rumqttc::AsyncClient,
 ) -> Result<()> {
     async fn do_read(
         reader: &mut LircReader,
         mqtt_topic: &str,
-        client: &rumqttc::AsyncClient,
+        mqtt_client: &rumqttc::AsyncClient,
     ) -> Result<()> {
         let data = reader.read()?;
         for item in data {
             debug!("recv ir event: {item:?}");
             let payload = serde_json::to_string(&item)?;
-            client
+            mqtt_client
                 .publish(mqtt_topic, QoS::AtLeastOnce, false, payload)
                 .await?;
         }
@@ -61,16 +70,14 @@ fn start_reader_loop(
     let mut reader = LircReader::new(lirc_rx_device)?;
     tokio::spawn(async move {
         loop {
-            if let Err(e) = do_read(&mut reader, &mqtt_topic, &client).await {
-                error!("failed to read; error = {e}");
-                process::exit(1);
-            }
+            do_read(&mut reader, &mqtt_topic, &mqtt_client)
+                .await
+                .unwrap();
         }
     });
     Ok(())
 }
 
-#[cfg(not(feature = "mock-rpi"))]
 fn setup_ir_polarity() -> Result<()> {
     let gpio = rppal::gpio::Gpio::new()?;
 
@@ -79,10 +86,5 @@ fn setup_ir_polarity() -> Result<()> {
     pin_ir_out_pol.set_low();
     pin_ir_in_pol.set_low();
 
-    Ok(())
-}
-
-#[cfg(feature = "mock-rpi")]
-fn setup_ir_polarity() -> Result<()> {
     Ok(())
 }

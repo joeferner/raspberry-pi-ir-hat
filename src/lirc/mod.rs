@@ -40,7 +40,6 @@ pub enum LircProtocol {
     XboxDvd = 27,
 }
 
-#[cfg(not(feature = "mock-rpi"))]
 pub const SCAN_CODE_SIZE: usize = (64 + 16 + 16 + 32 + 64) / 8;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -76,7 +75,6 @@ pub struct Remotes {
     pub _lirc_tx_device: String,
 }
 
-#[cfg(not(feature = "mock-rpi"))]
 pub fn find_remotes() -> Result<Remotes> {
     use crate::rc_devices::{enable_all_protocols, find_rc_device_lirc_dev_dir, get_rc_devices};
     use anyhow::anyhow;
@@ -92,13 +90,5 @@ pub fn find_remotes() -> Result<Remotes> {
     Ok(Remotes {
         lirc_rx_device,
         _lirc_tx_device: lirc_tx_device,
-    })
-}
-
-#[cfg(feature = "mock-rpi")]
-pub fn find_remotes() -> Result<Remotes> {
-    Ok(Remotes {
-        lirc_rx_device: "mock-rx".to_string(),
-        _lirc_tx_device: "mock-tx".to_string(),
     })
 }

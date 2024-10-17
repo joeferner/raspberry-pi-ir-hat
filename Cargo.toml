@@ -3,9 +3,6 @@ name = "raspberry-pi-ir-hat-network-bridge"
 version = "0.1.0"
 edition = "2021"
 
-[features]
-mock-rpi = []
-
 [dependencies]
 anyhow = "1.0.89"
 log = "0.4.22"
