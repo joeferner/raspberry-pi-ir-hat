@@ -1,0 +1,14 @@
+[Unit]
+Description=Raspberry Pi IR Hat Network Bridge
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+ExecStart=/usr/sbin/raspberry-pi-ir-hat-network-bridge
+Environment="LOG_LEVEL=debug"
+
+[Install]
+WantedBy=multi-user.target
