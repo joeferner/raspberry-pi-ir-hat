@@ -17,8 +17,8 @@ pub enum State {
 
 fn state_changed(prev: &Option<State>, new_state: &State) -> bool {
     return match prev {
-        Option::None => true,
-        Option::Some(prev_state) => prev_state != new_state,
+        None => true,
+        Some(prev_state) => prev_state != new_state,
     };
 }
 
@@ -60,8 +60,8 @@ impl Power {
         let mut power = Power {
             mcp3204,
             tx,
-            ch0_prev_state: Option::None,
-            ch1_prev_state: Option::None,
+            ch0_prev_state: None,
+            ch1_prev_state: None,
             ch0: StatsList::new(),
             ch1: StatsList::new(),
             next_log: 0,
@@ -69,8 +69,8 @@ impl Power {
 
         let thread = thread::spawn(move || loop {
             match power.tick(&options) {
-                Result::Ok(()) => thread::sleep(Duration::from_millis(10)),
-                Result::Err(err) => {
+                Ok(()) => thread::sleep(Duration::from_millis(10)),
+                Err(err) => {
                     log::error!("failed to get power data {}", err);
                     thread::sleep(Duration::from_secs(5));
                 }
@@ -83,14 +83,14 @@ impl Power {
 
     fn calculate_new_state(&self, prev: Option<State>, stddev: f64, on: f64, off: f64) -> State {
         match prev {
-            Option::None => {
+            None => {
                 if stddev > on {
                     return State::On;
                 } else {
                     return State::Off;
                 }
             }
-            Option::Some(prev_state) => match prev_state {
+            Some(prev_state) => match prev_state {
                 State::Off => {
                     if stddev > on {
                         return State::On;
@@ -146,15 +146,15 @@ impl Power {
                 ch1: ch1_stddev,
                 ch1_state: new_ch1_state,
             };
-            self.ch0_prev_state = Option::Some(new_ch0_state);
-            self.ch1_prev_state = Option::Some(new_ch1_state);
+            self.ch0_prev_state = Some(new_ch0_state);
+            self.ch1_prev_state = Some(new_ch1_state);
 
             self.tx
                 .send(Message::PowerData(power_data))
                 .map_err(|err| MyError::new(format!("power send error: {}", err)))?;
         }
 
-        return Result::Ok(());
+        return Ok(());
     }
 }
 
@@ -163,6 +163,6 @@ impl PowerReceiver {
         self.thread
             .join()
             .map_err(|err| MyError::new(format!("failed to join thread {:?}", err)))?;
-        return Result::Ok(());
+        return Ok(());
     }
 }

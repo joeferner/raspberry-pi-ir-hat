@@ -7,7 +7,7 @@ pub struct Config {
     pub mqtt_id: String,
     pub mqtt_host: String,
     pub mqtt_port: u16,
-    pub mqtt_topic_ir_receive: String,
+    pub mqtt_topic_prefix: String,
 }
 
 impl Config {
@@ -23,14 +23,13 @@ impl Config {
             .parse()
             .with_context(|| format!("invalid MQTT_PORT: {mqtt_port}"))?;
 
-        let mqtt_topic_ir_receive =
-            env::var("MQTT_TOPIC_IR_RECEIVE").unwrap_or("home/ir/receive".to_string());
+        let mqtt_topic_prefix = env::var("MQTT_TOPIC_PREFIX").unwrap_or("home/ir".to_string());
 
         Ok(Config {
             mqtt_id,
             mqtt_host,
             mqtt_port,
-            mqtt_topic_ir_receive,
+            mqtt_topic_prefix,
         })
     }
 }

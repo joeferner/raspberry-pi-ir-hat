@@ -65,9 +65,9 @@ fn parse_inputs(rc_path: &Path) -> Result<Vec<RcDeviceInput>> {
                     .map_err(|e| anyhow!("could not convert: {e:?}"))?;
                 if file_name.starts_with("input") {
                     let parsed_input = parse_input(&d.path())?;
-                    Ok(Option::Some(parsed_input))
+                    Ok(Some(parsed_input))
                 } else {
-                    Ok(Option::None)
+                    Ok(None)
                 }
             }
             Err(err) => Err(err.into()),
@@ -96,12 +96,12 @@ fn parse_input_events(dir: &PathBuf) -> Result<Vec<RcDeviceInputEvent>> {
                     .map_err(|e| anyhow!("could not convert: {e:?}"))?;
                 if file_name.starts_with("input") {
                     let dev_name = get_uevent_value(&d.path().join("uevent"), "DEVNAME")?;
-                    Ok(Option::Some(RcDeviceInputEvent {
+                    Ok(Some(RcDeviceInputEvent {
                         event_dir: d.path(),
                         dev_name,
                     }))
                 } else {
-                    Ok(Option::None)
+                    Ok(None)
                 }
             }
             Err(err) => Err(err.into()),
@@ -116,13 +116,13 @@ fn get_uevent_value(dir: &Path, name: &str) -> Result<Option<String>> {
     let uevent = fs::read_to_string(path)?;
     let uevent_lines = uevent.split("\n");
     for uevent_line in uevent_lines {
-        if let Option::Some(parts) = uevent_line.split_once("=") {
+        if let Some(parts) = uevent_line.split_once("=") {
             if parts.0.trim() == name {
-                return Ok(Option::Some(parts.1.trim().to_string()));
+                return Ok(Some(parts.1.trim().to_string()));
             }
         }
     }
-    Ok(Option::None)
+    Ok(None)
 }
 
 fn parse_lircs(dir: &PathBuf) -> Result<Vec<RcDeviceLirc>> {
@@ -136,12 +136,12 @@ fn parse_lircs(dir: &PathBuf) -> Result<Vec<RcDeviceLirc>> {
                     .map_err(|e| anyhow!("could not convert: {e:?}"))?;
                 if file_name.starts_with("lirc") {
                     let dev_name = get_uevent_value(&d.path(), "DEVNAME")?;
-                    Ok(Option::Some(RcDeviceLirc {
+                    Ok(Some(RcDeviceLirc {
                         lirc_dir: d.path(),
                         dev_name,
                     }))
                 } else {
-                    Ok(Option::None)
+                    Ok(None)
                 }
             }
             Err(err) => Err(err.into()),
@@ -157,24 +157,24 @@ pub fn find_rc_device_lirc_dev_dir(
     lirc_index: usize,
 ) -> Option<String> {
     return devices.iter().find_map(|d| {
-        if let Option::Some(d_driver) = &d.driver {
+        if let Some(d_driver) = &d.driver {
             if d_driver == driver {
-                if let Option::Some(lirc) = d.lircs.get(lirc_index) {
-                    if let Option::Some(dev_name) = &lirc.dev_name {
-                        if let Option::Some(path) = Path::new("/dev").join(dev_name).to_str() {
-                            return Option::Some(path.to_string());
+                if let Some(lirc) = d.lircs.get(lirc_index) {
+                    if let Some(dev_name) = &lirc.dev_name {
+                        if let Some(path) = Path::new("/dev").join(dev_name).to_str() {
+                            return Some(path.to_string());
                         }
                     }
                 }
             }
         }
-        Option::None
+        None
     });
 }
 
 pub fn enable_all_protocols(devices: &Vec<RcDevice>, driver: &str) -> Result<()> {
     for device in devices {
-        if let Option::Some(d_driver) = &device.driver {
+        if let Some(d_driver) = &device.driver {
             if *d_driver == driver {
                 enable_all_protocols_on_device(device)?;
             }

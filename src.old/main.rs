@@ -102,21 +102,9 @@ impl Main {
         ir_in.stop()?;
         ir_out.stop()?;
 
-        return Result::Ok(());
+        return Ok(());
     }
 
-    fn set_mode(&mut self, new_mode: Mode) -> Result<()> {
-        self.mode = new_mode;
-        log::info!("new mode: {:?}", self.mode);
-        return Result::Ok(());
-    }
-
-    fn send(&self, remote_name: &str, key: Key, can_timeout: bool) -> Result<()> {
-        self.tx_ir
-            .send(IrOutMessage::new(remote_name, key, can_timeout)?)
-            .map_err(|err| MyError::new(format!("ir out send error: {}", err)))?;
-        return Result::Ok(());
-    }
 
     fn handle_power_data(&mut self, power_data: PowerData) -> Result<()> {
         log::debug!("power data {:?}", power_data);
@@ -125,79 +113,6 @@ impl Main {
         } else {
             self.set_mode(Mode::Off)?;
         }
-        return Result::Ok(());
+        return Ok(());
     }
-
-    fn handle_lirc_event(&mut self, lirc_event: LircEvent) -> Result<()> {
-        if let Option::Some(decode_result) = self.remotes.decode(lirc_event) {
-            log::debug!("decode_results {:?}", decode_result);
-            if decode_result.source == "rca" {
-                match self.mode {
-                    Mode::Off => self.handle_lirc_event_mode_off(decode_result)?,
-                    Mode::On => self.handle_lirc_event_mode_on(decode_result)?,
-                }
-            }
-        }
-        return Result::Ok(());
-    }
-
-    fn handle_lirc_event_mode_off(&mut self, decode_result: DecodeResult) -> Result<()> {
-        match decode_result.key {
-            Key::PowerToggle => {
-                if decode_result.repeat == 0 {
-                    log::info!("powering on");
-                    self.send("denon", Key::PowerOn, false)?;
-                    self.send("pioneer", Key::PowerOn, false)?;
-
-                    thread::sleep(Duration::from_secs(3));
-
-                    self.send("denon", Key::InputTv, false)?;
-                    self.send("pioneer", Key::Input5, false)?;
-
-                    self.set_mode(Mode::On)?;
-                    log::debug!("mode is now on");
-                }
-            }
-            _ => {}
-        }
-        return Result::Ok(());
-    }
-
-    fn handle_lirc_event_mode_on(&mut self, decode_result: DecodeResult) -> Result<()> {
-        match decode_result.key {
-            Key::PowerToggle => {
-                if decode_result.repeat == 0 {
-                    log::info!("powering off");
-                    self.send("denon", Key::PowerOff, false)?;
-                    self.send("pioneer", Key::PowerOff, false)?;
-                    self.set_mode(Mode::Off)?;
-                    log::debug!("mode is now off");
-                }
-            }
-            Key::VolumeUp => {
-                if decode_result.repeat % 4 == 0 {
-                    log::info!("volume up");
-                    self.send("denon", Key::VolumeUp, true)?;
-                }
-            }
-            Key::VolumeDown => {
-                if decode_result.repeat % 4 == 0 {
-                    log::info!("volume down");
-                    self.send("denon", Key::VolumeDown, true)?;
-                }
-            }
-            Key::Mute => {
-                if decode_result.repeat == 0 {
-                    log::info!("mute");
-                    self.send("denon", Key::Mute, false)?;
-                }
-            }
-            _ => {}
-        }
-        return Result::Ok(());
-    }
-}
-
-fn main() {
-    Main::run().unwrap();
 }

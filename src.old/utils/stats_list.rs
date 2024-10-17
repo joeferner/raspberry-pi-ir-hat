@@ -40,7 +40,7 @@ impl<const N: usize> StatsList<N> {
 
                 Some(variance.sqrt())
             }
-            _ => Option::None,
+            _ => None,
         };
     }
 }

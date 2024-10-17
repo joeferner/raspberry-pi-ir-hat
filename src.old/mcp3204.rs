@@ -10,12 +10,12 @@ impl Mcp3204 {
         let spi = Spi::new(Bus::Spi0, SlaveSelect::Ss0, 20_000, Mode::Mode0)?;
         spi.set_bits_per_word(8)?;
         spi.set_bit_order(BitOrder::MsbFirst)?;
-        return Result::Ok(Mcp3204 { spi });
+        return Ok(Mcp3204 { spi });
     }
 
     pub fn read_single(&self, ch: u8) -> Result<u32> {
         if ch > 3 {
-            return Result::Err(MyError::new(format!(
+            return Err(MyError::new(format!(
                 "invalid channel, expected 0,1,2,3 found {}",
                 ch
             )));
@@ -27,6 +27,6 @@ impl Mcp3204 {
         let v1 = (read_buffer[1] as u32) << 8;
         let v2 = read_buffer[2] as u32;
         let value = (v0 | v1 | v2) >> 5;
-        return Result::Ok(value);
+        return Ok(value);
     }
 }

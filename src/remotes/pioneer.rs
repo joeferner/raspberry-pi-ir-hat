@@ -1,44 +1,42 @@
 use std::time::Duration;
 
-use crate::{
-    lirc::{lirc_writer::LircWriter, LircEvent, LircProtocol},
-    my_error::MyError,
-};
+use anyhow::{anyhow, Result};
+
+use crate::lirc::{lirc_writer::LircWriter, LircEvent, LircProtocol};
 
 use super::{send_scan_codes, DecodeResult, Key, Remote};
-use crate::my_error::Result;
 
 pub struct PioneerRemote {}
 
 impl PioneerRemote {
     pub fn new() -> Self {
-        return PioneerRemote {};
+        PioneerRemote {}
     }
 }
 
 impl Remote for PioneerRemote {
     fn get_protocol(&self) -> LircProtocol {
-        return LircProtocol::Nec;
+        LircProtocol::Nec
     }
 
     fn get_repeat_count(&self) -> u32 {
-        return 2;
+        2
     }
 
     fn get_tx_scan_code_gap(&self) -> Duration {
-        return Duration::from_millis(25);
+        Duration::from_millis(25)
     }
 
     fn get_tx_repeat_gap(&self) -> Duration {
-        return Duration::from_millis(100);
+        Duration::from_millis(100)
     }
 
     fn get_rx_repeat_gap_max(&self) -> Duration {
-        return Duration::from_millis(200);
+        Duration::from_millis(200)
     }
 
     fn get_display_name(&self) -> &str {
-        return "pioneer";
+        "pioneer"
     }
 
     fn send(&self, writer: &mut LircWriter, key: Key) -> Result<()> {
@@ -100,14 +98,14 @@ impl Remote for PioneerRemote {
             Key::Sleep => vec![0xaa5e, 0xaf70],
 
             _ => {
-                return Result::Err(MyError::new(format!("unhandled key {:?}", key)));
+                return Err(anyhow!("unhandled key {:?}", key));
             }
         };
-        return send_scan_codes(writer, self, scan_codes);
+        send_scan_codes(writer, self, scan_codes)
     }
 
-    fn decode(&self, events: &Vec<LircEvent>) -> Option<DecodeResult> {
-        if let Option::Some(first_event) = events.get(0) {
+    fn decode(&self, events: &[LircEvent]) -> Option<DecodeResult> {
+        if let Some(first_event) = events.first() {
             match first_event.scan_code {
                 0xaa00 => return DecodeResult::new(self, Key::Num0),
                 0xaa01 => return DecodeResult::new(self, Key::Num1),
@@ -136,7 +134,7 @@ impl Remote for PioneerRemote {
                 0xaa49 => return DecodeResult::new(self, Key::Mute),
                 0xaa4a => return DecodeResult::new(self, Key::Display),
                 0xaa5a => {
-                    if let Option::Some(second_event) = events.get(1) {
+                    if let Some(second_event) = events.get(1) {
                         match second_event.scan_code {
                             0xaf64 => return DecodeResult::new(self, Key::Dot),
                             0xaf61 => return DecodeResult::new(self, Key::ChannelEnter),
@@ -148,12 +146,12 @@ impl Remote for PioneerRemote {
                             0xaf7d => return DecodeResult::new(self, Key::Input4),
                             0xaf7e => return DecodeResult::new(self, Key::Input5),
                             0xaf7f => return DecodeResult::new(self, Key::Input6),
-                            _ => return Option::None,
+                            _ => return None,
                         }
                     }
                 }
                 0xaa5b => {
-                    if let Option::Some(second_event) = events.get(1) {
+                    if let Some(second_event) = events.get(1) {
                         match second_event.scan_code {
                             0xaf20 => return DecodeResult::new(self, Key::Home),
                             0xaf22 => return DecodeResult::new(self, Key::Back),
@@ -168,23 +166,23 @@ impl Remote for PioneerRemote {
                             0xaf2f => return DecodeResult::new(self, Key::FavoriteA),
                             0xaf33 => return DecodeResult::new(self, Key::PageUp),
                             0xaf34 => return DecodeResult::new(self, Key::PageDown),
-                            _ => return Option::None,
+                            _ => return None,
                         }
                     }
                 }
                 0xaa5e => {
-                    if let Option::Some(second_event) = events.get(1) {
+                    if let Some(second_event) = events.get(1) {
                         match second_event.scan_code {
                             0xaf3a => return DecodeResult::new(self, Key::Size),
                             0xaf61 => return DecodeResult::new(self, Key::AvSelection),
                             0xaf70 => return DecodeResult::new(self, Key::Sleep),
-                            _ => return Option::None,
+                            _ => return None,
                         }
                     }
                 }
-                _ => return Option::None,
+                _ => return None,
             }
         }
-        return Option::None;
+        None
     }
 }

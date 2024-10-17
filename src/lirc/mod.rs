@@ -7,6 +7,7 @@ use num_derive::FromPrimitive;
 use serde::{Deserialize, Serialize};
 
 pub mod lirc_reader;
+pub mod lirc_writer;
 
 #[derive(FromPrimitive, Copy, Clone)]
 pub enum LircProtocol {
@@ -43,6 +44,7 @@ pub enum LircProtocol {
 pub const SCAN_CODE_SIZE: usize = (64 + 16 + 16 + 32 + 64) / 8;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LircEvent {
     pub timestamp: u64,
     pub flags: u16,
@@ -71,12 +73,12 @@ pub enum LircMode {
 }
 
 #[derive(Debug)]
-pub struct Remotes {
+pub struct LircDevices {
     pub lirc_rx_device: String,
     pub _lirc_tx_device: String,
 }
 
-pub fn find_remotes() -> Result<Remotes> {
+pub fn find_lirc_devices() -> Result<LircDevices> {
     use crate::rc_devices::{enable_all_protocols, find_rc_device_lirc_dev_dir, get_rc_devices};
     use anyhow::anyhow;
 
@@ -88,7 +90,7 @@ pub fn find_remotes() -> Result<Remotes> {
     let lirc_tx_device = find_rc_device_lirc_dev_dir(&rc_devices, "gpio-ir-tx", 0);
     let lirc_tx_device = lirc_tx_device.ok_or(anyhow!("could not find lirc tx device"))?;
 
-    Ok(Remotes {
+    Ok(LircDevices {
         lirc_rx_device,
         _lirc_tx_device: lirc_tx_device,
     })

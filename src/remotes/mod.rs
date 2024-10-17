@@ -1,18 +1,19 @@
-use std::thread::sleep;
-use std::time::Duration;
-
 use self::denon::DenonRemote;
 use self::pioneer::PioneerRemote;
 use self::rca::RcaRemote;
 use crate::lirc::{lirc_writer::LircWriter, LircEvent, LircProtocol};
-use crate::my_error::{MyError, Result};
-use log;
+use anyhow::{anyhow, Result};
+use log::debug;
+use serde::{Deserialize, Serialize};
+use std::thread::sleep;
+use std::time::Duration;
 
 mod denon;
 mod pioneer;
 mod rca;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum Key {
     Num0,
     Num1,
@@ -108,7 +109,8 @@ pub enum Key {
     VideoSelect,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DecodeResult {
     pub time: u64,
     pub key: Key,
@@ -118,7 +120,7 @@ pub struct DecodeResult {
 
 impl DecodeResult {
     pub fn new(remote: &dyn Remote, key: Key) -> Option<Self> {
-        return Option::Some(DecodeResult {
+        return Some(DecodeResult {
             time: 0,
             key,
             repeat: 0,
@@ -135,7 +137,7 @@ pub trait Remote: Send {
     fn get_rx_repeat_gap_max(&self) -> Duration;
     fn get_display_name(&self) -> &str;
 
-    fn decode(&self, events: &Vec<LircEvent>) -> Option<DecodeResult>;
+    fn decode(&self, events: &[LircEvent]) -> Option<DecodeResult>;
     fn send(&self, writer: &mut LircWriter, key: Key) -> Result<()>;
 }
 
@@ -147,15 +149,15 @@ pub struct Remotes {
 
 impl Remotes {
     pub fn new() -> Self {
-        return Remotes {
+        Remotes {
             events: vec![],
-            last_decode_result: Option::None,
+            last_decode_result: None,
             remotes: vec![
                 Box::new(PioneerRemote::new()),
                 Box::new(DenonRemote::new()),
                 Box::new(RcaRemote::new()),
             ],
-        };
+        }
     }
 
     pub fn send(&self, writer: &mut LircWriter, remote_name: &str, key: Key) -> Result<()> {
@@ -164,17 +166,14 @@ impl Remotes {
                 return remote.send(writer, key);
             }
         }
-        return Result::Err(MyError::new(format!(
-            "could not find remote {}",
-            remote_name
-        )));
+        Err(anyhow!("could not find remote {}", remote_name))
     }
 
     pub fn decode(&mut self, event: LircEvent) -> Option<DecodeResult> {
-        if let Option::Some(last_event) = self.events.last() {
+        if let Some(last_event) = self.events.last() {
             let delta_t = event.timestamp - last_event.timestamp;
             if delta_t > 500 * 1_000_000 {
-                log::debug!("clearing {:?}", self.events);
+                debug!("clearing {:?}", self.events);
                 self.events.clear();
             }
         }
@@ -187,22 +186,22 @@ impl Remotes {
                 .iter()
                 .all(|e| e.rc_protocol == remote.get_protocol() as u16)
             {
-                if let Option::Some(mut result) = remote.decode(&self.events) {
-                    result.time = (self.events.last().unwrap().timestamp / 1_000_000) as u64;
-                    if let Option::Some(last_result) = &self.last_decode_result {
+                if let Some(mut result) = remote.decode(&self.events) {
+                    result.time = self.events.last().unwrap().timestamp / 1_000_000;
+                    if let Some(last_result) = &self.last_decode_result {
                         let delta_t = Duration::from_millis(result.time - last_result.time);
                         if delta_t < remote.get_rx_repeat_gap_max() {
                             result.repeat = last_result.repeat + 1;
                         }
                     }
                     self.events.clear();
-                    self.last_decode_result = Option::Some(result.clone());
-                    return Option::Some(result);
+                    self.last_decode_result = Some(result.clone());
+                    return Some(result);
                 }
             }
         }
 
-        return Option::None;
+        None
     }
 }
 
@@ -220,5 +219,5 @@ pub fn send_scan_codes(
         }
         sleep(remote.get_tx_repeat_gap());
     }
-    return Result::Ok(());
+    Ok(())
 }

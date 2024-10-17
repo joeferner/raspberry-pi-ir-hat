@@ -10,7 +10,7 @@ RestartSec=1
 ExecStart=/usr/sbin/raspberry-pi-ir-hat-network-bridge
 Environment="LOG_LEVEL=debug"
 Environment="MQTT_HOST=home.local"
-Environment="MQTT_TOPIC_IR_RECEIVE=home/basement/ir/receive"
+Environment="MQTT_TOPIC_PREFIX=home/basement/ir"
 
 [Install]
 WantedBy=multi-user.target

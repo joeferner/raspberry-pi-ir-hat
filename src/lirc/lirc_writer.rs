@@ -1,4 +1,6 @@
-use crate::{ioctl, my_error::Result};
+use anyhow::Result;
+
+use crate::ioctl;
 use std::{fs::File, io::Write, os::fd::AsRawFd};
 
 use super::{LircIoCtlCommand, LircMode, SCAN_CODE_SIZE};
@@ -15,11 +17,15 @@ impl LircWriter {
             LircIoCtlCommand::SetSendMode as u32,
             LircMode::ScanCode as u32,
         )?;
-        return Result::Ok(LircWriter { file });
+        Ok(LircWriter { file })
     }
 
     pub fn write(&mut self, protocol: u16, scan_code: u64) -> Result<()> {
-        log::debug!("writing (protocol: {}, scan_code: 0x{:#x})", protocol, scan_code);
+        log::debug!(
+            "writing (protocol: {}, scan_code: 0x{:#x})",
+            protocol,
+            scan_code
+        );
         ioctl::write_u32(
             self.file.as_raw_fd(),
             LircIoCtlCommand::SetSendMode as u32,
@@ -33,7 +39,7 @@ impl LircWriter {
         let scan_code_bytes = scan_code.to_le_bytes();
         buf[16..24].copy_from_slice(&scan_code_bytes);
 
-        self.file.write(&buf)?;
-        return Result::Ok(());
+        self.file.write_all(&buf)?;
+        Ok(())
     }
 }

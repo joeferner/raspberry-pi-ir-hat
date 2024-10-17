@@ -1,43 +1,41 @@
 use std::time::Duration;
 
-use crate::{
-    lirc::{lirc_writer::LircWriter, LircEvent, LircProtocol},
-    my_error::MyError,
-};
+use anyhow::{anyhow, Result};
+
+use crate::lirc::{lirc_writer::LircWriter, LircEvent, LircProtocol};
 
 use super::{send_scan_codes, DecodeResult, Key, Remote};
-use crate::my_error::Result;
 pub struct DenonRemote {}
 
 impl DenonRemote {
     pub fn new() -> Self {
-        return DenonRemote {};
+        DenonRemote {}
     }
 }
 
 impl Remote for DenonRemote {
     fn get_protocol(&self) -> LircProtocol {
-        return LircProtocol::Sharp;
+        LircProtocol::Sharp
     }
 
     fn get_repeat_count(&self) -> u32 {
-        return 3;
+        3
     }
 
     fn get_tx_scan_code_gap(&self) -> Duration {
-        return Duration::from_millis(0);
+        Duration::from_millis(0)
     }
 
     fn get_tx_repeat_gap(&self) -> Duration {
-        return Duration::from_millis(50);
+        Duration::from_millis(50)
     }
 
     fn get_rx_repeat_gap_max(&self) -> Duration {
-        return Duration::from_millis(200);
+        Duration::from_millis(200)
     }
 
     fn get_display_name(&self) -> &str {
-        return "denon";
+        "denon"
     }
 
     fn send(&self, writer: &mut LircWriter, key: Key) -> Result<()> {
@@ -105,14 +103,14 @@ impl Remote for DenonRemote {
             Key::Num9 => vec![0x0cc9],
             Key::Num0 => vec![0x0cca],
             _ => {
-                return Result::Err(MyError::new(format!("unhandled key {:?}", key)));
+                return Err(anyhow!("unhandled key {:?}", key));
             }
         };
-        return send_scan_codes(writer, self, scan_codes);
+        send_scan_codes(writer, self, scan_codes)
     }
 
-    fn decode(&self, events: &Vec<LircEvent>) -> Option<DecodeResult> {
-        if let Option::Some(first_event) = events.get(0) {
+    fn decode(&self, events: &[LircEvent]) -> Option<DecodeResult> {
+        if let Some(first_event) = events.first() {
             match first_event.scan_code {
                 0x02e1 => return DecodeResult::new(self, Key::PowerOn),
                 0x02e2 => return DecodeResult::new(self, Key::PowerOff),
@@ -176,9 +174,9 @@ impl Remote for DenonRemote {
                 0x0cc8 => return DecodeResult::new(self, Key::Num8),
                 0x0cc9 => return DecodeResult::new(self, Key::Num9),
                 0x0cca => return DecodeResult::new(self, Key::Num0),
-                _ => return Option::None,
+                _ => return None,
             }
         }
-        return Option::None;
+        None
     }
 }

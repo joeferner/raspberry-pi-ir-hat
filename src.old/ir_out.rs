@@ -21,11 +21,11 @@ pub struct IrOutMessage {
 impl IrOutMessage {
     pub fn new(remote_name: &str, key: Key, can_timeout: bool) -> Result<Self> {
         let time = if can_timeout {
-            Option::Some(get_time_millis()?)
+            Some(get_time_millis()?)
         } else {
-            Option::None
+            None
         };
-        return Result::Ok(IrOutMessage {
+        return Ok(IrOutMessage {
             time,
             remote_name: remote_name.to_string(),
             key,
@@ -47,8 +47,8 @@ impl IrOut {
         let thread = thread::spawn(move || loop {
             let mut remotes = remotes.as_mut();
             match Self::tick(&rx, &mut writer, &mut remotes) {
-                Result::Ok(()) => {}
-                Result::Err(err) => {
+                Ok(()) => {}
+                Err(err) => {
                     log::error!("failed to get power data {}", err);
                     thread::sleep(Duration::from_secs(5));
                 }
@@ -66,7 +66,7 @@ impl IrOut {
         let message = rx.recv()?;
 
         // check message timeout
-        if let Option::Some(time) = message.time {
+        if let Some(time) = message.time {
             let dt = get_time_millis()? - time;
             if dt > IR_OUT_MESSAGE_TIMEOUT_MILLIS {
                 log::debug!(
@@ -74,18 +74,18 @@ impl IrOut {
                     IR_OUT_MESSAGE_TIMEOUT_MILLIS,
                     dt
                 );
-                return Result::Ok(());
+                return Ok(());
             }
         }
 
         remotes.send(writer, message.remote_name.as_str(), message.key)?;
-        return Result::Ok(());
+        return Ok(());
     }
 
     pub fn stop(self) -> Result<()> {
         self.thread
             .join()
             .map_err(|err| MyError::new(format!("failed to join thread {:?}", err)))?;
-        return Result::Ok(());
+        return Ok(());
     }
 }
