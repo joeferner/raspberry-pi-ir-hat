@@ -20,5 +20,11 @@
         "uevent",
         "unistd",
         "unportable"
+    ],
+    "remote.SSH.defaultExtensions": [
+        "streetsidesoftware.code-spell-checker",
+        "timonwong.shellcheck",
+        "rust-lang.rust-analyzer",
+        "smulyono.reveal"
     ]
 }
