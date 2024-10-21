@@ -15,7 +15,7 @@ impl RcaRemote {
 
 impl Remote for RcaRemote {
     fn get_protocol(&self) -> LircProtocol {
-        LircProtocol::Sony12
+        LircProtocol::Nec
     }
 
     fn get_repeat_count(&self) -> u32 {
@@ -45,9 +45,9 @@ impl Remote for RcaRemote {
     fn decode(&self, events: &[LircEvent]) -> Option<DecodeResult> {
         if let Some(first_event) = events.first() {
             match first_event.scan_code {
-                0x10015 => return DecodeResult::new(self, Key::PowerToggle),
-                0x10012 => return DecodeResult::new(self, Key::VolumeUp),
-                0x10013 => return DecodeResult::new(self, Key::VolumeDown),
+                0xA05F => return DecodeResult::new(self, Key::PowerToggle),
+                0xA040 => return DecodeResult::new(self, Key::VolumeUp),
+                0xA05D => return DecodeResult::new(self, Key::VolumeDown),
                 0x10014 => return DecodeResult::new(self, Key::Mute),
                 _ => return None,
             }
